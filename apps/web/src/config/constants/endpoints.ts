@@ -31,7 +31,7 @@ const BLOCKS_SUBGRAPH_URLS = {
 }
 
 export const GRAPH_API_NFTMARKET = `${THE_GRAPH_PROXY_API}/nft-marketplace-bsc`
-export const GRAPH_HEALTH = 'https://indexer.upgrade.thegraph.com/status'
+export const GRAPH_HEALTH = 'https://api.thegraph.com/index-node/graphql'
 
 export const TC_MOBOX_SUBGRAPH = `${THE_GRAPH_PROXY_API}/trading-competition-v3`
 export const TC_MOD_SUBGRAPH = `${THE_GRAPH_PROXY_API}/trading-competition-v4`
@@ -81,8 +81,6 @@ export const STABLESWAP_SUBGRAPHS_URLS = {
 export const TRADING_REWARD_API = 'https://trading-reward.pancakeswap.com/api/v1'
 
 export const X_API_ENDPOINT = process.env.NEXT_PUBLIC_QUOTING_API
-
-export const BRIDGE_API_ENDPOINT = process.env.NEXT_PUBLIC_BRIDGE_API
 
 export const QUOTING_API_PREFIX = `${X_API_ENDPOINT}/order-price`
 

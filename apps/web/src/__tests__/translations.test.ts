@@ -1,6 +1,7 @@
 import teams from 'config/constants/teams'
 import fs from 'fs'
 import Path from 'path'
+import { NftLocation } from 'state/nftMarket/types'
 import { describe, expect, it } from 'vitest'
 
 // FIXME: should move this test file inside localization pkg
@@ -10,9 +11,9 @@ const allTranslationKeys = Object.keys(translations)
 
 // when some keys are hard to be extracted from code
 const whitelist = [
+  ...Object.values(NftLocation),
   ...teams.map((t) => t.description),
-  'Profile Pic',
-  'In Wallet',
+  // NFT description moved to profile sdk
   `Oopsie daisy! Hiccup's had a bit of an accident. Poor little fella.`,
   'Eggscellent! Celebrating Syrup Storm winning the Easter Battle!',
   'Melting Easter eggs and melting hearts!',
@@ -34,6 +35,7 @@ const whitelist = [
   'Swap %inputAmount% %inputSymbol% for min. %outputAmount% %outputSymbol% to %recipientAddress%',
   'Unwrap %amount% %wrap% to %native%',
   'Wrap %amount% %native% to %wrap%',
+  'Approve %symbol%',
   'Add %amountA% %symbolA% and %amountB% %symbolB%',
   'Remove %amount% %symbol%',
   'Remove %amountA% %symbolA% and %amountB% %symbolB%',
@@ -63,6 +65,7 @@ const whitelist = [
   'Games',
   'with',
   'Design Games to Captivate 1.5 Million Potential Players',
+  'Start Building',
   'Build Games with PancakeSwap Now',
   'Bring Your Game to Life on PancakeSwap',
   'Your Complete Developer Infrastructure',
@@ -94,8 +97,16 @@ const whitelist = [
   'Buy Squad / Bunnies',
   'Swap Token',
   "Your browser doesn't support iframe",
-  'Try it now',
-  'This Product is in beta.',
+  'The CAKE and APT Farm rewards for this pool will not be applicable to or claimable by',
+  'U.S.-based and VPN users.',
+  'The CAKE and APT Farm rewards for this pool will not be applicable to or claimable by U.S.-based and VPN users.',
+  'Base APR (APT yield only)',
+  'CAKE community.',
+  'Stake %stakedToken%, Earn APT on',
+  '%stakedToken% Syrup Pool',
+  `If more %lpLabel% LP is deposited in our Farm this week, we'll increase APT rewards for %stakedToken% Syrup Pool next week.`,
+  'Enjoying the %stakingToken% Staking APR? Get more rewards with the %lpLabel% LP on our',
+  'The rewards for this Syrup Pool will not be applicable to or claimable by',
 ]
 
 describe.concurrent('Check translations integrity', () => {
@@ -124,7 +135,6 @@ describe('Check translations available', () => {
   }
 
   throughDirectory('src/')
-  throughDirectory('../../apps/solana')
   throughDirectory('../../apps/aptos')
   throughDirectory('../../apps/bridge')
   throughDirectory('../../packages/uikit/src')
@@ -132,7 +142,7 @@ describe('Check translations available', () => {
   throughDirectory('../../packages/widgets-internal')
   let match: RegExpExecArray | string | null = null
 
-  const extractedFileKeys = new Set<string>()
+  const extractedKeys = new Set<string>(whitelist)
 
   const regexWithoutCarriageReturn = /\bt\((["'`])((?:\\1|(?:(?!\1)).)*)(\1)/gm
   const regexWithCarriageReturn = /\bt\([\r\n]\s+(["'`])([^]*?)(\1)/gm
@@ -147,7 +157,7 @@ describe('Check translations available', () => {
       (match = regexWithCarriageReturn.exec(data)) !== null
     ) {
       if (match[2].trim()) {
-        extractedFileKeys.add(match[2])
+        extractedKeys.add(match[2])
       }
     }
 
@@ -161,7 +171,7 @@ describe('Check translations available', () => {
       if (match[1].trim()) {
         const placeHolderMatch = regexWithSearchInputPlaceHolder.exec(match[1])
         if (placeHolderMatch?.[1]) {
-          extractedFileKeys.add(placeHolderMatch[1])
+          extractedKeys.add(placeHolderMatch[1])
         }
       }
     }
@@ -177,12 +187,10 @@ describe('Check translations available', () => {
     ) {
       match = match[1].replace(/\n\s+/g, ' ').trim()
       if (match) {
-        extractedFileKeys.add(match)
+        extractedKeys.add(match)
       }
     }
   }
-
-  const extractedKeys = new Set([...extractedFileKeys, ...whitelist])
 
   it('Translation key should exist in translations json', () => {
     Array.from(extractedKeys).forEach((key) => {
@@ -210,20 +218,6 @@ describe('Check translations available', () => {
         null,
         '\t',
       )} in translation.json`,
-    ).toBe(0)
-  })
-
-  it('should not have keys in whitelist that are actually extracted from code', () => {
-    const redundantWhitelistEntries = whitelist.filter((key) => extractedFileKeys.has(key))
-    expect(
-      redundantWhitelistEntries.length,
-      `Found ${
-        redundantWhitelistEntries.length
-      } key(s) that are both in whitelist and extracted from code: ${JSON.stringify(
-        redundantWhitelistEntries,
-        null,
-        '\t',
-      )}. These should be removed from whitelist.`,
     ).toBe(0)
   })
 })

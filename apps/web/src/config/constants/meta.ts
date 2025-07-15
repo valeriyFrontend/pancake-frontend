@@ -17,8 +17,8 @@ interface PathList {
 const getPathList = memoize((t: ContextApi['t']): PathList => {
   return {
     paths: {
-      '/': { title: t('Home') },
       '/home': { title: t('Home') },
+      '/': { basePath: true, title: t('Exchange'), image: `${ASSET_CDN}/web/og/swap.jpg` },
       '/swap': { basePath: true, title: t('Exchange'), image: `${ASSET_CDN}/web/og/swap.jpg` },
       '/limit-orders': { basePath: true, title: t('Limit Orders'), image: `${ASSET_CDN}/web/og/limit.jpg` },
       '/add': { basePath: true, title: t('Add Liquidity'), image: `${ASSET_CDN}/web/og/liquidity.jpg` },
@@ -82,11 +82,6 @@ const getPathList = memoize((t: ContextApi['t']): PathList => {
       '/cake-staking': { basePath: true, title: t('CAKE Staking') },
       '/buy-crypto': { basePath: true, title: t('Buy Crypto') },
       '/gauges-voting': { basePath: true, title: t('Gauges Voting') },
-      '/burn-dashboard': {
-        basePath: true,
-        title: t('Burn Dashboard'),
-        image: `${ASSET_CDN}/web/og/burn-dashboard.png`,
-      },
     },
     defaultTitleSuffix: t('PancakeSwap'),
   }

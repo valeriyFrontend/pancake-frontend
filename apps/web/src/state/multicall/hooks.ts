@@ -1,5 +1,3 @@
-import { Token } from '@pancakeswap/sdk'
-import { useReadContracts } from '@pancakeswap/wagmi'
 import { useQueryClient } from '@tanstack/react-query'
 import { useActiveChainId } from 'hooks/useActiveChainId'
 import { useAtom } from 'jotai'
@@ -32,10 +30,8 @@ export const NEVER_RELOAD: ListenerOptions = {
 }
 
 // the lowest level call for subscribing to contract data
-function useCallsData(calls: (Call | undefined)[], options?: ListenerOptions, overrideChainId?: number): CallResult[] {
-  const { chainId: activeChainId } = useActiveChainId()
-  const chainId = overrideChainId || activeChainId
-
+function useCallsData(calls: (Call | undefined)[], options?: ListenerOptions): CallResult[] {
+  const { chainId } = useActiveChainId()
   const [{ callResults }, dispatch] = useAtom(multicallReducerAtom)
 
   const serializedCallKeys: string = useMemo(
@@ -49,20 +45,17 @@ function useCallsData(calls: (Call | undefined)[], options?: ListenerOptions, ov
     [calls],
   )
 
-  const serializedOptions: string = useMemo(() => JSON.stringify(options ?? {}), [options])
-
   // update listeners when there is an actual change that persists for at least 100ms
   useEffect(() => {
     const callKeys: string[] = JSON.parse(serializedCallKeys)
     if (!chainId || callKeys.length === 0) return undefined
-    const objectOptions: ListenerOptions = JSON.parse(serializedOptions)
     // eslint-disable-next-line @typescript-eslint/no-shadow
     const calls = callKeys.map((key) => parseCallKey(key))
     dispatch(
       addMulticallListeners({
         chainId,
         calls,
-        options: objectOptions,
+        options,
       }),
     )
 
@@ -71,11 +64,11 @@ function useCallsData(calls: (Call | undefined)[], options?: ListenerOptions, ov
         removeMulticallListeners({
           chainId,
           calls,
-          options: objectOptions,
+          options,
         }),
       )
     }
-  }, [chainId, dispatch, serializedOptions, serializedCallKeys])
+  }, [chainId, dispatch, options, serializedCallKeys])
 
   return useMemo(
     () =>
@@ -127,7 +120,6 @@ function toCallState<
   if (!valid) return INVALID_CALL_STATE
   if (valid && !blockNumber) return LOADING_CALL_STATE
   if (!functionName || !abi || !latestBlockNumber) return LOADING_CALL_STATE
-
   const success = data && data.length > 2
   const syncing = (blockNumber ?? 0) < latestBlockNumber
   let result
@@ -186,11 +178,10 @@ export function useSingleContractMultipleData<TAbi extends Abi | readonly unknow
 }: // FIXME: wagmiv2
 SingleContractMultipleDataCallParameters<TAbi, TFunctionName>): CallState<any>[] {
   const { chainId } = useActiveChainId()
-  const { enabled = true } = options ?? {}
 
   const calls = useMemo(
     () =>
-      enabled && contract && contract.abi && contract.address && args && args.length > 0
+      contract && contract.abi && contract.address && args && args.length > 0
         ? args.map((inputs) => {
             if (!contract.address) return undefined
             return {
@@ -203,7 +194,7 @@ SingleContractMultipleDataCallParameters<TAbi, TFunctionName>): CallState<any>[]
             }
           })
         : [],
-    [args, contract, enabled, functionName],
+    [args, contract, functionName],
   )
 
   const results = useCallsData(calls, options)
@@ -228,60 +219,12 @@ export type MultipleSameDataCallParameters<
   TAbiStateMutability extends AbiStateMutability = AbiStateMutability,
 > = {
   addresses: (Address | undefined)[]
-  tokens?: (Token | undefined)[]
   abi: TAbi
-  functionName?: string | undefined
   // FIXME: wagmiv2
-  chainId?: number
+  functionName: any
   options?: ListenerOptionsWithGas
-  args?: readonly unknown[] | undefined
-}
+} & any
 // GetFunctionArgs<TAbi, TFunctionName>
-
-export type MultipleSameDataCallParametersWagmi<TAbi extends Abi | readonly unknown[] = Abi> = {
-  addresses: (Address | undefined)[]
-  abi: TAbi
-  functionName?: string | undefined
-  options?: {
-    enabled?: boolean
-    watch?: boolean
-    refetchInterval?: number
-  }
-  chainId?: number | number[]
-  args?: readonly unknown[] | undefined
-}
-
-export function useMultipleContractSingleDataWagmi({
-  abi,
-  addresses,
-  chainId,
-  functionName,
-  args,
-  options,
-}: MultipleSameDataCallParametersWagmi) {
-  const contracts = useMemo(() => {
-    return addresses.map((address, index) => ({
-      abi,
-      address,
-      functionName,
-      args,
-      // We need to support multiple chainIds
-      // For example, when we fetch the balance of cross-chain pairs
-      // we need to fetch the balance of the token on both chains
-      chainId: !Array.isArray(chainId) ? chainId : chainId.length === addresses.length ? chainId[index] : undefined,
-    }))
-  }, [abi, functionName, args, addresses, chainId])
-
-  return useReadContracts({
-    // 2048 is the maximum batch size for wagmi.
-    // If not set, it will send large calldata in one request,
-    // it will also cause the request to fail.
-    batchSize: 2048,
-    contracts,
-    watch: options?.watch,
-    query: { enabled: options?.enabled, refetchInterval: options?.refetchInterval },
-  })
-}
 
 export function useMultipleContractSingleData<TAbi extends Abi | readonly unknown[], TFunctionName extends string>({
   abi,
@@ -292,7 +235,7 @@ export function useMultipleContractSingleData<TAbi extends Abi | readonly unknow
 }: // FIXME: wagmiv2
 // MultipleSameDataCallParameters<TAbi, TFunctionName>): CallState<ContractFunctionResult<TAbi, TFunctionName>>[] {
 MultipleSameDataCallParameters<TAbi, TFunctionName>): CallState<any>[] {
-  const { enabled = true, blocksPerFetch, chainId } = options ?? {}
+  const { enabled, blocksPerFetch } = options ?? { enabled: true }
   const callData: Hex | undefined = useMemo(
     () =>
       abi && enabled
@@ -319,20 +262,18 @@ MultipleSameDataCallParameters<TAbi, TFunctionName>): CallState<any>[] {
         : [],
     [addresses, callData],
   )
-  const { chainId: activeChainId } = useActiveChainId()
 
-  const usedChainId = chainId ?? activeChainId
-
-  const results = useCallsData(calls, options?.blocksPerFetch ? { blocksPerFetch } : DEFAULT_OPTIONS, chainId)
+  const results = useCallsData(calls, options?.blocksPerFetch ? { blocksPerFetch } : DEFAULT_OPTIONS)
+  const { chainId } = useActiveChainId()
 
   const queryClient = useQueryClient()
 
   return useMemo(() => {
     const currentBlockNumber = queryClient.getQueryCache().find<number>({
-      queryKey: ['blockNumber', usedChainId],
+      queryKey: ['blockNumber', chainId],
     })?.state?.data
     return results.map((result) => toCallState(result, abi, functionName, currentBlockNumber))
-  }, [queryClient, usedChainId, results, abi, functionName])
+  }, [queryClient, chainId, results, abi, functionName])
 }
 
 export type SingleCallParameters<
@@ -358,9 +299,8 @@ export function useSingleCallResult<TAbi extends Abi | readonly unknown[], TFunc
   options,
 }: // FIXME: wagmiv2
 SingleCallParameters<TAbi, TFunctionName>): CallState<any> {
-  const { enabled = true } = options ?? {}
   const calls = useMemo<Call[]>(() => {
-    return enabled && contract && contract.abi && contract.address
+    return contract && contract.abi && contract.address
       ? [
           {
             address: contract.address,
@@ -372,7 +312,7 @@ SingleCallParameters<TAbi, TFunctionName>): CallState<any> {
           },
         ]
       : []
-  }, [contract, args, enabled, functionName])
+  }, [contract, args, functionName])
 
   const result = useCallsData(calls, options)[0]
 

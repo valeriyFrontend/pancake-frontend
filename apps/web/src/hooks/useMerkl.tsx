@@ -47,7 +47,7 @@ export function useMerklInfo(poolAddress?: string): {
       const responsev4 = await fetch(
         `${MERKL_API_V4}/opportunities?${supportedChainIdV4.join(
           ',',
-        )}&test=false&mainProtocolId=pancake-swap&action=POOL,HOLD&status=LIVE`,
+        )}&test=false&items=1000&action=POOL,HOLD&status=LIVE`,
       )
 
       if (!responsev4.ok) {
@@ -59,7 +59,6 @@ export function useMerklInfo(poolAddress?: string): {
       const opportunities = merklDataV4?.filter(
         (opportunity) =>
           opportunity?.tokens?.[0]?.symbol?.toLowerCase().startsWith('cake-lp') ||
-          opportunity?.protocol?.id?.toLowerCase().startsWith('pancake-swap') ||
           opportunity?.protocol?.id?.toLowerCase().startsWith('pancakeswap'),
       )
 

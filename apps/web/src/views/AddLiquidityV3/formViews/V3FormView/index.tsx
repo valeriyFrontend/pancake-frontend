@@ -46,6 +46,7 @@ import { useTranslation } from '@pancakeswap/localization'
 import TransactionConfirmationModal from 'components/TransactionConfirmationModal'
 import { Bound } from 'config/constants/types'
 import { useIsTransactionUnsupported, useIsTransactionWarning } from 'hooks/Trades'
+import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { useV3NFTPositionManagerContract } from 'hooks/useContract'
 import { useRouter } from 'next/router'
 import { useTransactionAdder } from 'state/transactions/hooks'
@@ -59,16 +60,10 @@ import { V3SubmitButton } from 'views/AddLiquidityV3/components/V3SubmitButton'
 import { QUICK_ACTION_CONFIGS } from 'views/AddLiquidityV3/types'
 import { useSendTransaction, useWalletClient } from 'wagmi'
 
-import { Price } from '@pancakeswap/swap-sdk-core'
-import BigNumber from 'bignumber.js'
 import { ZapLiquidityWidget } from 'components/ZapLiquidityWidget'
 import { ZAP_V3_POOL_ADDRESSES } from 'config/constants/zapV3'
-import useAccountActiveChain from 'hooks/useAccountActiveChain'
-import { usePoolMarketPriceSlippage } from 'hooks/usePoolMarketPriceSlippage'
 import { transactionErrorToUserReadableMessage } from 'utils/transactionErrorToUserReadableMessage'
 import { useDensityChartData } from 'views/AddLiquidityV3/hooks/useDensityChartData'
-import { MarketPriceSlippageWarning } from 'views/CreateLiquidityPool/components/SubmitCreateButton'
-import { MevProtectToggle } from 'views/Mev/MevProtectToggle'
 import LockedDeposit from './components/LockedDeposit'
 import { PositionPreview } from './components/PositionPreview'
 import RangeSelector from './components/RangeSelector'
@@ -142,7 +137,7 @@ export default function V3FormView({
   const expertMode = useIsExpertMode()
 
   const positionManager = useV3NFTPositionManagerContract()
-  const { account, chainId, isWrongNetwork } = useAccountActiveChain()
+  const { account, chainId, isWrongNetwork } = useActiveWeb3React()
   const addTransaction = useTransactionAdder()
 
   // mint state
@@ -468,16 +463,6 @@ export default function V3FormView({
     expertMode ? onAdd() : onPresentAddLiquidityModal()
     logGTMClickAddLiquidityEvent()
   }, [expertMode, onAdd, onPresentAddLiquidityModal])
-  const poolCurrentPrice = useMemo(() => {
-    if (!pool) return undefined
-    return new Price(pool.token0, pool.token1, 2n ** 192n, pool.sqrtRatioX96 * pool.sqrtRatioX96)
-  }, [pool])
-  const [marketPrice, marketPriceSlippage] = usePoolMarketPriceSlippage(pool?.token0, pool?.token1, poolCurrentPrice)
-  const displayMarketPriceSlippageWarning = useMemo(() => {
-    if (marketPriceSlippage === undefined) return false
-    const slippage = new BigNumber(marketPriceSlippage.toFixed(0)).abs()
-    return slippage.gt(5) // 5% slippage
-  }, [marketPriceSlippage])
 
   const buttons = (
     <V3SubmitButton
@@ -608,7 +593,6 @@ export default function V3FormView({
             commonBasesType={CommonBasesType.LIQUIDITY}
           />
         </LockedDeposit>
-        <MevProtectToggle size="sm" />
       </DynamicSection>
       <HideMedium style={{ gap: 16, flexDirection: 'column' }}>
         {buttons}
@@ -713,9 +697,6 @@ export default function V3FormView({
                   currencyB={quoteCurrency ?? undefined}
                   feeAmount={feeAmount}
                   ticksAtLimit={ticksAtLimit}
-                  tickUpper={tickUpper}
-                  tickLower={tickLower}
-                  tickCurrent={pool?.tickCurrent}
                   price={price ? parseFloat((invertPrice ? price.invert() : price).toSignificant(8)) : undefined}
                   priceLower={priceLower}
                   priceUpper={priceUpper}
@@ -813,10 +794,6 @@ export default function V3FormView({
                 </Button>
               </Flex>
             )}
-
-            {displayMarketPriceSlippageWarning ? (
-              <MarketPriceSlippageWarning slippage={`${marketPriceSlippage?.toFixed(0)} %`} />
-            ) : null}
 
             {outOfRange ? (
               <Message variant="warning">

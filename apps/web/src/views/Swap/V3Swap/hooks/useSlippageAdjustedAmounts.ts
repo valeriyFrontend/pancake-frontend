@@ -1,9 +1,9 @@
-import { useAutoSlippageWithFallback } from 'hooks/useAutoSlippageWithFallback'
+import { useUserSlippage } from '@pancakeswap/utils/user'
 import { useMemo } from 'react'
 import { InterfaceOrder } from 'views/Swap/utils'
 import { computeSlippageAdjustedAmounts } from '../utils/exchange'
 
 export function useSlippageAdjustedAmounts(order: InterfaceOrder | undefined | null) {
-  const { slippageTolerance } = useAutoSlippageWithFallback()
-  return useMemo(() => computeSlippageAdjustedAmounts(order, slippageTolerance), [slippageTolerance, order])
+  const [allowedSlippage] = useUserSlippage()
+  return useMemo(() => computeSlippageAdjustedAmounts(order, allowedSlippage), [allowedSlippage, order])
 }

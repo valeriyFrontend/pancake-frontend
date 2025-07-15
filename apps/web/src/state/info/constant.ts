@@ -3,20 +3,11 @@ import { infoStableSwapClients, v2Clients } from 'utils/graphql'
 
 import { ChainId, isTestnetChainId } from '@pancakeswap/chains'
 import { STABLE_SUPPORTED_CHAIN_IDS } from '@pancakeswap/stable-swap-sdk'
-import { mapValues } from '@pancakeswap/utils/fns'
 import { BSC_TOKEN_WHITELIST, ETH_TOKEN_BLACKLIST, ETH_TOKEN_WHITELIST, TOKEN_BLACKLIST } from 'config/constants/info'
-import { arbitrum, base, bsc, bscTestnet, linea, mainnet, opBNB, polygonZkEvm, zkSync } from 'wagmi/chains'
+import mapValues from 'lodash/mapValues'
+import { arbitrum, base, bsc, linea, mainnet, opBNB, polygonZkEvm, zkSync } from 'wagmi/chains'
 
-export type MultiChainName =
-  | 'BSC_TESTNET'
-  | 'BSC'
-  | 'ETH'
-  | 'POLYGON_ZKEVM'
-  | 'ZKSYNC'
-  | 'ARB'
-  | 'LINEA'
-  | 'BASE'
-  | 'OPBNB'
+export type MultiChainName = 'BSC' | 'ETH' | 'POLYGON_ZKEVM' | 'ZKSYNC' | 'ARB' | 'LINEA' | 'BASE' | 'OPBNB'
 
 export type MultiChainNameExtend = MultiChainName | 'BSC_TESTNET' | 'ZKSYNC_TESTNET'
 
@@ -37,7 +28,6 @@ export const multiChainShortName: Record<number, string> = {
 }
 
 export const multiChainQueryMainToken: Record<MultiChainName, string> = {
-  BSC_TESTNET: 'BSC_TESTNET',
   BSC: 'BNB',
   ETH: 'ETH',
   POLYGON_ZKEVM: 'ETH',
@@ -48,7 +38,7 @@ export const multiChainQueryMainToken: Record<MultiChainName, string> = {
   OPBNB: 'ETH',
 }
 
-export const multiChainId: Record<MultiChainNameExtend, ChainId> = {
+export const multiChainId: Record<MultiChainName, ChainId> = {
   BSC: ChainId.BSC,
   ETH: ChainId.ETHEREUM,
   POLYGON_ZKEVM: ChainId.POLYGON_ZKEVM,
@@ -57,12 +47,9 @@ export const multiChainId: Record<MultiChainNameExtend, ChainId> = {
   LINEA: ChainId.LINEA,
   BASE: ChainId.BASE,
   OPBNB: ChainId.OPBNB,
-  BSC_TESTNET: ChainId.BSC_TESTNET,
-  ZKSYNC_TESTNET: ChainId.ZKSYNC_TESTNET,
 }
 
 export const multiChainPaths = {
-  [ChainId.BSC_TESTNET]: '/bsc-testnet',
   [ChainId.BSC]: '',
   [ChainId.ETHEREUM]: '/eth',
   [ChainId.POLYGON_ZKEVM]: '/polygon-zkevm',
@@ -75,10 +62,7 @@ export const multiChainPaths = {
 
 export const multiChainQueryStableClient = STABLE_SUPPORTED_CHAIN_IDS.reduce((acc, chainId) => {
   if (isTestnetChainId(chainId)) return acc
-  return {
-    ...acc,
-    [multiChainName[chainId]]: infoStableSwapClients[chainId],
-  }
+  return { ...acc, [multiChainName[chainId]]: infoStableSwapClients[chainId] }
 }, {} as Record<MultiChainName, GraphQLClient>)
 
 export const infoChainNameToExplorerChainName = {
@@ -97,7 +81,6 @@ export const STABLESWAP_SUBGRAPHS_START_BLOCK = {
 }
 
 export const multiChainScan: Record<MultiChainName, string> = {
-  BSC_TESTNET: bscTestnet.blockExplorers.default.name,
   BSC: bsc.blockExplorers.default.name,
   ETH: mainnet.blockExplorers.default.name,
   POLYGON_ZKEVM: polygonZkEvm.blockExplorers.default.name,
@@ -126,7 +109,6 @@ export const multiChainTokenBlackList: Record<MultiChainName, string[]> = mapVal
     LINEA: ['0x'],
     BASE: ['0x'],
     OPBNB: ['0x'],
-    BSC_TESTNET: ['0x'],
   },
   (val) => val.map((address) => address.toLowerCase()),
 )
@@ -141,7 +123,6 @@ export const multiChainTokenWhiteList: Record<MultiChainName, string[]> = mapVal
     LINEA: [],
     BASE: [],
     OPBNB: [],
-    BSC_TESTNET: [],
   },
   (val) => val.map((address) => address.toLowerCase()),
 )
@@ -169,11 +150,9 @@ export const subgraphTokenSymbol = {
     '0x0782b6d8c4551B9760e74c0545a9bCD90bdc41E5': 'lisUSD',
     '0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B': 'slisBNB',
     '0x11727E5b7Fa33FF4D380F3E7E877F19876c25b97': 'mdLP',
-    '0xC71B5F631354BE6853eFe9C3Ab6b9590F8302e81': 'ZKJ',
   },
 }
 
 export const checkIsStableSwap = () => window.location.href.includes('stableSwap')
-export const checkIsInfinity = () => window.location.pathname.includes('infinity')
 
 export const ChainLinkSupportChains = [ChainId.BSC, ChainId.BSC_TESTNET]

@@ -1,14 +1,14 @@
 import { useTranslation } from '@pancakeswap/localization'
-import { Currency, CurrencyAmount, Native, Trade, TradeType } from '@pancakeswap/sdk'
+import { Currency, CurrencyAmount, Price, Trade, TradeType } from '@pancakeswap/sdk'
 import { CAKE, STABLE_COIN, USDC, USDT } from '@pancakeswap/tokens'
-import { PairDataTimeWindowEnum } from '@pancakeswap/uikit'
 import tryParseAmount from '@pancakeswap/utils/tryParseAmount'
+import { useUserSlippage } from '@pancakeswap/utils/user'
 import { useQuery } from '@tanstack/react-query'
-import { CHAIN_QUERY_NAME, getChainId } from 'config/chains'
+import { DEFAULT_INPUT_CURRENCY } from 'config/constants/exchange'
 import dayjs from 'dayjs'
 import { useTradeExactIn, useTradeExactOut } from 'hooks/Trades'
 import { useActiveChainId } from 'hooks/useActiveChainId'
-import { useAutoSlippageWithFallback } from 'hooks/useAutoSlippageWithFallback'
+import { useBestAMMTrade } from 'hooks/useBestAMMTrade'
 import { useGetENSAddressByName } from 'hooks/useGetENSAddressByName'
 import useNativeCurrency from 'hooks/useNativeCurrency'
 import { useAtom, useAtomValue } from 'jotai'
@@ -18,10 +18,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ChartPeriod, chainIdToExplorerInfoChainName, explorerApiClient } from 'state/info/api/client'
 import { isAddressEqual, safeGetAddress } from 'utils'
 import { computeSlippageAdjustedAmounts } from 'utils/exchange'
-import { useBridgeAvailableRoutes } from 'views/Swap/Bridge/hooks'
+import { getTokenAddress } from 'views/Swap/components/Chart/utils'
 import { useAccount } from 'wagmi'
-import { DEFAULT_INPUT_CURRENCY } from 'config/constants/exchange'
-import replaceBrowserHistoryMultiple from '@pancakeswap/utils/replaceBrowserHistoryMultiple'
+import { PairDataTimeWindowEnum } from '@pancakeswap/uikit'
 import { useCurrencyBalances } from '../wallet/hooks'
 import { Field, replaceSwapState } from './actions'
 import { SwapState, swapReducerAtom } from './reducer'
@@ -50,6 +49,57 @@ function involvesAddress(trade: Trade<Currency, Currency, TradeType>, checksumme
 }
 
 // Get swap price for single token disregarding slippage and price impact
+export function useSingleTokenSwapInfo(
+  inputCurrencyId: string | undefined,
+  inputCurrency: Currency | undefined | null,
+  outputCurrencyId: string | undefined,
+  outputCurrency: Currency | undefined | null,
+  enabled = true,
+): { [key: string]: number } {
+  const { chainId } = useActiveChainId()
+  const token0Address = useMemo(() => getTokenAddress(chainId, inputCurrencyId), [chainId, inputCurrencyId])
+  const token1Address = useMemo(() => getTokenAddress(chainId, outputCurrencyId), [chainId, outputCurrencyId])
+
+  const amount = useMemo(() => tryParseAmount('1', inputCurrency ?? undefined), [inputCurrency])
+
+  const { trade: bestTradeExactIn } = useBestAMMTrade({
+    amount,
+    currency: outputCurrency,
+    baseCurrency: inputCurrency,
+    tradeType: TradeType.EXACT_INPUT,
+    maxSplits: 0,
+    v2Swap: true,
+    v3Swap: true,
+    stableSwap: true,
+    type: 'quoter',
+    autoRevalidate: false,
+    enabled,
+  })
+  if (!inputCurrency || !outputCurrency || !bestTradeExactIn) {
+    return {}
+  }
+
+  let inputTokenPrice = 0
+  try {
+    inputTokenPrice = parseFloat(
+      new Price({
+        baseAmount: bestTradeExactIn.inputAmount,
+        quoteAmount: bestTradeExactIn.outputAmount,
+      }).toSignificant(6),
+    )
+  } catch (error) {
+    //
+  }
+  if (!inputTokenPrice) {
+    return {}
+  }
+  const outputTokenPrice = 1 / inputTokenPrice
+
+  return {
+    [token0Address]: inputTokenPrice,
+    [token1Address]: outputTokenPrice,
+  }
+}
 
 // from the current swap inputs, compute the best trade and return it.
 export function useDerivedSwapInfo(
@@ -78,7 +128,6 @@ export function useDerivedSwapInfo(
   )
 
   const isExactIn: boolean = independentField === Field.INPUT
-
   const parsedAmount = tryParseAmount(typedValue, (isExactIn ? inputCurrency : outputCurrency) ?? undefined)
 
   const bestTradeExactIn = useTradeExactIn(isExactIn ? parsedAmount : undefined, outputCurrency ?? undefined)
@@ -119,8 +168,8 @@ export function useDerivedSwapInfo(
   ) {
     inputError = inputError ?? t('Invalid recipient')
   }
-  // @ts-ignore
-  const { slippageTolerance: allowedSlippage } = useAutoSlippageWithFallback()
+
+  const [allowedSlippage] = useUserSlippage()
 
   const slippageAdjustedAmounts = v2Trade && allowedSlippage && computeSlippageAdjustedAmounts(v2Trade, allowedSlippage)
 
@@ -168,24 +217,12 @@ export function queryParametersToSwapState(
   nativeSymbol?: string,
   defaultOutputCurrency?: string,
 ): SwapState {
-  // Parse chains
-  const inputChain = parsedQs.chain
-  const outputChain = parsedQs.chainOut
-
-  const inputChainId = typeof inputChain === 'string' ? getChainId(inputChain) : undefined
-  const outputChainId = typeof outputChain === 'string' ? getChainId(outputChain) : undefined
-
-  const recipient = validatedRecipient(parsedQs.recipient)
-
-  // Parse currencies
-  let inputCurrency =
-    safeGetAddress(parsedQs.inputCurrency) ||
-    (inputChainId ? Native.onChain(inputChainId).symbol : nativeSymbol || DEFAULT_INPUT_CURRENCY)
+  let inputCurrency = safeGetAddress(parsedQs.inputCurrency) || (nativeSymbol ?? DEFAULT_INPUT_CURRENCY)
   let outputCurrency =
     typeof parsedQs.outputCurrency === 'string'
-      ? safeGetAddress(parsedQs.outputCurrency) || (outputChainId ? Native.onChain(outputChainId).symbol : nativeSymbol)
+      ? safeGetAddress(parsedQs.outputCurrency) || nativeSymbol
       : defaultOutputCurrency
-  if (inputCurrency === outputCurrency && inputChainId === outputChainId) {
+  if (inputCurrency === outputCurrency) {
     if (typeof parsedQs.outputCurrency === 'string') {
       inputCurrency = ''
     } else {
@@ -193,14 +230,14 @@ export function queryParametersToSwapState(
     }
   }
 
+  const recipient = validatedRecipient(parsedQs.recipient)
+
   return {
     [Field.INPUT]: {
       currencyId: inputCurrency,
-      chainId: inputChainId,
     },
     [Field.OUTPUT]: {
       currencyId: outputCurrency,
-      chainId: outputChainId,
     },
     typedValue: parseTokenAmountURLParameter(parsedQs.exactAmount),
     independentField: parseIndependentFieldURLParameter(parsedQs.exactField),
@@ -217,120 +254,30 @@ export function useDefaultsFromURLSearch():
   const { chainId } = useActiveChainId()
   const [, dispatch] = useAtom(swapReducerAtom)
   const native = useNativeCurrency()
-  const { query, pathname, isReady } = useRouter()
+  const { query, isReady } = useRouter()
   const [result, setResult] = useState<
-    | {
-        inputCurrencyId: string | undefined
-        outputCurrencyId: string | undefined
-        inputChainId: number | undefined
-        outputChainId: number | undefined
-      }
-    | undefined
+    { inputCurrencyId: string | undefined; outputCurrencyId: string | undefined } | undefined
   >()
-
-  const { data: supportedBridgeChains, isPending: isSupportedBridgePending } = useBridgeAvailableRoutes()
 
   useEffect(() => {
     if (!chainId || !native || !isReady) return
-
-    const defaultOutputCurrency =
-      CAKE[chainId]?.address ?? STABLE_COIN[chainId]?.address ?? USDC[chainId]?.address ?? USDT[chainId]?.address
-
-    const parsed = queryParametersToSwapState(query, native.symbol, defaultOutputCurrency)
-
-    let finalInputCurrencyId = parsed[Field.INPUT].currencyId
-    let finalOutputCurrencyId = parsed[Field.OUTPUT].currencyId
-
-    let finalInputChainId = parsed[Field.INPUT].chainId
-    let finalOutputChainId = parsed[Field.OUTPUT].chainId
-
-    if (isSupportedBridgePending && finalInputChainId !== finalOutputChainId) {
-      return
-    }
-
-    const isNotTwapOrLimitPath = !['twap', 'limit'].some((p) => pathname.includes(p))
-
-    let switchedToFallback = false
-
-    // Set input currency to default (native currency) if chain is changed by user
-    // and input currency is on different chain
-    if (finalInputChainId && finalInputChainId !== chainId) {
-      finalInputCurrencyId = native.symbol
-      finalInputChainId = chainId
-
-      const isOutputChainSupported =
-        finalOutputChainId &&
-        isNotTwapOrLimitPath &&
-        supportedBridgeChains?.some(
-          (route) => route.originChainId === finalInputChainId && route.destinationChainId === finalOutputChainId,
-        )
-
-      // If now input and output currencies are the same,
-      // OR if output chain is NOT supported by the bridge,
-      // set output currency to the default value
-      if (
-        !isOutputChainSupported ||
-        (finalOutputCurrencyId === finalInputCurrencyId && finalOutputChainId === finalInputChainId)
-      ) {
-        finalOutputCurrencyId = defaultOutputCurrency
-        finalOutputChainId = chainId
-      }
-      switchedToFallback = true
-    }
-
-    if (finalOutputChainId && finalOutputChainId !== chainId) {
-      const isOutputChainSupported =
-        isNotTwapOrLimitPath &&
-        supportedBridgeChains?.some(
-          (route) =>
-            route.originChainId === (finalInputChainId || chainId) && route.destinationChainId === finalOutputChainId,
-        )
-
-      if (!isOutputChainSupported) {
-        finalOutputCurrencyId = defaultOutputCurrency
-        finalOutputChainId = chainId
-      }
-      switchedToFallback = true
-    }
-
-    // If input and output currencies are the same, set output currency to native currency (other default currency)
-    if (finalInputCurrencyId === finalOutputCurrencyId && finalOutputChainId === finalInputChainId) {
-      if (finalOutputCurrencyId !== native.symbol) {
-        finalOutputCurrencyId = native.symbol
-      } else {
-        finalOutputCurrencyId = defaultOutputCurrency
-      }
-      switchedToFallback = true
-    }
+    const parsed = queryParametersToSwapState(
+      query,
+      native.symbol,
+      CAKE[chainId]?.address ?? STABLE_COIN[chainId]?.address ?? USDC[chainId]?.address ?? USDT[chainId]?.address,
+    )
 
     dispatch(
       replaceSwapState({
         typedValue: parsed.typedValue,
         field: parsed.independentField,
-        inputCurrencyId: finalInputCurrencyId,
-        outputCurrencyId: finalOutputCurrencyId,
-        inputChainId: finalInputChainId || chainId,
-        outputChainId: finalOutputChainId || chainId,
+        inputCurrencyId: parsed[Field.INPUT].currencyId,
+        outputCurrencyId: parsed[Field.OUTPUT].currencyId,
         recipient: null,
       }),
     )
-
-    if (switchedToFallback) {
-      replaceBrowserHistoryMultiple({
-        inputCurrency: finalInputCurrencyId,
-        outputCurrency: finalOutputCurrencyId,
-        chain: CHAIN_QUERY_NAME[finalInputChainId || chainId],
-        chainOut: CHAIN_QUERY_NAME[finalOutputChainId || chainId],
-      })
-    }
-
-    setResult({
-      inputCurrencyId: finalInputCurrencyId,
-      outputCurrencyId: finalOutputCurrencyId,
-      inputChainId: finalInputChainId || chainId,
-      outputChainId: finalOutputChainId || chainId,
-    })
-  }, [dispatch, chainId, query, native, isReady, pathname, supportedBridgeChains, isSupportedBridgePending])
+    setResult({ inputCurrencyId: parsed[Field.INPUT].currencyId, outputCurrencyId: parsed[Field.OUTPUT].currencyId })
+  }, [dispatch, chainId, query, native, isReady])
 
   return result
 }

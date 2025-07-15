@@ -50,7 +50,7 @@ export const usePoolChartVolumeData = (
   const chainName = useExplorerChainNameByQuery()
 
   return useQuery({
-    queryKey: ['poolChartVolumeData', chainName, address, protocol, period],
+    queryKey: ['poolChartVolumeData', chainName, address, protocol],
     queryFn: () => fetchChartVolumeData(address!, chainName!, protocol!, period),
     enabled: !!address && !!protocol && !!chainName,
     ...QUERY_SETTINGS_IMMUTABLE,

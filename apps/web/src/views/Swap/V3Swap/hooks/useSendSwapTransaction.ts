@@ -4,6 +4,8 @@ import { TradeType } from '@pancakeswap/sdk'
 import { SmartRouter } from '@pancakeswap/smart-router'
 import { formatAmount } from '@pancakeswap/utils/formatFractions'
 import truncateHash from '@pancakeswap/utils/truncateHash'
+import { useUserSlippage } from '@pancakeswap/utils/user'
+import { INITIAL_ALLOWED_SLIPPAGE } from 'config/constants'
 import { useMemo } from 'react'
 import { useSwapState } from 'state/swap/hooks'
 import { useTransactionAdder } from 'state/transactions/hooks'
@@ -22,9 +24,8 @@ import {
 } from 'viem'
 import { useSendTransaction } from 'wagmi'
 
-import { ClassicOrder } from '@pancakeswap/price-api-sdk'
-import { useAutoSlippageWithFallback } from 'hooks/useAutoSlippageWithFallback'
 import { usePaymaster } from 'hooks/usePaymaster'
+import { ClassicOrder } from '@pancakeswap/price-api-sdk'
 import { logger } from 'utils/datadog'
 import { viemClients } from 'utils/viem'
 import { isZero } from '../utils/isZero'
@@ -67,8 +68,7 @@ export default function useSendSwapTransaction(
   const addTransaction = useTransactionAdder()
   const { sendTransactionAsync } = useSendTransaction()
   const publicClient = viemClients[chainId as ChainId]
-  // @ts-ignore
-  const { slippageTolerance: allowedSlippage } = useAutoSlippageWithFallback()
+  const [allowedSlippage] = useUserSlippage() || [INITIAL_ALLOWED_SLIPPAGE]
   const { recipient } = useSwapState()
   const recipientAddress = recipient === null ? account : recipient
 
@@ -291,8 +291,4 @@ export const userRejectedError = (error: unknown): boolean => {
     error instanceof TransactionRejectedError ||
     (typeof error !== 'string' && isUserRejected(error))
   )
-}
-
-export const eip5792UserRejectUpgradeError = (error: unknown) => {
-  return error instanceof TransactionExecutionError && error.message.includes('user rejected the upgrade')
 }

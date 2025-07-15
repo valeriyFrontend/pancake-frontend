@@ -29,7 +29,6 @@ interface StakedAssetsProps {
   isSingleDepositToken0?: boolean
   onAdd?: () => void
   onRemove?: () => void
-  isDisabled?: boolean
 }
 
 export const StakedAssets = memo(function StakedAssets({
@@ -43,7 +42,6 @@ export const StakedAssets = memo(function StakedAssets({
   token1PriceUSD,
   isSingleDepositToken0,
   isSingleDepositToken,
-  isDisabled,
 }: StakedAssetsProps) {
   const { t } = useTranslation()
 
@@ -85,7 +83,7 @@ export const StakedAssets = memo(function StakedAssets({
           <ActionButton scale="md" onClick={onRemove} variant="secondary">
             <MinusIcon color="currentColor" width="1.5em" />
           </ActionButton>
-          <ActionButton scale="md" ml="0.5em" onClick={onAdd} variant="secondary" disabled={isDisabled}>
+          <ActionButton scale="md" ml="0.5em" onClick={onAdd} variant="secondary">
             <AddIcon color="currentColor" width="1.5em" />
           </ActionButton>
         </Flex>

@@ -33,7 +33,9 @@ export const STABLE_LP_TO_MIGRATE = [
 export function Step2() {
   const { address: account } = useAccount()
   const { t } = useTranslation()
-  const { data: { farmsWithPrice } = { farmsWithPrice: [] } } = useFarmsV3Public()
+  const {
+    data: { farmsWithPrice },
+  } = useFarmsV3Public()
 
   // fetch the user's balances of all tracked V2 LP tokens
   const trackedTokenPairs = useTrackedTokenPairs()
@@ -59,7 +61,7 @@ export function Step2() {
   const liquidityTokensWithBalances = useMemo(
     () =>
       tokenPairsWithLiquidityTokens.filter(({ liquidityToken }) =>
-        v2PairsBalances[`${liquidityToken.chainId}-${liquidityToken.address}`]?.greaterThan('0'),
+        v2PairsBalances[liquidityToken.address]?.greaterThan('0'),
       ),
     [tokenPairsWithLiquidityTokens, v2PairsBalances],
   )

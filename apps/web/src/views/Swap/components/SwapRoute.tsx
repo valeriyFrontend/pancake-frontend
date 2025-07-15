@@ -1,11 +1,9 @@
 import { Currency } from '@pancakeswap/sdk'
-import { RouteType } from '@pancakeswap/smart-router'
 import { ChevronRightIcon, Flex, Text } from '@pancakeswap/uikit'
-import { SHORT_SYMBOL } from 'components/NetworkSwitcher'
 import { Fragment, memo } from 'react'
 import { unwrappedToken } from 'utils/wrappedCurrency'
 
-export default memo(function SwapRoute({ path, type }: { path?: Currency[]; type?: RouteType }) {
+export default memo(function SwapRoute({ path }: { path?: Currency[] }) {
   return (
     <Flex flexWrap="wrap" width="100%" justifyContent="flex-end" alignItems="center">
       {path?.map((token, i) => {
@@ -17,7 +15,7 @@ export default memo(function SwapRoute({ path, type }: { path?: Currency[]; type
           <Fragment key={`${currency?.symbol}_${i}`}>
             <Flex alignItems="end">
               <Text fontSize="14px" ml="0.125rem" mr="0.125rem">
-                {currency?.symbol} {type === RouteType.BRIDGE ? `(${SHORT_SYMBOL[currency?.chainId]})` : ''}
+                {currency?.symbol}
               </Text>
             </Flex>
             {!isLastItem && <ChevronRightIcon color="textSubtle" width="20px" />}

@@ -1,3 +1,4 @@
+import { ChainId } from '@pancakeswap/chains'
 import { Currency, Token } from '@pancakeswap/sdk'
 import {
   ImageProps,
@@ -6,19 +7,41 @@ import {
   TokenPairImageProps as UIKitTokenPairImageProps,
   TokenPairLogo as UIKitTokenPairLogo,
 } from '@pancakeswap/uikit'
+import uriToHttp from '@pancakeswap/utils/uriToHttp'
 import { ASSET_CDN } from 'config/constants/endpoints'
 import { useMemo } from 'react'
-import {
-  getCurrencyLogoSrcs,
-  getImageUrlFromToken,
-  getImageUrlsFromToken,
-  tokenImageChainNameMapping,
-} from 'utils/tokenImages'
 
 interface TokenPairImageProps extends Omit<UIKitTokenPairImageProps, 'primarySrc' | 'secondarySrc'> {
   primaryToken: Currency
-  secondaryToken: Currency
+  secondaryToken: Token
   withChainLogo?: boolean
+}
+
+export const tokenImageChainNameMapping = {
+  [ChainId.BSC]: '',
+  [ChainId.ETHEREUM]: 'eth/',
+  [ChainId.POLYGON_ZKEVM]: 'polygon-zkevm/',
+  [ChainId.ZKSYNC]: 'zksync/',
+  [ChainId.ARBITRUM_ONE]: 'arbitrum/',
+  [ChainId.LINEA]: 'linea/',
+  [ChainId.BASE]: 'base/',
+  [ChainId.OPBNB]: 'opbnb/',
+}
+
+export const getImageUrlFromToken = (token: Currency) => {
+  const address = token?.isNative ? token.wrapped.address : token?.address
+
+  return token
+    ? token.isNative && token.chainId !== ChainId.BSC
+      ? `${ASSET_CDN}/web/native/${token.chainId}.png`
+      : `https://tokens.pancakeswap.finance/images/${tokenImageChainNameMapping[token.chainId]}${address}.png`
+    : ''
+}
+
+export const getImageUrlsFromToken = (token: Currency & { logoURI?: string | undefined }) => {
+  const uriLocations = token?.logoURI ? uriToHttp(token?.logoURI) : []
+  const imageUri = getImageUrlFromToken(token)
+  return [...uriLocations, imageUri]
 }
 
 export const getChainLogoUrlFromChainId = (chainId: number) => `${ASSET_CDN}/web/chains/${chainId}.png`
@@ -50,10 +73,13 @@ export const TokenPairLogo: React.FC<React.PropsWithChildren<TokenPairImageProps
     () => (withChainLogo ? [getChainLogoUrlFromChainId(primaryToken.chainId)] : []),
     [withChainLogo, primaryToken.chainId],
   )
-  const primarySrcs = getCurrencyLogoSrcs(primaryToken as Currency & { logoURI?: string | undefined })
-  const secondarySrcs = getCurrencyLogoSrcs(secondaryToken as Currency & { logoURI?: string | undefined })
   return (
-    <UIKitTokenPairLogo primarySrcs={primarySrcs} secondarySrcs={secondarySrcs} chainLogoSrcs={chainLogo} {...props} />
+    <UIKitTokenPairLogo
+      primarySrcs={getImageUrlsFromToken(primaryToken)}
+      secondarySrcs={getImageUrlsFromToken(secondaryToken)}
+      chainLogoSrcs={chainLogo}
+      {...props}
+    />
   )
 }
 
@@ -64,5 +90,3 @@ interface TokenImageProps extends ImageProps {
 export const TokenImage: React.FC<React.PropsWithChildren<TokenImageProps>> = ({ token, ...props }) => {
   return <UIKitTokenImage src={getImageUrlFromToken(token)} {...props} />
 }
-
-export { getCurrencyLogoSrcs, getImageUrlFromToken, getImageUrlsFromToken, tokenImageChainNameMapping }

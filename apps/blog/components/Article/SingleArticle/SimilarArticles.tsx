@@ -10,13 +10,11 @@ import NextLink from 'next/link'
 import 'swiper/css/bundle'
 import { Autoplay } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/react'
-import { useRouter } from 'next/router'
 
 const SimilarArticles = () => {
-  const router = useRouter()
   const { t } = useTranslation()
   const { data: similarArticles } = useQuery<ArticleDataType[]>({
-    queryKey: ['/similarArticles', router?.query?.slug],
+    queryKey: ['/similarArticles'],
     enabled: false,
   })
 

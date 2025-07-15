@@ -1,11 +1,13 @@
 import { usePreviousValue } from '@pancakeswap/hooks'
 import { useTranslation } from '@pancakeswap/localization'
-import { ChainId, Currency, Token } from '@pancakeswap/sdk'
+import { Currency, Token } from '@pancakeswap/sdk'
 import { TokenList, WrappedTokenInfo } from '@pancakeswap/token-lists'
 import { enableList, removeList, useFetchListCallback } from '@pancakeswap/token-lists/react'
 import {
+  Button,
   CopyButton,
   FlexGap,
+  Heading,
   InjectedModalProps,
   MODAL_SWIPE_TO_CLOSE_VELOCITY,
   ModalBackButton,
@@ -15,6 +17,7 @@ import {
   ModalHeader,
   ModalTitle,
   Text,
+  useMatchBreakpoints,
 } from '@pancakeswap/uikit'
 import { CurrencyLogo, ImportList } from '@pancakeswap/widgets-internal'
 import AddToWalletButton from 'components/AddToWallet/AddToWalletButton'
@@ -23,19 +26,22 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAllLists } from 'state/lists/hooks'
 import { useListState } from 'state/lists/lists'
 import { styled } from 'styled-components'
-import { getTokenSymbolAlias } from 'utils/getTokenAlias'
 import CurrencySearch from './CurrencySearch'
 import ImportToken from './ImportToken'
 import Manage from './Manage'
 import { CurrencyModalView } from './types'
 
+const Footer = styled.div`
+  width: 100%;
+  background-color: ${({ theme }) => theme.colors.backgroundAlt};
+  text-align: center;
+`
 const StyledModalContainer = styled(ModalContainer)`
   width: 100%;
   min-width: 320px;
+  max-width: 420px !important;
   min-height: calc(var(--vh, 1vh) * 90);
-
-  ${({ theme }) => theme.mediaQueries.sm} {
-    max-width: 420px !important;
+  ${({ theme }) => theme.mediaQueries.md} {
     min-height: auto;
   }
 `
@@ -46,9 +52,7 @@ const StyledModalHeader = styled(ModalHeader)`
 
 const StyledModalBody = styled(ModalBody)`
   padding: 4px 24px 24px;
-  max-height: calc(90vh);
-
-  overflow-y: hidden;
+  overflow-y: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
   &::-webkit-scrollbar {
@@ -65,29 +69,20 @@ export interface CurrencySearchModalProps extends InjectedModalProps {
   showSearchInput?: boolean
   tokensToShow?: Token[]
   showCurrencyInHeader?: boolean
-  showSearchHeader?: boolean
-  modalTitle?: React.ReactNode
-  mode?: string
-  supportCrossChain?: boolean
 }
 
 export default function CurrencySearchModal({
-  supportCrossChain = false,
   onDismiss = () => null,
   onCurrencySelect,
   selectedCurrency,
   otherSelectedCurrency,
-  commonBasesType,
-  tokensToShow,
-  modalTitle,
   showCommonBases = true,
+  commonBasesType,
   showSearchInput,
+  tokensToShow,
   showCurrencyInHeader = false,
-  showSearchHeader,
-  mode,
 }: CurrencySearchModalProps) {
   const [modalView, setModalView] = useState<CurrencyModalView>(CurrencyModalView.search)
-  const [selectedChainId, setSelectedChainId] = useState<ChainId | undefined>(selectedCurrency?.chainId)
 
   const handleCurrencySelect = useCallback(
     (currency: Currency) => {
@@ -133,7 +128,7 @@ export default function CurrencySearchModal({
 
   const config = {
     [CurrencyModalView.search]: { title: t('Select a Token'), onBack: undefined },
-    [CurrencyModalView.manage]: { title: t('Manage Tokens'), onBack: () => setModalView(CurrencyModalView.search) },
+    [CurrencyModalView.manage]: { title: t('Manage'), onBack: () => setModalView(CurrencyModalView.search) },
     [CurrencyModalView.importToken]: {
       title: t('Import Tokens'),
       onBack: () =>
@@ -141,17 +136,18 @@ export default function CurrencySearchModal({
     },
     [CurrencyModalView.importList]: { title: t('Import List'), onBack: () => setModalView(CurrencyModalView.search) },
   }
+  const { isMobile } = useMatchBreakpoints()
   const wrapperRef = useRef<HTMLDivElement>(null)
   const [height, setHeight] = useState<number | undefined>(undefined)
 
   useEffect(() => {
     if (!wrapperRef.current) return
-
-    setHeight(wrapperRef.current.offsetHeight)
+    setHeight(wrapperRef.current.offsetHeight - 330)
   }, [])
 
   return (
     <StyledModalContainer
+      drag={isMobile ? 'y' : false}
       dragConstraints={{ top: 0, bottom: 600 }}
       dragElastic={{ top: 0 }}
       dragSnapToOrigin
@@ -164,77 +160,65 @@ export default function CurrencySearchModal({
       }}
       ref={wrapperRef}
     >
-      {(!showSearchHeader || modalView !== CurrencyModalView.search) && (
-        <StyledModalHeader>
-          <ModalTitle>
-            {config[modalView].onBack && <ModalBackButton onBack={config[modalView].onBack} />}
-            {showCurrencyInHeader && selectedCurrency ? (
-              <>
-                <CurrencyLogo
-                  size="32px"
-                  showChainLogo={supportCrossChain}
-                  currency={selectedCurrency}
-                  style={{ borderRadius: '50%' }}
-                />
-                <Text px="8px" bold fontSize="20px">
-                  {getTokenSymbolAlias(
-                    selectedCurrency.wrapped.address,
-                    selectedCurrency.chainId,
-                    selectedCurrency.symbol,
-                  )}
-                </Text>
-                {!selectedCurrency.isNative && (
-                  <FlexGap gap="8px" alignItems="center">
-                    <CopyButton
-                      data-dd-action-name="Copy token address"
-                      width="16px"
-                      buttonColor="textSubtle"
-                      text={selectedCurrency.wrapped.address}
-                      tooltipMessage={t('Token address copied')}
-                      defaultTooltipMessage={t('Copy token address')}
-                      tooltipPlacement="top"
-                    />
-                    <ViewOnExplorerButton
-                      address={selectedCurrency.wrapped.address}
-                      chainId={selectedCurrency.chainId}
-                      type="token"
-                      color="textSubtle"
-                      width="18px"
-                      tooltipPlacement="top"
-                    />
-                    <AddToWalletButton
-                      data-dd-action-name="Add to wallet"
-                      variant="text"
-                      p="0"
-                      height="auto"
-                      width="fit-content"
-                      tokenAddress={selectedCurrency.wrapped.address}
-                      tokenSymbol={selectedCurrency.symbol}
-                      tokenDecimals={selectedCurrency.decimals}
-                      tokenLogo={
-                        selectedCurrency.wrapped instanceof WrappedTokenInfo
-                          ? selectedCurrency.wrapped.logoURI
-                          : undefined
-                      }
-                      tooltipPlacement="top"
-                    />
-                  </FlexGap>
-                )}
-              </>
-            ) : (
-              <Text fontSize="18px" bold>
-                {config[modalView].title}
+      <StyledModalHeader>
+        <ModalTitle>
+          {config[modalView].onBack && <ModalBackButton onBack={config[modalView].onBack} />}
+
+          {showCurrencyInHeader && selectedCurrency ? (
+            <>
+              <CurrencyLogo currency={selectedCurrency} style={{ borderRadius: '50%' }} />
+              <Text p="2px 6px" bold>
+                {selectedCurrency.symbol}
               </Text>
-            )}
-          </ModalTitle>
-          <ModalCloseButton onDismiss={onDismiss} />
-        </StyledModalHeader>
-      )}
+              {!selectedCurrency.isNative && (
+                <FlexGap ml={isMobile ? '8px' : '4px'} alignItems="center">
+                  <CopyButton
+                    data-dd-action-name="Copy token address"
+                    width="16px"
+                    buttonColor="textSubtle"
+                    text={selectedCurrency.wrapped.address}
+                    tooltipMessage={t('Token address copied')}
+                    defaultTooltipMessage={t('Copy token address')}
+                    tooltipPlacement="top"
+                  />
+                  <ViewOnExplorerButton
+                    address={selectedCurrency.wrapped.address}
+                    chainId={selectedCurrency.chainId}
+                    type="token"
+                    color="textSubtle"
+                    width="18px"
+                    ml={isMobile ? '18px' : '12px'}
+                    tooltipPlacement="top"
+                  />
+                  <AddToWalletButton
+                    data-dd-action-name="Add to wallet"
+                    variant="text"
+                    p="0"
+                    ml={isMobile ? '21px' : '15px'}
+                    height="auto"
+                    width="fit-content"
+                    tokenAddress={selectedCurrency.wrapped.address}
+                    tokenSymbol={selectedCurrency.symbol}
+                    tokenDecimals={selectedCurrency.decimals}
+                    tokenLogo={
+                      selectedCurrency.wrapped instanceof WrappedTokenInfo
+                        ? selectedCurrency.wrapped.logoURI
+                        : undefined
+                    }
+                    tooltipPlacement="top"
+                  />
+                </FlexGap>
+              )}
+            </>
+          ) : (
+            <Heading>{config[modalView].title}</Heading>
+          )}
+        </ModalTitle>
+        <ModalCloseButton onDismiss={onDismiss} />
+      </StyledModalHeader>
       <StyledModalBody>
         {modalView === CurrencyModalView.search ? (
           <CurrencySearch
-            onSettingsClick={() => setModalView(CurrencyModalView.manage)}
-            supportCrossChain={supportCrossChain}
             onCurrencySelect={handleCurrencySelect}
             selectedCurrency={selectedCurrency}
             otherSelectedCurrency={otherSelectedCurrency}
@@ -245,13 +229,6 @@ export default function CurrencySearchModal({
             setImportToken={setImportToken}
             height={height}
             tokensToShow={tokensToShow}
-            showChainLogo={supportCrossChain}
-            showSearchHeader={showSearchHeader}
-            headerTitle={modalTitle}
-            onDismiss={onDismiss}
-            mode={mode}
-            setSelectedChainId={setSelectedChainId}
-            selectedChainId={selectedChainId}
           />
         ) : modalView === CurrencyModalView.importToken && importToken ? (
           <ImportToken tokens={[importToken]} handleCurrencySelect={handleCurrencySelect} />
@@ -270,9 +247,22 @@ export default function CurrencySearchModal({
             setImportToken={setImportToken}
             setImportList={setImportList}
             setListUrl={setListUrl}
-            chainId={selectedChainId}
           />
-        ) : null}
+        ) : (
+          ''
+        )}
+        {modalView === CurrencyModalView.search && (
+          <Footer>
+            <Button
+              scale="sm"
+              variant="text"
+              onClick={() => setModalView(CurrencyModalView.manage)}
+              className="list-token-manage-button"
+            >
+              {t('Manage Tokens')}
+            </Button>
+          </Footer>
+        )}
       </StyledModalBody>
     </StyledModalContainer>
   )

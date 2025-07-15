@@ -73,12 +73,13 @@ export function useSwapInputError(order: PriceOrder | undefined, currencyBalance
   }
 
   // compare input balance to max input based on version
-  // use the actual input amount instead of the slippage adjusted amount
-  const balanceIn = currencyBalances[Field.INPUT]
-  const actualInputAmount = order?.trade?.inputAmount
+  const [balanceIn, amountIn] = [
+    currencyBalances[Field.INPUT],
+    slippageAdjustedAmounts ? slippageAdjustedAmounts[Field.INPUT] : null,
+  ]
 
-  if (balanceIn && actualInputAmount && balanceIn.lessThan(actualInputAmount)) {
-    inputError = t('Insufficient %symbol% balance', { symbol: actualInputAmount.currency.symbol })
+  if (balanceIn && amountIn && balanceIn.lessThan(amountIn)) {
+    inputError = t('Insufficient %symbol% balance', { symbol: amountIn.currency.symbol })
   }
 
   return inputError || ''

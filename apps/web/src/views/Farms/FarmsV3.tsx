@@ -1,5 +1,11 @@
 import { ChainId } from '@pancakeswap/chains'
-import { FarmWithStakedValue, filterFarmsByQuery, supportedChainIdV2, supportedChainIdV3 } from '@pancakeswap/farms'
+import {
+  FarmWithStakedValue,
+  bCakeSupportedChainId,
+  filterFarmsByQuery,
+  supportedChainIdV2,
+  supportedChainIdV3,
+} from '@pancakeswap/farms'
 import { useIntersectionObserver } from '@pancakeswap/hooks'
 import { useTranslation } from '@pancakeswap/localization'
 import {
@@ -32,14 +38,17 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useFarms, usePollFarmsAvgInfo, usePollFarmsWithUserData } from 'state/farms/hooks'
 import { V2FarmWithoutStakedValue, V3FarmWithoutStakedValue, type V3Farm } from 'state/farms/types'
 import { useFarmsV3WithPositionsAndBooster } from 'state/farmsV3/hooks'
+import { useCakeVaultUserData } from 'state/pools/hooks'
 import { ViewMode } from 'state/user/actions'
 import { useUserFarmStakedOnly, useUserFarmsViewMode } from 'state/user/hooks'
 import { styled } from 'styled-components'
 import { getFarmApr } from 'utils/apr'
 import { getStakedFarms } from 'views/Farms/utils/getStakedFarms'
+import { BCakeMigrationBanner } from 'views/Home/components/Banners/BCakeMigrationBanner'
 import { useAccount } from 'wagmi'
 import Table from './components/FarmTable/FarmTable'
 import { FarmTypesFilter } from './components/FarmTypesFilter'
+import { BCakeBoosterCard } from './components/YieldBooster/components/bCakeV3/BCakeBoosterCard'
 import { FarmsV3Context } from './context'
 import { FarmFlexWrapper, FarmH1, FarmH2 } from './styled'
 
@@ -204,6 +213,8 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
   const isInactive = pathname.includes('history')
   const isActive = !isInactive && !isArchived
 
+  useCakeVaultUserData()
+
   usePollFarmsWithUserData()
 
   // Users with no wallet connected should see 0 as Earned amount
@@ -217,6 +228,7 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [stakedOnly, , toggleStakedOnly] = useUserFarmStakedOnly(isActive)
   const [v3FarmOnly, setV3FarmOnly] = useState(false)
   const [v2FarmOnly, setV2FarmOnly] = useState(false)
+  const [boostedOnly, setBoostedOnly] = useState(false)
   const [stableSwapOnly, setStableSwapOnly] = useState(false)
   const [farmTypesEnableCount, setFarmTypesEnableCount] = useState(0)
 
@@ -292,11 +304,12 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
       chosenFs = stakedOnly ? farmsList(stakedArchivedFarms) : farmsList(archivedFarms)
     }
 
-    if (v3FarmOnly || v2FarmOnly || stableSwapOnly) {
+    if (v3FarmOnly || v2FarmOnly || boostedOnly || stableSwapOnly) {
       const filterFarmsWithTypes = chosenFs.filter(
         (farm) =>
           (v3FarmOnly && farm.version === 3) ||
           (v2FarmOnly && farm.version === 2 && !farm.isStable) ||
+          (boostedOnly && ((farm.boosted && farm.version === 3) || (farm.version === 2 && farm.bCakeWrapperAddress))) ||
           (stableSwapOnly && farm.version === 2 && farm.isStable),
       )
 
@@ -316,6 +329,7 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
     inactiveFarms,
     stakedArchivedFarms,
     archivedFarms,
+    boostedOnly,
     stableSwapOnly,
     v3FarmOnly,
     v2FarmOnly,
@@ -393,6 +407,9 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
     <FarmsV3Context.Provider value={providerValue}>
       <PageHeader>
+        <Box mb="32px" mt="16px">
+          <BCakeMigrationBanner />
+        </Box>
         <Flex flexDirection="column">
           <FarmFlexWrapper>
             <Box style={{ flex: '1 1 100%' }}>
@@ -403,6 +420,7 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
                 {t('Stake LP tokens to earn.')}
               </FarmH2>
             </Box>
+            <Box>{bCakeSupportedChainId.includes(chainId) && <BCakeBoosterCard />}</Box>
           </FarmFlexWrapper>
         </Flex>
       </PageHeader>
@@ -419,6 +437,8 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
                 handleSetV3FarmOnly={setV3FarmOnly}
                 v2FarmOnly={v2FarmOnly}
                 handleSetV2FarmOnly={setV2FarmOnly}
+                boostedOnly={boostedOnly}
+                handleSetBoostedOnly={setBoostedOnly}
                 stableSwapOnly={stableSwapOnly}
                 handleSetStableSwapOnly={setStableSwapOnly}
                 farmTypesEnableCount={farmTypesEnableCount}

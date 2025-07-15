@@ -15,13 +15,16 @@ import {
 import { FeeAmount } from '@pancakeswap/v3-sdk'
 import { FarmWidget } from '@pancakeswap/widgets-internal'
 import { GiftTooltip } from 'components/GiftTooltip/GiftTooltip'
+import { SwellTooltip } from 'components/SwellTooltip/SwellTooltip'
 import { TokenPairImage } from 'components/TokenImage'
+import { useHasSwellReward } from 'hooks/useHasSwellReward'
 import { styled } from 'styled-components'
 import { isAddressEqual } from 'utils'
 import { Address } from 'viem'
 import { bsc } from 'viem/chains'
 import { useHasCustomFarmLpTooltips } from 'views/Farms/hooks/useHasCustomFarmLpTooltips'
 import { useChainId } from 'wagmi'
+import BoostedTag from '../YieldBooster/components/BoostedTag'
 
 const { FarmAuctionTag, StableFarmTag, V2Tag, V3FeeTag } = FarmWidget.Tags
 const { MerklNotice } = FarmWidget
@@ -32,6 +35,7 @@ type ExpandableSectionProps = {
   isCommunityFarm?: boolean
   token: Token
   quoteToken: Token
+  boosted?: boolean
   isStable?: boolean
   version: 3 | 2
   feeAmount?: FeeAmount
@@ -41,8 +45,11 @@ type ExpandableSectionProps = {
   merklLink?: string
   merklUserLink?: string
   hasBothFarmAndMerkl?: boolean
+  isBoosted?: boolean
   lpAddress?: Address
   merklApr?: number
+  isBooster?: boolean
+  bCakeWrapperAddress?: Address
 }
 
 const Wrapper = styled(Flex)`
@@ -71,10 +78,13 @@ const CardHeading: React.FC<React.PropsWithChildren<ExpandableSectionProps>> = (
   hasBothFarmAndMerkl,
   merklApr,
   lpAddress,
+  isBooster,
+  bCakeWrapperAddress,
 }) => {
   const { t } = useTranslation()
   const chainId = useChainId()
-  const isReady = multiplier !== undefined
+  const isReady = multiplier !== undefined || bCakeWrapperAddress
+  const hasSwellReward = useHasSwellReward(lpAddress)
   const customTooltips = useHasCustomFarmLpTooltips(lpAddress)
 
   const multiplierTooltipContent = FarmMultiplierInfo({
@@ -136,6 +146,7 @@ const CardHeading: React.FC<React.PropsWithChildren<ExpandableSectionProps>> = (
           <Skeleton mb="4px" width={60} height={18} />
         )}
         <AutoRow gap="4px" justifyContent="flex-end">
+          {hasSwellReward && <SwellTooltip />}
           {customTooltips && customTooltips.tooltips}
           {isReady && isStable ? <StableFarmTag /> : version === 2 ? <V2Tag /> : null}
           {isReady && version === 3 && <V3FeeTag feeAmount={feeAmount} />}
@@ -150,6 +161,7 @@ const CardHeading: React.FC<React.PropsWithChildren<ExpandableSectionProps>> = (
           ) : (
             <Skeleton ml="4px" width={42} height={28} />
           )}
+          {isReady && isBooster && <BoostedTag mr="-4px" />}
         </AutoRow>
       </Flex>
     </Wrapper>

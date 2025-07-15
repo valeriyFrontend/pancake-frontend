@@ -19,7 +19,6 @@ import { keyframes, styled } from 'styled-components'
 import { useUserSlippage } from '@pancakeswap/utils/user'
 import { DEFAULT_SLIPPAGE_TOLERANCE } from 'components/Menu/GlobalSettings/TransactionSettings'
 import { useActiveChainId } from 'hooks/useActiveChainId'
-import { useAutoSlippageEnabled } from 'hooks/useAutoSlippageWithFallback'
 import { TOKEN_RISK, TOKEN_RISK_T, useTokenRisk } from './index'
 
 const appearAni = keyframes`
@@ -206,7 +205,6 @@ const PriceImpactDetails: React.FC = () => {
 const SlippageDetails: React.FC = () => {
   const { t } = useTranslation()
   const [, setUserSlippageTolerance] = useUserSlippage()
-  const [, setAutoSlippageEnabled] = useAutoSlippageEnabled()
 
   return (
     <FlexGap alignItems="flex-start">
@@ -216,14 +214,7 @@ const SlippageDetails: React.FC = () => {
             'You may only get the amount of “Minimum received” with a high slippage setting. Reset your slippage to avoid potential losses.',
           )}
         </Text>
-        <StyledTextButton
-          onClick={() => {
-            setAutoSlippageEnabled(false)
-            setUserSlippageTolerance(DEFAULT_SLIPPAGE_TOLERANCE)
-          }}
-          scale="sm"
-          px="0"
-        >
+        <StyledTextButton onClick={() => setUserSlippageTolerance(DEFAULT_SLIPPAGE_TOLERANCE)} scale="sm" px="0">
           {t('Reset Slippage')}
         </StyledTextButton>
       </FlexGap>

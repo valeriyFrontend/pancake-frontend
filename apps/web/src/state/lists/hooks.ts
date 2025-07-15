@@ -18,7 +18,7 @@ import mapValues from 'lodash/mapValues'
 import _pickBy from 'lodash/pickBy'
 import uniqBy from 'lodash/uniqBy'
 import { useMemo } from 'react'
-import { isNotUndefinedOrNull } from 'utils/isNotUndefinedOrNull'
+import { notEmpty } from 'utils/notEmpty'
 import DEFAULT_TOKEN_LIST from '../../config/constants/tokenLists/pancake-default.tokenlist.json'
 import ONRAMP_TOKEN_LIST from '../../config/constants/tokenLists/pancake-supported-onramp-currency-list.json'
 import UNSUPPORTED_TOKEN_LIST from '../../config/constants/tokenLists/pancake-unsupported.tokenlist.json'
@@ -167,7 +167,7 @@ export function listToTokenMap(list: TokenList, key?: string): TokenAddressMap {
       }
       return null
     })
-    .filter(isNotUndefinedOrNull)
+    .filter(notEmpty)
 
   const groupedTokenMap: { [chainId: string]: WrappedTokenInfo[] } = groupBy(tokenMap, 'chainId')
 
@@ -191,7 +191,7 @@ export function listToTokenMap(list: TokenList, key?: string): TokenAddressMap {
 // -------------------------------------
 //   Hooks
 // -------------------------------------
-export function useAllLists(chainId?: ChainId): {
+export function useAllLists(): {
   readonly [url: string]: {
     readonly current: TokenList | null
     readonly pendingUpdate: TokenList | null
@@ -199,9 +199,8 @@ export function useAllLists(chainId?: ChainId): {
     readonly error: string | null
   }
 } {
-  const { chainId: activeChainId } = useActiveChainId()
-  const selectedChainId = chainId ?? activeChainId
-  return useAllListsByChainId(selectedChainId)
+  const { chainId } = useActiveChainId()
+  return useAllListsByChainId(chainId)
 }
 export function useAllListsByChainId(chainId: number): {
   readonly [url: string]: {
@@ -228,10 +227,9 @@ function combineMaps(map1: TokenAddressMap, map2: TokenAddressMap): TokenAddress
 }
 
 // filter out unsupported lists
-export function useActiveListUrls(chainId?: ChainId): string[] | undefined {
-  const { chainId: activeChainId } = useActiveChainId()
-  const selectedChainId = chainId ?? activeChainId
-  return useActiveListUrlsByChainId(selectedChainId)
+export function useActiveListUrls(): string[] | undefined {
+  const { chainId } = useActiveChainId()
+  return useActiveListUrlsByChainId(chainId)
 }
 
 export function useActiveListUrlsByChainId(chainId: number): string[] | undefined {
@@ -265,12 +263,7 @@ export function useWarningTokenList(): TokenAddressMap {
   return useAtomValue(combinedTokenMapFromWarningUrlsAtom)
 }
 
-export function useIsListActive(url: string, chainId?: ChainId): boolean {
-  const activeListUrls = useActiveListUrls(chainId)
-  return useMemo(() => Boolean(activeListUrls?.includes(url)), [activeListUrls, url])
-}
-
-export function useIsListActiveByChainId(url: string, chainId: number): boolean {
-  const activeListUrls = useActiveListUrlsByChainId(chainId)
+export function useIsListActive(url: string): boolean {
+  const activeListUrls = useActiveListUrls()
   return useMemo(() => Boolean(activeListUrls?.includes(url)), [activeListUrls, url])
 }

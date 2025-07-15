@@ -1,11 +1,12 @@
-import { PriceOrder } from '@pancakeswap/price-api-sdk'
-import { Currency, CurrencyAmount } from '@pancakeswap/sdk'
-import tryParseAmount from '@pancakeswap/utils/tryParseAmount'
-import { useAllTypeBestTrade } from 'quoter/hook/useAllTypeBestTrade'
 import { useMemo } from 'react'
+
 import { Field } from 'state/swap/actions'
+
+import { PriceOrder } from '@pancakeswap/price-api-sdk'
 import { useCurrencyBalances } from 'state/wallet/hooks'
 import { useAccount } from 'wagmi'
+import { useAllTypeBestTrade } from '../../Swap/V3Swap/hooks/useAllTypeBestTrade'
+import { useSlippageAdjustedAmounts } from '../../Swap/V3Swap/hooks/useSlippageAdjustedAmounts'
 import { useSwapCurrency } from '../../Swap/V3Swap/hooks/useSwapCurrency'
 
 export function useUserInsufficientBalance(order: PriceOrder | undefined): boolean {
@@ -17,6 +18,7 @@ export function useUserInsufficientBalance(order: PriceOrder | undefined): boole
     outputCurrency ?? undefined,
   ])
 
+  const slippageAdjustedAmounts = useSlippageAdjustedAmounts(order)
   const isInsufficientBalance = useMemo(() => {
     const currencyBalances = {
       [Field.INPUT]: relevantTokenBalances[0],
@@ -25,40 +27,15 @@ export function useUserInsufficientBalance(order: PriceOrder | undefined): boole
     if (!account || !order || !tradeLoaded) {
       return false
     }
-
-    // use the actual input amount instead of the slippage adjusted amount
-    const balanceIn = currencyBalances[Field.INPUT]
-    const actualInputAmount = order.trade?.inputAmount
-
-    if (balanceIn && actualInputAmount && balanceIn.lessThan(actualInputAmount)) {
+    const [balanceIn, amountIn] = [
+      currencyBalances[Field.INPUT],
+      slippageAdjustedAmounts ? slippageAdjustedAmounts[Field.INPUT] : null,
+    ]
+    if (balanceIn && amountIn && balanceIn.lessThan(amountIn)) {
       return true
     }
     return false
-  }, [account, relevantTokenBalances, order, tradeLoaded])
-
-  return isInsufficientBalance
-}
-
-export function useUserInsufficientBalanceLight(
-  token: Currency,
-  userMaxAmount?: CurrencyAmount<Currency>,
-  inputText?: string,
-): boolean {
-  const { address: account } = useAccount()
-
-  const isInsufficientBalance = useMemo(() => {
-    if (!account || !userMaxAmount || !inputText) {
-      return false
-    }
-
-    const actualInputAmount = tryParseAmount(inputText, token)
-    const balanceIn = userMaxAmount
-
-    if (balanceIn && actualInputAmount && balanceIn.lessThan(actualInputAmount)) {
-      return true
-    }
-    return false
-  }, [account, userMaxAmount, inputText, token])
+  }, [account, relevantTokenBalances, slippageAdjustedAmounts, order, tradeLoaded])
 
   return isInsufficientBalance
 }

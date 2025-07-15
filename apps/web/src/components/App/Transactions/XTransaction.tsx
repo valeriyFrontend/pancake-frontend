@@ -1,19 +1,18 @@
-import { useCountdown } from '@pancakeswap/hooks'
+import { ModalV2, useModalV2, ChevronRightIcon, Text, FlexGap } from '@pancakeswap/uikit'
 import { useTranslation } from '@pancakeswap/localization'
-import { ChevronRightIcon, FlexGap, ModalV2, Text, useModalV2 } from '@pancakeswap/uikit'
+import { useCurrency } from 'hooks/Tokens'
+import { useMemo } from 'react'
+import { formatUnits } from 'viem'
+import { XSwapTransactionDetailModal } from 'views/Swap/x/XSwapTransactionDetail'
+import { GetXOrderReceiptResponseOrder } from 'views/Swap/x/api'
 import {
   TransactionListItem,
   TransactionListItemDesc,
   TransactionListItemTitle,
   TransactionStatus,
 } from '@pancakeswap/widgets-internal'
+import { useCountdown } from '@pancakeswap/hooks'
 import dayjs from 'dayjs'
-import { useCurrency } from 'hooks/Tokens'
-import { useMemo } from 'react'
-import { getFullChainNameById } from 'utils/getFullChainNameById'
-import { formatUnits } from 'viem'
-import { XSwapTransactionDetailModal } from 'views/Swap/x/XSwapTransactionDetail'
-import { GetXOrderReceiptResponseOrder } from 'views/Swap/x/api'
 
 export function XTransaction({ order }: { order: GetXOrderReceiptResponseOrder }) {
   const { t } = useTranslation()
@@ -49,9 +48,7 @@ export function XTransaction({ order }: { order: GetXOrderReceiptResponseOrder }
       <TransactionListItem
         onClick={modal.onOpen}
         status={status}
-        title={
-          <TransactionListItemTitle>PancakeSwap X ({getFullChainNameById(order.chainId)})</TransactionListItemTitle>
-        }
+        title={<TransactionListItemTitle>PancakeSwap X</TransactionListItemTitle>}
         action={
           <FlexGap gap="0.25rem" justifyContent="flex-end">
             {status === TransactionStatus.Pending ? <Countdown to={order.deadline} /> : null}

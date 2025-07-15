@@ -2,16 +2,17 @@ import { useTranslation } from '@pancakeswap/localization'
 import { FeeOptions } from '@pancakeswap/v3-sdk'
 import { useMemo } from 'react'
 
+import { useUserSlippage } from '@pancakeswap/utils/user'
+import { INITIAL_ALLOWED_SLIPPAGE } from 'config/constants'
 import { useSwapState } from 'state/swap/hooks'
 import { basisPointsToPercent } from 'utils/exchange'
 
 import { ClassicOrder } from '@pancakeswap/price-api-sdk'
 import { Permit2Signature } from '@pancakeswap/universal-router-sdk'
 import useAccountActiveChain from 'hooks/useAccountActiveChain'
-import { useAutoSlippageWithFallback } from 'hooks/useAutoSlippageWithFallback'
 import { Address } from 'viem'
 import useSendSwapTransaction from './useSendSwapTransaction'
-import { useSwapCallArguments, SwapCall } from './useSwapCallArguments'
+import { useSwapCallArguments } from './useSwapCallArguments'
 import type { TWallchainMasterInput, WallchainStatus } from './useWallchain'
 
 export enum SwapCallbackState {
@@ -24,7 +25,6 @@ export enum SwapCallbackState {
 interface UseSwapCallbackReturns {
   state: SwapCallbackState
   callback?: () => Promise<{ hash: Address }>
-  swapCalls?: SwapCall[]
   error?: string
   reason?: string
 }
@@ -49,7 +49,7 @@ export function useSwapCallback({
 }: UseSwapCallbackArgs): UseSwapCallbackReturns {
   const { t } = useTranslation()
   const { account, chainId } = useAccountActiveChain()
-  const { slippageTolerance: allowedSlippageRaw } = useAutoSlippageWithFallback()
+  const [allowedSlippageRaw] = useUserSlippage() || [INITIAL_ALLOWED_SLIPPAGE]
   const { recipient: recipientAddress } = useSwapState()
   const recipient = recipientAddress === null ? account : recipientAddress
 
@@ -78,7 +78,6 @@ export function useSwapCallback({
     return {
       state: SwapCallbackState.VALID,
       callback,
-      swapCalls,
     }
-  }, [swapCalls, trade, account, chainId, callback, recipient, recipientAddress, t])
+  }, [trade, account, chainId, callback, recipient, recipientAddress, t])
 }

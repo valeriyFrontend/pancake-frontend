@@ -1,32 +1,14 @@
 import { ChainId } from '@pancakeswap/chains'
-import { Protocol } from '@pancakeswap/farms'
 import { GraphQLClient } from 'graphql-request'
 import { useMemo } from 'react'
-import { usePoolInfo } from 'state/farmsV4/hooks'
 import { multiChainId } from 'state/info/constant'
 import { useChainNameByQuery } from 'state/info/hooks'
-import { isAddress } from 'viem'
+import { Block } from 'state/info/types'
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { chainIdToExplorerInfoChainName, explorerApiClient } from 'state/info/api/client'
 import { useExplorerChainNameByQuery } from 'state/info/api/hooks'
 import { components } from 'state/info/api/schema'
-import { fetchPoolsForToken } from 'state/info/queries/tokens/fetchPoolsForToken'
-import { fetchTokenChartData } from 'state/info/queries/tokens/fetchTokenChartData'
-import { fetchedTokenData } from 'state/info/queries/tokens/fetchTokenData'
-import { fetchedTokenDatas } from 'state/info/queries/tokens/fetchTokenDatas'
-import {
-  Block,
-  ChartDayData,
-  PoolChartEntry,
-  PoolDataForView,
-  PriceChartEntry,
-  ProtocolDataForView,
-  TokenChartEntry,
-  TokenDataForView,
-  Transaction,
-} from 'state/info/types'
-import { transformPoolData } from 'state/info/utils'
 import { getPercentChange } from 'views/V3Info/utils/data'
 import { fetchPoolChartData } from '../data/pool/chartData'
 import { fetchedPoolData } from '../data/pool/poolData'
@@ -36,8 +18,22 @@ import { fetchChartData } from '../data/protocol/chart'
 import { fetchProtocolData } from '../data/protocol/overview'
 import { fetchTopTransactions } from '../data/protocol/transactions'
 import { fetchSearchResults } from '../data/search'
+import { fetchTokenChartData } from '../data/token/chartData'
+import { fetchPoolsForToken } from '../data/token/poolsForToken'
 import { fetchPairPriceChartTokenData, fetchTokenPriceData } from '../data/token/priceData'
+import { fetchedTokenData, fetchedTokenDatas } from '../data/token/tokenData'
 import { fetchTokenTransactions } from '../data/token/transactions'
+import {
+  ChartDayData,
+  PoolChartEntry,
+  PoolData,
+  PriceChartEntry,
+  ProtocolData,
+  TokenChartEntry,
+  TokenData,
+  Transaction,
+} from '../types'
+import { transformPoolData } from '../utils'
 
 const QUERY_SETTINGS_IMMUTABLE = {
   retryDelay: 3000,
@@ -61,7 +57,7 @@ export const useProtocolChartData = (): ChartDayData[] | undefined => {
   return useMemo(() => chartData?.data ?? [], [chartData])
 }
 
-export const useProtocolData = (): ProtocolDataForView | undefined => {
+export const useProtocolData = (): ProtocolData | undefined => {
   const chainName = useChainNameByQuery()
   const chainId = multiChainId[chainName]
   const explorerChainName = useExplorerChainNameByQuery()
@@ -103,13 +99,7 @@ export const usePairPriceChartTokenData = (
     queryKey: [`v3/info/token/pairPriceChartToken/${address}/${duration}`, targetChainId ?? chainId],
 
     queryFn: async ({ signal }) => {
-      return fetchPairPriceChartTokenData(
-        address!,
-        chainIdToExplorerInfoChainName[chainId!],
-        Protocol.V3,
-        duration ?? 'day',
-        signal,
-      )
+      return fetchPairPriceChartTokenData(address!, chainIdToExplorerInfoChainName[chainId!], duration ?? 'day', signal)
     },
 
     enabled: Boolean(
@@ -169,7 +159,7 @@ export async function fetchTopTokens(chainName: components['schemas']['ChainName
           return acc
         },
         {} as {
-          [address: string]: TokenDataForView
+          [address: string]: TokenData
         },
       ),
       error: false,
@@ -185,7 +175,7 @@ export async function fetchTopTokens(chainName: components['schemas']['ChainName
 
 export const useTopTokensData = ():
   | {
-      [address: string]: TokenDataForView
+      [address: string]: TokenData
     }
   | undefined => {
   const chainName = useChainNameByQuery()
@@ -204,7 +194,16 @@ export const useTopTokensData = ():
 
 const graphPerPage = 50
 
-export const useTokenData = (address: string): TokenDataForView | undefined => {
+const tokenDataFetcher = (dataClient: GraphQLClient, tokenAddresses: string[], blocks?: Block[]) => {
+  const times = Math.ceil(tokenAddresses.length / graphPerPage)
+  const addressGroup: Array<string[]> = []
+  for (let i = 0; i < times; i++) {
+    addressGroup.push(tokenAddresses.slice(i * graphPerPage, (i + 1) * graphPerPage))
+  }
+  return Promise.all(addressGroup.map((d) => fetchedTokenDatas(dataClient, d, blocks)))
+}
+
+export const useTokenData = (address: string): TokenData | undefined => {
   const chainName = useChainNameByQuery()
   const chainId = multiChainId[chainName]
   const explorerChainName = useExplorerChainNameByQuery()
@@ -238,16 +237,15 @@ export const useTokenChartData = (address: string): TokenChartEntry[] | undefine
 export const useTokenPriceData = (
   address: string,
   duration: 'day' | 'week' | 'month' | 'year',
-  protocol: 'v3' | 'infinityCl' | 'infinityBin' = 'v3',
 ): PriceChartEntry[] | undefined => {
   const chainName = useChainNameByQuery()
   const chainId = multiChainId[chainName]
   const explorerChainName = useExplorerChainNameByQuery()
 
   const { data } = useQuery({
-    queryKey: [`${protocol}/info/token/tokenPriceData/${chainId}/${address}/${duration}`, chainId],
+    queryKey: [`v3/info/token/tokenPriceData/${chainId}/${address}/${duration}`, chainId],
 
-    queryFn: ({ signal }) => fetchTokenPriceData(address, protocol, duration, explorerChainName!, signal),
+    queryFn: ({ signal }) => fetchTokenPriceData(address, 'v3', duration, explorerChainName!, signal),
 
     enabled: Boolean(explorerChainName && address && address !== 'undefined'),
     ...QUERY_SETTINGS_IMMUTABLE,
@@ -296,7 +294,7 @@ export async function fetchTopPools(chainName: components['schemas']['ChainName'
           }
         },
         {} as {
-          [address: string]: PoolDataForView
+          [address: string]: PoolData
         },
       ),
       error: false,
@@ -312,7 +310,7 @@ export async function fetchTopPools(chainName: components['schemas']['ChainName'
 
 export const useTopPoolsData = ():
   | {
-      [address: string]: PoolDataForView
+      [address: string]: PoolData
     }
   | undefined => {
   const chainName = useChainNameByQuery()
@@ -331,7 +329,7 @@ export const useTopPoolsData = ():
   return data?.data
 }
 
-export const usePoolsDataForToken = (address: string): PoolDataForView[] | undefined => {
+export const usePoolsDataForToken = (address: string): PoolData[] | undefined => {
   const chainName = useChainNameByQuery()
   const explorerChainName = useExplorerChainNameByQuery()
 
@@ -347,7 +345,7 @@ export const usePoolsDataForToken = (address: string): PoolDataForView[] | undef
   return data?.data
 }
 
-export const usePoolData = (address: string): PoolDataForView | undefined => {
+export const usePoolData = (address: string): PoolData | undefined => {
   const chainName = useChainNameByQuery()
   const chainId = multiChainId[chainName]
   const explorerChainName = useExplorerChainNameByQuery()
@@ -383,76 +381,22 @@ export const usePoolChartData = (address: string): PoolChartEntry[] | undefined 
 
   const { data } = useQuery({
     queryKey: [`v3/info/pool/poolChartData/${chainId}/${address}`, chainId],
-    queryFn: ({ signal }) => fetchPoolChartData(Protocol.V3, explorerChainName!, address, signal),
+    queryFn: ({ signal }) => fetchPoolChartData('v3', explorerChainName!, address, signal),
     enabled: Boolean(explorerChainName && address && address !== 'undefined'),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
   return data?.data
 }
 
-const FEE_TIER_TO_TICK_SPACING = (feeTier: number): number => {
-  switch (feeTier) {
-    case 10000:
-      return 200
-    case 2500:
-      return 50
-    case 500:
-      return 10
-    case 100:
-      return 1
-    default:
-      throw Error(`Tick spacing for fee tier ${feeTier} undefined.`)
-  }
-}
-
 export const usePoolTickData = (address?: string): PoolTickData | undefined => {
   const chainName = useChainNameByQuery()
   const chainId = multiChainId[chainName]
   const explorerChainName = useExplorerChainNameByQuery()
-  const poolInfo = usePoolInfo({ poolAddress: address && isAddress(address) ? address : undefined, chainId })
 
   const { data } = useQuery({
-    queryKey: [`v3/info/pool/poolTickData/${chainId}/${address}`, chainId, poolInfo?.feeTier],
-    queryFn: ({ signal }) => {
-      if (!explorerChainName || !address || !poolInfo?.feeTier) {
-        return undefined
-      }
-      return fetchTicksSurroundingPrice({
-        poolAddress: address,
-        chainName: explorerChainName,
-        chainId,
-        signal,
-        protocol: Protocol.V3,
-        tickSpacing: FEE_TIER_TO_TICK_SPACING(poolInfo.feeTier),
-      })
-    },
-    enabled: Boolean(explorerChainName && address && poolInfo?.feeTier),
-    ...QUERY_SETTINGS_IMMUTABLE,
-  })
-  return data?.data ?? undefined
-}
-
-export const useInfinityCLPoolTickData = (address?: string, tickSpacing?: number): PoolTickData | undefined => {
-  const chainName = useChainNameByQuery()
-  const chainId = multiChainId[chainName]
-  const explorerChainName = useExplorerChainNameByQuery()
-
-  const { data } = useQuery({
-    queryKey: [`info/pool/poolTickData`, chainId, address, Protocol.InfinityCLAMM, tickSpacing],
-    queryFn: ({ signal }) => {
-      if (!explorerChainName || !address || !tickSpacing) {
-        return undefined
-      }
-      return fetchTicksSurroundingPrice({
-        poolAddress: address,
-        chainName: explorerChainName,
-        chainId,
-        signal,
-        protocol: Protocol.InfinityCLAMM,
-        tickSpacing,
-      })
-    },
-    enabled: Boolean(explorerChainName && address && tickSpacing),
+    queryKey: [`v3/info/pool/poolTickData/${chainId}/${address}`, chainId],
+    queryFn: ({ signal }) => fetchTicksSurroundingPrice(address!, explorerChainName!, chainId, undefined, signal),
+    enabled: Boolean(explorerChainName && address && address !== 'undefined'),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
   return data?.data ?? undefined

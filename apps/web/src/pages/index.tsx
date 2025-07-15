@@ -1,15 +1,14 @@
-import { Suspense } from 'react'
-import { HomeV2 } from 'views/HomeV2'
+import { CHAIN_IDS } from 'utils/wagmi'
+import SwapLayout from 'views/Swap/SwapLayout'
+import Swap from 'views/SwapSimplify'
 
-const IndexPage = () => {
-  return (
-    <Suspense>
-      <HomeV2 />
-    </Suspense>
-  )
-}
+const SwapPage = () => (
+  <SwapLayout>
+    <Swap />
+  </SwapLayout>
+)
 
-IndexPage.chains = []
-IndexPage.isShowV4IconButton = true
+SwapPage.chains = CHAIN_IDS
+SwapPage.screen = true
 
-export default IndexPage
+export default SwapPage

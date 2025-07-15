@@ -19,6 +19,7 @@ import {
 } from '@pancakeswap/uikit'
 import { ChainLogo } from 'components/Logo/ChainLogo'
 import { FetchStatus } from 'config/constants/types'
+import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import useAuth from 'hooks/useAuth'
 import useNativeCurrency from 'hooks/useNativeCurrency'
 import useTokenBalance, { useBSCCakeBalance } from 'hooks/useTokenBalance'
@@ -30,8 +31,7 @@ import { useState } from 'react'
 import { isMobile } from 'react-device-detect'
 import { getBlockExploreLink, getBlockExploreName } from 'utils'
 import { Address } from 'viem'
-import { useAccount, useBalance } from 'wagmi'
-import { useActiveChainId } from 'hooks/useActiveChainId'
+import { useBalance } from 'wagmi'
 
 const COLORS = {
   ETH: '#627EEA',
@@ -46,8 +46,7 @@ interface WalletInfoProps {
 
 const WalletInfo: React.FC<WalletInfoProps> = ({ hasLowNativeBalance, onDismiss }) => {
   const { t } = useTranslation()
-  const { chainId } = useActiveChainId()
-  const { address: account, chain } = useAccount()
+  const { account, chainId, chain } = useActiveWeb3React()
   const { domainName } = useDomainNameForAddress(account ?? '')
   const isBSC = chainId === ChainId.BSC
   const bnbBalance = useBalance({ address: account ?? undefined, chainId: ChainId.BSC })

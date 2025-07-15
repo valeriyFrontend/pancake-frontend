@@ -3,9 +3,8 @@ import { publicClient } from 'utils/viem'
 import { Address } from 'viem'
 import { useChainId } from 'wagmi'
 
-export const useIsSmartContract = (address?: Address, overrideChainId?: number): boolean => {
-  const activeChainId = useChainId()
-  const chainId = overrideChainId ?? activeChainId
+export const useIsSmartContract = (address?: Address): boolean => {
+  const chainId = useChainId()
 
   const { data } = useQuery({
     queryKey: ['useIsSmartContract', chainId, address],

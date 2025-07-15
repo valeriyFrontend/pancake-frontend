@@ -1,12 +1,11 @@
 import { useTranslation } from '@pancakeswap/localization'
-import { Button, Card, FlexGap, Tab, TabMenu, Text, useMatchBreakpoints } from '@pancakeswap/uikit'
+import { Button, Card, Tab, TabMenu, Text } from '@pancakeswap/uikit'
 import { NextLinkFromReactRouter } from '@pancakeswap/widgets-internal'
-import Page_ from 'components/Layout/Page'
+import Page from 'components/Layout/Page'
 import { useRouter } from 'next/router'
 import { PropsWithChildren, useMemo } from 'react'
 import styled from 'styled-components'
 import { PoolsBanner } from './components'
-import { AddLiquidityButton } from './components/AddLiquidityButton'
 import { PoolsPage } from './PoolsPage'
 import { PositionPage } from './PositionPage'
 
@@ -14,16 +13,6 @@ const StyledTab = styled(Tab)`
   padding: 0;
   & > a {
     padding: 8px;
-  }
-`
-
-const ButtonContainer = styled.div`
-  @media (max-width: 967px) {
-    min-width: 200px;
-    button {
-      width: 100%;
-      height: 50px;
-    }
   }
 `
 
@@ -72,18 +61,9 @@ const LegacyPage = () => {
   )
 }
 
-const Page = styled(Page_)`
-  padding: 8px;
-
-  ${({ theme }) => theme.mediaQueries.sm} {
-    padding: 24px;
-  }
-`
-
 export const UniversalFarms: React.FC<PropsWithChildren> = () => {
   const { t } = useTranslation()
   const { tabIdx } = usePageInfo()
-  const { isMobile, isMd } = useMatchBreakpoints()
 
   const tabsConfig = useMemo(() => {
     return {
@@ -117,17 +97,10 @@ export const UniversalFarms: React.FC<PropsWithChildren> = () => {
   return (
     <>
       <PoolsBanner additionLink={<LegacyPage />} />
-      <Page style={isMobile ? { padding: '0 16px 16px 16px' } : undefined}>
-        <FlexGap width="100%" alignItems="flex-end" justifyContent="space-between">
-          <TabMenu gap="8px" activeIndex={tabIdx} isShowBorderBottom={false}>
-            {Object.values(tabsConfig).map(({ menu }) => menu())}
-          </TabMenu>
-          {!isMobile && !isMd && (
-            <ButtonContainer>
-              <AddLiquidityButton scale="md" mb="12px" />
-            </ButtonContainer>
-          )}
-        </FlexGap>
+      <Page>
+        <TabMenu gap="8px" activeIndex={tabIdx} isShowBorderBottom={false}>
+          {Object.values(tabsConfig).map(({ menu }) => menu())}
+        </TabMenu>
         {tabsConfig[tabIdx].page()}
       </Page>
     </>

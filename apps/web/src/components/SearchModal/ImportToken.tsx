@@ -19,7 +19,6 @@ import {
 } from '@pancakeswap/uikit'
 import truncateHash from '@pancakeswap/utils/truncateHash'
 import { ListLogo } from '@pancakeswap/widgets-internal'
-import { useQuery } from '@tanstack/react-query'
 import AccessRisk, { TOKEN_RISK } from 'components/AccessRisk'
 import { ACCESS_TOKEN_SUPPORT_CHAIN_IDS } from 'components/AccessRisk/config/supportedChains'
 import { fetchRiskToken } from 'components/AccessRisk/utils/fetchTokenRisk'
@@ -29,16 +28,15 @@ import { useCombinedInactiveList } from 'state/lists/hooks'
 import { useAddUserToken } from 'state/user/hooks'
 import { getBlockExploreLink, getBlockExploreName } from 'utils'
 import { chains } from 'utils/wagmi'
+import { useQuery } from '@tanstack/react-query'
 
 interface ImportProps {
   tokens: Token[]
   handleCurrencySelect?: (currency: Currency) => void
-  chainId?: number
 }
 
-function ImportToken({ tokens, handleCurrencySelect, chainId: chainIdProp }: ImportProps) {
-  const { chainId: activeChainId } = useActiveChainId()
-  const chainId = chainIdProp || activeChainId
+function ImportToken({ tokens, handleCurrencySelect }: ImportProps) {
+  const { chainId } = useActiveChainId()
 
   const { t } = useTranslation()
 
@@ -74,7 +72,7 @@ function ImportToken({ tokens, handleCurrencySelect, chainId: chainIdProp }: Imp
           {t(
             'Anyone can create tokens on %network% with any name, including creating fake versions of existing tokens and tokens that claim to represent projects that do not have a token.',
             {
-              network: chains.find((c) => c.id === tokens?.[0]?.chainId || chainId)?.name,
+              network: chains.find((c) => c.id === chainId)?.name,
             },
           )}
           <br />

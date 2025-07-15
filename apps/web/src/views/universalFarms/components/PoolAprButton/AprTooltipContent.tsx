@@ -1,8 +1,8 @@
 import { useTranslation } from '@pancakeswap/localization'
 import { LinkExternal, Text } from '@pancakeswap/uikit'
-import { displayApr } from '@pancakeswap/utils/displayApr'
 import { PropsWithChildren } from 'react'
 import styled from 'styled-components'
+import { displayApr } from '../../utils/displayApr'
 
 const StyledLi = styled.li`
   flex-wrap: nowrap;
@@ -29,6 +29,7 @@ const StyledLi = styled.li`
 
 type AprValue = {
   value: number | `${number}`
+  boost?: number | `${number}`
 }
 
 type AprTooltipContentProps = {
@@ -51,17 +52,25 @@ export const AprTooltipContent: React.FC<PropsWithChildren<AprTooltipContentProp
   children,
 }) => {
   const { t } = useTranslation()
-  const cakeAprValue = Number(cakeApr?.value ?? 0)
+  const hasBoost = cakeApr?.boost && parseFloat(cakeApr.boost.toString()) > 0
   return (
     <>
       <Text>
         {t('Combined APR')}: <b>{displayApr(combinedApr)}</b>
       </Text>
       <ul>
-        {cakeApr && cakeAprValue ? (
+        {cakeApr ? (
           <li>
             {t('Farm APR')}: &nbsp;&nbsp;
-            <b>{displayApr(cakeAprValue)}</b>
+            {hasBoost ? (
+              <>
+                <b>{displayApr(Number(cakeApr.boost ?? 0))}</b>
+                &nbsp;&nbsp;
+              </>
+            ) : null}
+            <b style={{ textDecoration: hasBoost ? 'line-through' : 'none' }}>
+              {displayApr(Number(cakeApr.value ?? 0))}
+            </b>
           </li>
         ) : null}
         <li>
@@ -81,15 +90,18 @@ export const AprTooltipContent: React.FC<PropsWithChildren<AprTooltipContentProp
 
       {showDesc && (
         <>
-          <Text mt="10px">
-            {t(
-              'APRs are calculated using the total liquidity in the pool versus the total reward amount, actual APRs may be higher as some liquidity is not staked or in-range.',
-            )}
-          </Text>
-          <Text mt="10px">{t('APRs for individual positions may vary depending on the price range set.')}</Text>
+          <br />
+          {cakeApr?.boost && (
+            <Text>
+              {/* {t('Calculated using the total active liquidity staked versus the CAKE reward emissions for the farm.')} */}
+              {t(
+                'Calculated using the total liquidity in the pool versus the total reward amount. Actual APR may be higher as some liquidity is not staked or not in-range.',
+              )}
+            </Text>
+          )}
+          <Text mt="15px">{t('APRs for individual positions may vary depending on the configs.')}</Text>
         </>
       )}
-
       {children}
     </>
   )

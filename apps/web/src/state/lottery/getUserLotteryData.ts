@@ -2,7 +2,7 @@ import { GRAPH_API_LOTTERY } from 'config/constants/endpoints'
 import { LotteryTicket } from 'config/constants/types'
 import { gql, request } from 'graphql-request'
 import { LotteryResponse, LotteryUserGraphEntity, UserRound } from 'state/types'
-import { isNotUndefinedOrNull } from 'utils/isNotUndefinedOrNull'
+import { notEmpty } from 'utils/notEmpty'
 import { fetchUserTicketsForMultipleRounds } from './getUserTicketsData'
 import { fetchMultipleLotteries, getRoundIdsArray, hasRoundBeenClaimed } from './helpers'
 
@@ -51,7 +51,7 @@ const applyNodeDataToUserGraphResponse = (
         tickets: userNodeRound.userTickets,
       }
     })
-    .filter(isNotUndefinedOrNull)
+    .filter(notEmpty)
 
   // Return the rounds with combined data, plus all remaining subgraph rounds.
   const [lastCombinedDataRound] = nodeRoundsWithGraphData.slice(-1)

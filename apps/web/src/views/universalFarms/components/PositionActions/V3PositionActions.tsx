@@ -1,7 +1,7 @@
+import { useLatestTxReceipt } from 'state/farmsV4/state/accountPositions/hooks/useLatestTxReceipt'
 import { useTranslation } from '@pancakeswap/localization'
 import { Button, Flex, IconButton, MinusIcon, useModalV2 } from '@pancakeswap/uikit'
 import { useCallback, useMemo } from 'react'
-import { useLatestTxReceipt } from 'state/farmsV4/state/accountPositions/hooks/useLatestTxReceipt'
 import styled from 'styled-components'
 import { logGTMClickStakeFarmEvent } from 'utils/customGTMEventTracking'
 import useFarmV3Actions from 'views/Farms/hooks/v3/useFarmV3Actions'
@@ -9,10 +9,6 @@ import { useCheckShouldSwitchNetwork } from 'views/universalFarms/hooks'
 import { useV3CakeEarning } from 'views/universalFarms/hooks/useCakeEarning'
 import { V3StakeModal } from '../Modals/V3StakeModal'
 import { StopPropagation } from '../StopPropagation'
-
-const StyledButton = styled(Button)`
-  color: ${({ theme }) => theme.colors.primary60};
-`
 
 type ActionPanelProps = {
   removed: boolean
@@ -122,7 +118,7 @@ export const V3PositionActions = ({
             <MinusIcon color="primary" width="24px" />
           </IconButton>
         ) : (
-          <StyledButton
+          <Button
             scale="md"
             width={['100px']}
             style={{ alignSelf: 'center' }}
@@ -131,7 +127,7 @@ export const V3PositionActions = ({
             disabled={attemptingTxn || isSwitchingNetwork}
           >
             {t('Unstake')}
-          </StyledButton>
+          </Button>
         )}
         <V3StakeModal
           disabled={attemptingTxn || isSwitchingNetwork}

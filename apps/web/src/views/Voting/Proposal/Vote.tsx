@@ -114,7 +114,7 @@ const VoteComponent: React.FC<React.PropsWithChildren<VoteProps>> = ({
           </Heading>
           {account && isVeCakeVersion && (
             <Flex alignItems="center">
-              <Text color={notEnoughVeCake ? 'failure' : 'text'}>{t('Cake Balance')}:</Text>
+              <Text color={notEnoughVeCake ? 'failure' : 'text'}>{t('veCake Balance')}:</Text>
               <Balance
                 bold
                 fontSize="20px"
@@ -163,7 +163,7 @@ const VoteComponent: React.FC<React.PropsWithChildren<VoteProps>> = ({
                   </Message>
                 ) : notEnoughVeCake ? (
                   <Button m="auto" display="block" disabled>
-                    {t('Not enough CAKE')}
+                    {t('Not enough veCAKE')}
                   </Button>
                 ) : !isAbleToVote ? (
                   <Button m="auto" display="block" disabled>

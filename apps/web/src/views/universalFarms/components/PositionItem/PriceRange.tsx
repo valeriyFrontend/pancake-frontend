@@ -1,6 +1,6 @@
 import { useTranslation } from '@pancakeswap/localization'
-import { Currency, Price } from '@pancakeswap/swap-sdk-core'
-import { Flex, FlexGap, IconButton, SwapHorizIcon, useMatchBreakpoints } from '@pancakeswap/uikit'
+import { Currency, Price, Token } from '@pancakeswap/swap-sdk-core'
+import { IconButton, Row, SwapHorizIcon } from '@pancakeswap/uikit'
 import { Bound } from '@pancakeswap/widgets-internal'
 import { formatTickPrice } from 'hooks/v3/utils/formatTickPrice'
 import { memo, useCallback, useMemo, useState } from 'react'
@@ -8,8 +8,8 @@ import { memo, useCallback, useMemo, useState } from 'react'
 type PriceRangeProps = {
   quote?: Currency
   base?: Currency
-  priceUpper?: Price<Currency, Currency>
-  priceLower?: Price<Currency, Currency>
+  priceUpper?: Price<Token, Token>
+  priceLower?: Price<Token, Token>
   tickAtLimit: {
     LOWER?: boolean
     UPPER?: boolean
@@ -40,15 +40,8 @@ export const PriceRange = memo(({ base, quote, priceLower, priceUpper, tickAtLim
     [base?.symbol, quote?.symbol, priceLower, priceUpper, priceBaseInvert],
   )
 
-  const { isMobile } = useMatchBreakpoints()
-
   return priceUpper && priceLower ? (
-    <FlexGap
-      flexDirection={isMobile ? 'column' : 'row'}
-      aria-hidden
-      onClick={toggleSwitch}
-      alignItems={isMobile ? 'flex-start' : 'center'}
-    >
+    <Row aria-hidden onClick={toggleSwitch}>
       {t('Min %minAmount%', {
         minAmount: formatTickPrice(priceMin, tickAtLimit, Bound.LOWER, locale),
       })}{' '}
@@ -56,16 +49,13 @@ export const PriceRange = memo(({ base, quote, priceLower, priceUpper, tickAtLim
       {t('Max %maxAmount%', {
         maxAmount: formatTickPrice(priceMax, tickAtLimit, Bound.UPPER, locale),
       })}{' '}
-      {isMobile ? <br /> : <>&nbsp;</>}
-      <Flex alignItems="center">
-        {t('of %quote% per %base%', {
-          quote: quoteSymbol,
-          base: baseSymbol,
-        })}
-        <IconButton variant="text" scale="xs">
-          <SwapHorizIcon color="textSubtle" ml="2px" />
-        </IconButton>
-      </Flex>
-    </FlexGap>
+      {t('of %quote% per %base%', {
+        quote: quoteSymbol,
+        base: baseSymbol,
+      })}
+      <IconButton variant="text" scale="xs">
+        <SwapHorizIcon color="textSubtle" ml="2px" />
+      </IconButton>
+    </Row>
   ) : null
 })

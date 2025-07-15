@@ -6,7 +6,7 @@ import { useInfoStableSwapContract } from 'hooks/useContract'
 import { useContext, useMemo } from 'react'
 import { Field } from 'state/burn/actions'
 import { useRemoveLiquidityV2FormState } from 'state/burn/reducer'
-import { useTokenBalancesWithLoadingIndicator } from 'state/wallet/hooks'
+import { useTokenBalances } from 'state/wallet/hooks'
 import { Address } from 'viem'
 import { StablePair, useStablePair } from 'views/AddLiquidity/AddStableLiquidity/hooks/useStableLPDerivedMintInfo'
 import { StableConfigContext } from 'views/Swap/hooks/useStableConfig'
@@ -80,13 +80,11 @@ export function useStableDerivedBurnInfo(
   const { pair } = useStablePair(currencyA?.wrapped, currencyB?.wrapped)
 
   // balances
-  const [relevantTokenBalances] = useTokenBalancesWithLoadingIndicator(
+  const relevantTokenBalances = useTokenBalances(
     account ?? undefined,
     useMemo(() => [pair?.liquidityToken || undefined], [pair?.liquidityToken]),
   )
-  const userLiquidity: undefined | CurrencyAmount<Token> = pair?.liquidityToken
-    ? relevantTokenBalances?.[`${pair.liquidityToken.chainId}-${pair.liquidityToken.address}`]
-    : undefined
+  const userLiquidity: undefined | CurrencyAmount<Token> = relevantTokenBalances?.[pair?.liquidityToken?.address ?? '']
 
   let percentToRemove: Percent = new Percent('0', '100')
   // user specified a %

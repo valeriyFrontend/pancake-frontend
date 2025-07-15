@@ -1,10 +1,7 @@
 import { Flex, UserMenuItem, WarningIcon } from '@pancakeswap/uikit'
 import { useTranslation } from '@pancakeswap/localization'
 import { useAccount, useBalance } from 'wagmi'
-import { parseEther } from 'viem'
-
-// Define LOW_NATIVE_BALANCE here since we no longer import it from the old WalletModal
-export const LOW_NATIVE_BALANCE = parseEther('0.002', 'wei')
+import { LOW_NATIVE_BALANCE } from './WalletModal'
 
 interface WalletUserMenuItemProps {
   isWrongNetwork: boolean

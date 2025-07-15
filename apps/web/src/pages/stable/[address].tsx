@@ -12,9 +12,7 @@ import {
 } from '@pancakeswap/uikit'
 import { NextLinkFromReactRouter } from '@pancakeswap/widgets-internal'
 import { AppHeader } from 'components/App'
-import dynamic from 'next/dynamic'
 import { useMemo } from 'react'
-import { NextPageWithLayout } from 'utils/page.types'
 
 import { useRouter } from 'next/router'
 import { useStableSwapPairs } from 'state/swap/useStableSwapPairs'
@@ -22,25 +20,25 @@ import { styled } from 'styled-components'
 import { CHAIN_IDS } from 'utils/wagmi'
 import Page from 'views/Page'
 
-import { Protocol } from '@pancakeswap/farms'
 import { useTranslation } from '@pancakeswap/localization'
 import { CurrencyAmount } from '@pancakeswap/sdk'
-import { formatFiatNumber } from '@pancakeswap/utils/formatFiatNumber'
 import { LightGreyCard } from 'components/Card'
 import { CurrencyLogo } from 'components/Logo'
 import { usePoolTokenPercentage, useTotalUSDValue } from 'components/PositionCard'
-import { useActiveChainId } from 'hooks/useActiveChainId'
 import { useInfoStableSwapContract } from 'hooks/useContract'
-import { useTotalPriceUSD } from 'hooks/useTotalPriceUSD'
-import { useAccountPositionDetailByPool } from 'state/farmsV4/state/accountPositions/hooks'
-import { usePoolInfo } from 'state/farmsV4/state/extendPools/hooks'
 import { useSingleCallResult } from 'state/multicall/hooks'
-import { useLPApr } from 'state/swap/useLPApr'
-import { isAddressEqual } from 'utils'
 import currencyId from 'utils/currencyId'
 import { formatCurrencyAmount } from 'utils/formatCurrencyAmount'
-import { formatAmount } from 'utils/formatInfoNumbers'
 import { useAccount } from 'wagmi'
+import { Protocol } from '@pancakeswap/farms'
+import { useAccountPositionDetailByPool } from 'state/farmsV4/state/accountPositions/hooks'
+import { useActiveChainId } from 'hooks/useActiveChainId'
+import { usePoolInfo } from 'state/farmsV4/state/extendPools/hooks'
+import { formatFiatNumber } from '@pancakeswap/utils/formatFiatNumber'
+import { useTotalPriceUSD } from 'hooks/useTotalPriceUSD'
+import { useLPApr } from 'state/swap/useLPApr'
+import { formatAmount } from 'utils/formatInfoNumbers'
+import { isAddressEqual } from 'utils'
 
 export const BodyWrapper = styled(Card)`
   border-radius: 24px;
@@ -49,7 +47,7 @@ export const BodyWrapper = styled(Card)`
   z-index: 1;
 `
 
-function StablePoolPage() {
+export default function StablePoolPage() {
   const {
     t,
     currentLanguage: { locale },
@@ -305,10 +303,4 @@ function StablePoolPage() {
   )
 }
 
-const StablePage = dynamic(() => Promise.resolve(StablePoolPage), {
-  ssr: false,
-}) as NextPageWithLayout
-
-StablePage.chains = CHAIN_IDS
-
-export default StablePage
+StablePoolPage.chains = CHAIN_IDS

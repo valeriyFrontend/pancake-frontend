@@ -41,7 +41,6 @@ const sign = async (req: NextApiRequest, res: NextApiResponse) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // 'x-gray-env': 'infra',
         },
         body: JSON.stringify({
           address,

@@ -1,5 +1,5 @@
 import { useTranslation } from '@pancakeswap/localization'
-import { ChainId, Currency, WNATIVE } from '@pancakeswap/sdk'
+import { Currency, WNATIVE } from '@pancakeswap/sdk'
 import tryParseAmount from '@pancakeswap/utils/tryParseAmount'
 import useAccountActiveChain from 'hooks/useAccountActiveChain'
 import { useMemo } from 'react'
@@ -37,14 +37,7 @@ export default function useWrapCallback(
   const addTransaction = useTransactionAdder()
 
   return useMemo(() => {
-    if (
-      !wbnbContract ||
-      !chainId ||
-      !inputCurrency ||
-      !outputCurrency ||
-      inputCurrency.chainId !== outputCurrency.chainId
-    )
-      return NOT_APPLICABLE
+    if (!wbnbContract || !chainId || !inputCurrency || !outputCurrency) return NOT_APPLICABLE
 
     const sufficientBalance = inputAmount && balance && !balance.lessThan(inputAmount)
 
@@ -121,16 +114,4 @@ export function useIsWrapping(
   const { wrapType } = useWrapCallback(currencyA, currencyB, value)
 
   return wrapType !== WrapType.NOT_APPLICABLE
-}
-
-export function getIsWrapping(inputCurrency?: Currency, outputCurrency?: Currency, chainId?: ChainId): boolean {
-  if (!chainId || !inputCurrency || !outputCurrency) return false
-
-  if (inputCurrency?.isNative && WNATIVE[chainId]?.equals(outputCurrency)) {
-    return true
-  }
-  if (WNATIVE[chainId]?.equals(inputCurrency) && outputCurrency?.isNative) {
-    return true
-  }
-  return false
 }

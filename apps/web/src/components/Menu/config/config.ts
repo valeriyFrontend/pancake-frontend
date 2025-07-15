@@ -11,12 +11,11 @@ import {
   GameIcon,
   MenuItemsType,
   MoreIcon,
-  TradeIcon,
-  TradeFilledIcon,
   SwapFillIcon,
   SwapIcon,
 } from '@pancakeswap/uikit'
-import { SUPPORT_FARMS, SUPPORT_ONLY_BSC } from 'config/constants/supportChains'
+import { SUPPORT_CAKE_STAKING, SUPPORT_FARMS, SUPPORT_ONLY_BSC } from 'config/constants/supportChains'
+import { getOptionsUrl } from 'utils/getOptionsUrl'
 import { getPerpetualUrl } from 'utils/getPerpetualUrl'
 
 export type ConfigMenuDropDownItemsType = DropdownMenuItems & {
@@ -55,30 +54,34 @@ const config: (
       label: t('Trade'),
       icon: SwapIcon,
       fillIcon: SwapFillIcon,
-      href: '/swap',
+      href: '/',
       hideSubNav: true,
       items: [
         {
           label: t('Swap'),
-          href: '/swap',
+          href: '/',
+        },
+        {
+          label: t('Perps'),
+          href: getPerpetualUrl({
+            chainId,
+            languageCode,
+            isDark,
+          }),
+          confirmModalId: 'perpConfirmModal',
+          type: DropdownMenuItemType.EXTERNAL_LINK,
+        },
+        {
+          label: t('Options'),
+          href: getOptionsUrl(),
+          confirmModalId: 'optionsConfirmModal',
+          type: DropdownMenuItemType.EXTERNAL_LINK,
         },
         {
           label: t('Buy Crypto'),
           href: '/buy-crypto',
         },
       ].map((item) => addMenuItemSupported(item, chainId)),
-    },
-    {
-      label: t('Perps'),
-      icon: TradeIcon,
-      fillIcon: TradeFilledIcon,
-      href: getPerpetualUrl({
-        chainId,
-        languageCode,
-        isDark,
-      }),
-      hideSubNav: true,
-      confirmModalId: 'perpConfirmModal',
     },
     {
       label: t('Earn'),
@@ -99,9 +102,9 @@ const config: (
           supportChainIds: POSITION_MANAGERS_SUPPORTED_CHAINS,
         },
         {
-          label: t('veCake Redeem'),
-          href: '/cake-staking/redeem',
-          supportChainIds: POOL_SUPPORTED_CHAINS,
+          label: t('CAKE Staking'),
+          href: '/cake-staking',
+          supportChainIds: SUPPORT_CAKE_STAKING,
         },
         {
           label: t('Syrup Pools'),
@@ -125,9 +128,8 @@ const config: (
           label: t('Staking'),
           items: [
             {
-              label: t('veCake Redeem'),
-              href: '/cake-staking/redeem',
-              supportChainIds: POOL_SUPPORTED_CHAINS,
+              label: t('CAKE Staking'),
+              href: '/cake-staking',
             },
             {
               label: t('Syrup Pools'),
@@ -167,7 +169,7 @@ const config: (
           type: DropdownMenuItemType.EXTERNAL_LINK,
         },
         {
-          label: t('Prediction'),
+          label: t('Prediction (BETA)'),
           href: '/prediction',
           image: '/images/decorations/prediction.png',
           supportChainIds: PREDICTION_SUPPORTED_CHAINS,
@@ -176,6 +178,11 @@ const config: (
           label: t('Lottery'),
           href: '/lottery',
           image: '/images/decorations/lottery.png',
+        },
+        {
+          label: t('Quests'),
+          href: 'https://quest.pancakeswap.finance/quests',
+          type: DropdownMenuItemType.EXTERNAL_LINK,
         },
       ].map((item) => addMenuItemSupported(item, chainId)),
     },
@@ -188,10 +195,6 @@ const config: (
         {
           label: t('Info'),
           href: '/info/v3',
-        },
-        {
-          label: t('Burn Dashboard'),
-          href: '/burn-dashboard',
         },
         {
           label: t('IFO'),
@@ -211,8 +214,18 @@ const config: (
         {
           label: t('Voting'),
           image: '/images/voting/voting-bunny.png',
-          href: '/voting',
-          supportChainIds: SUPPORT_ONLY_BSC,
+          items: [
+            {
+              label: t('Proposals'),
+              href: '/voting',
+              supportChainIds: SUPPORT_ONLY_BSC,
+            },
+            {
+              label: t('Gauges'),
+              href: '/gauges-voting',
+              supportChainIds: SUPPORT_CAKE_STAKING,
+            },
+          ].map((item) => addMenuItemSupported(item, chainId)),
         },
         {
           type: DropdownMenuItemType.DIVIDER,

@@ -1,50 +1,37 @@
 import { useMatchBreakpoints } from '@pancakeswap/uikit'
-import { useTradingCompetitionAds } from 'components/AdPanel/Ads/AdTradingCompetition'
-import { AdsIds, useAdsConfigs } from 'components/AdPanel/hooks/useAdsConfig'
 import { useMemo } from 'react'
+import { AdCakeStaking } from './Ads/AdCakeStaking'
 import { AdCommon } from './Ads/AdCommon'
-import { AdCrossChain } from './Ads/AdCrossChain'
 import { AdIfo } from './Ads/AdIfo'
 import { AdPCSX } from './Ads/AdPCSX'
-import { AdSolana } from './Ads/AdSolana'
 import { AdSpringboard } from './Ads/AdSpringboard'
-import { commonLayoutWhitelistedPages } from './constants'
+import { AdTradingCompetitionAndy } from './Ads/AdTradingCompetition'
 import { ExpandableAd } from './Expandable/ExpandableAd'
+import { AdsIds } from './hooks/useAdsConfig'
 import { shouldRenderOnPages } from './renderConditions'
-import { AdSlide, Priority } from './types'
 import { useShouldRenderAdIfo } from './useShouldRenderAdIfo'
 
-const JULY_13_2025_TIMESTAMP = 1752364800000
+enum Priority {
+  FIRST_AD = 6,
+  VERY_HIGH = 5,
+  HIGH = 4,
+  MEDIUM = 3,
+  LOW = 2,
+  VERY_LOW = 1,
+}
 
 export const useAdConfig = () => {
   const { isDesktop } = useMatchBreakpoints()
-  const shouldRenderOnPage = useMemo(() => {
-    const shouldRender = shouldRenderOnPages(commonLayoutWhitelistedPages)
-    if (!shouldRender) return false
-
-    const shouldIncludeIsDesktop = Date.now() < JULY_13_2025_TIMESTAMP
-    return shouldIncludeIsDesktop ? isDesktop : true
-  }, [isDesktop])
+  const shouldRenderOnPage = shouldRenderOnPages(['/buy-crypto', '/', '/prediction'])
   const MAX_ADS = isDesktop ? 6 : 4
   const shouldRenderAdIfo = useShouldRenderAdIfo()
-  const configs = useAdsConfigs()
-  const tradingCompetitionAds = useTradingCompetitionAds()
-  const commonAdConfigs = useMemo(() => {
-    return Object.entries(configs)
-      .map(([key, value]) => {
-        if (value.ad) {
-          return {
-            id: value.id,
-            component: <AdCommon id={key as AdsIds} />,
-            priority: value.priority || undefined,
-          }
-        }
-        return undefined
-      })
-      .filter(Boolean) as { id: string; component: JSX.Element; priority?: number }[]
-  }, [configs])
 
-  const adList: Array<AdSlide> = useMemo(
+  const adList: Array<{
+    id: string
+    component: JSX.Element
+    shouldRender?: Array<boolean>
+    priority?: number
+  }> = useMemo(
     () => [
       {
         id: 'expandable-ad',
@@ -53,19 +40,17 @@ export const useAdConfig = () => {
         shouldRender: [shouldRenderOnPage],
       },
       {
-        id: 'ad-cross-chain',
-        component: <AdCrossChain />,
-      },
-      ...commonAdConfigs,
-      {
-        id: 'ad-solana',
-        component: <AdSolana />,
+        id: 'tst-perp',
+        component: <AdCommon id={AdsIds.TST_PERP} />,
       },
       {
         id: 'ad-springboard',
         component: <AdSpringboard />,
       },
-      ...tradingCompetitionAds,
+      {
+        id: 'ad-andy-tc',
+        component: <AdTradingCompetitionAndy />,
+      },
       {
         id: 'ad-ifo',
         component: <AdIfo />,
@@ -75,8 +60,12 @@ export const useAdConfig = () => {
         id: 'pcsx',
         component: <AdPCSX />,
       },
+      {
+        id: 'cake-staking',
+        component: <AdCakeStaking />,
+      },
     ],
-    [shouldRenderOnPage, shouldRenderAdIfo, commonAdConfigs, tradingCompetitionAds],
+    [shouldRenderOnPage, shouldRenderAdIfo],
   )
 
   return useMemo(
@@ -105,7 +94,6 @@ const commonLayoutAdIgnoredPages = [
 export const layoutMobileAdIgnoredPages = [
   ...commonLayoutAdIgnoredPages,
   '/',
-  '/swap',
   '/prediction',
   '/liquidity/pools',
   '/migration/bcake',
@@ -117,3 +105,6 @@ export const layoutMobileAdIgnoredPages = [
  *  Contains strings or regex patterns.
  */
 export const layoutDesktopAdIgnoredPages = [...commonLayoutAdIgnoredPages]
+
+// NOTE: In current phase, we're adding pages to whitelist as well for AdPlayer.
+export const commonLayoutWhitelistedPages = ['/', '/buy-crypto', '/prediction']

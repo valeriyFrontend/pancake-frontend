@@ -4,7 +4,6 @@ import { FlexGap } from '@pancakeswap/uikit'
 import { priceToClosestTick } from '@pancakeswap/v3-sdk'
 import { Bound } from 'config/constants/types'
 import { useMemo } from 'react'
-import { formatRangeSelectorPrice } from 'utils/formatRangeSelectorPrice'
 import StepCounter from './StepCounter'
 
 // currencyA is the base token
@@ -29,8 +28,8 @@ export default function RangeSelector({
   getIncrementLower: () => Price<Token, Token> | undefined
   getDecrementUpper: () => Price<Token, Token> | undefined
   getIncrementUpper: () => Price<Token, Token> | undefined
-  onLeftRangeInput: (typedValue: Price<Currency, Currency> | undefined) => void
-  onRightRangeInput: (typedValue: Price<Currency, Currency> | undefined) => void
+  onLeftRangeInput: (typedValue: Price<Token, Token> | undefined) => void
+  onRightRangeInput: (typedValue: Price<Token, Token> | undefined) => void
   currencyA?: Currency | undefined | null
   currencyB?: Currency | undefined | null
   feeAmount?: number
@@ -56,7 +55,7 @@ export default function RangeSelector({
       return '0'
     }
 
-    return formatRangeSelectorPrice(leftPrice)
+    return leftPrice?.toSignificant(5) ?? ''
   }, [isSorted, leftPrice, tickSpaceLimits, ticksAtLimit])
 
   const rightValue = useMemo(() => {
@@ -78,7 +77,7 @@ export default function RangeSelector({
       return '∞'
     }
 
-    return formatRangeSelectorPrice(rightPrice)
+    return rightPrice?.toSignificant(5) ?? ''
   }, [isSorted, rightPrice, tickSpaceLimits, ticksAtLimit])
 
   return (

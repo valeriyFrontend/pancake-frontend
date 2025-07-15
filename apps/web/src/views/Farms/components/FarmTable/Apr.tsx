@@ -26,6 +26,8 @@ export interface AprProps {
   stableLpFee?: number
   farmCakePerSecond?: string
   totalMultipliers?: string
+  boosterMultiplier?: number
+  isBooster?: boolean
 }
 
 const Container = styled.div`
@@ -68,6 +70,8 @@ const Apr: React.FC<React.PropsWithChildren<AprProps>> = ({
   stableLpFee,
   farmCakePerSecond,
   totalMultipliers,
+  isBooster,
+  boosterMultiplier,
 }) => {
   const { chainId } = useActiveChainId()
   const liquidityUrlPathParts = getLiquidityUrlPathParts({ quoteTokenAddress, tokenAddress, chainId })
@@ -93,6 +97,8 @@ const Apr: React.FC<React.PropsWithChildren<AprProps>> = ({
           stableLpFee={stableLpFee}
           farmCakePerSecond={farmCakePerSecond}
           totalMultipliers={totalMultipliers}
+          isBooster={isBooster}
+          boosterMultiplier={boosterMultiplier}
         />
       ) : (
         <AprWrapper>

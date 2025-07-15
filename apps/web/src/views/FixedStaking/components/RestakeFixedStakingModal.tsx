@@ -5,8 +5,8 @@ import { LightGreyCard } from 'components/Card'
 import { ReactNode } from 'react'
 
 import ConnectWalletButton from 'components/ConnectWalletButton'
+import useAccountActiveChain from 'hooks/useAccountActiveChain'
 
-import { useAccount } from 'wagmi'
 import { FixedStakingPool, StakedPosition } from '../type'
 import { AmountWithUSDSub } from './AmountWithUSDSub'
 import { FixedStakingCalculator } from './FixedStakingCalculator'
@@ -33,7 +33,7 @@ export function FixedRestakingModal({
   amountDeposit: CurrencyAmount<Currency>
   stakedPositions: StakedPosition[]
 }) {
-  const { address: account } = useAccount()
+  const { account } = useAccountActiveChain()
 
   const { t } = useTranslation()
   const stakeModal = useModalV2()

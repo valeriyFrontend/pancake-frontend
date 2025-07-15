@@ -19,7 +19,6 @@ import {
   getBCakeProxyContract,
   getBunnyFactoryContract,
   getCakeFlexibleSideVaultV2Contract,
-  getCakeVaultV1Contract,
   getCakeVaultV2Contract,
   getCalcGaugesVotingContract,
   getChainlinkOracleContract,
@@ -30,10 +29,6 @@ import {
   getFixedStakingContract,
   getGaugesVotingContract,
   getIfoCreditAddressContract,
-  getInfinityBinPoolManagerContract,
-  getInfinityBinPositionManagerContract,
-  getInfinityCLPoolManagerContract,
-  getInfinityCLPositionManagerContract,
   getLotteryV2Contract,
   getMasterChefContract,
   getMasterChefV3Contract,
@@ -224,15 +219,6 @@ export const useCakeVaultContract = (targetChain?: ChainId) => {
   )
 }
 
-export const useCakeVaultV1Contract = (targetChain?: ChainId) => {
-  const { data: signer } = useWalletClient()
-  const { chainId } = useActiveChainId()
-  return useMemo(
-    () => getCakeVaultV1Contract(signer ?? undefined, targetChain ?? chainId),
-    [signer, chainId, targetChain],
-  )
-}
-
 export const useIfoCreditAddressContract = () => {
   return useMemo(() => getIfoCreditAddressContract(), [])
 }
@@ -310,8 +296,8 @@ export function useContract<TAbi extends Abi>(
   }, [addressOrAddressMap, abi, chainId, walletClient])
 }
 
-export function useTokenContract(tokenAddress?: Address, overrideChainId?: number) {
-  return useContract(tokenAddress, erc20Abi, { chainId: overrideChainId })
+export function useTokenContract(tokenAddress?: Address) {
+  return useContract(tokenAddress, erc20Abi)
 }
 
 export function useWNativeContract() {
@@ -338,9 +324,8 @@ export function usePairContract(pairAddress?: Address, options?: UseContractOpti
   return useContract(pairAddress, pancakePairV2ABI, options)
 }
 
-export function useMulticallContract(overrideChainId?: number) {
-  const { chainId: activeChainId } = useActiveChainId()
-  const chainId = overrideChainId || activeChainId
+export function useMulticallContract() {
+  const { chainId } = useActiveChainId()
   return useContract(getMulticallAddress(chainId), multicallABI)
 }
 
@@ -385,32 +370,6 @@ export function useBCakeFarmWrapperBoosterVeCakeContract() {
 export const useZksyncAirDropContract = () => {
   const { data: signer } = useWalletClient()
   return useMemo(() => getZksyncAirDropContract(signer ?? undefined, ChainId.ZKSYNC), [signer])
-}
-
-export const useInfinityCLPoolManagerContract = (targetChainId: ChainId) => {
-  const { data: signer } = useWalletClient()
-  return useMemo(() => getInfinityCLPoolManagerContract(signer ?? undefined, targetChainId), [signer, targetChainId])
-}
-
-export const useInfinityBinPoolManagerContract = (targetChainId: ChainId) => {
-  const { data: signer } = useWalletClient()
-  return useMemo(() => getInfinityBinPoolManagerContract(signer ?? undefined, targetChainId), [signer, targetChainId])
-}
-
-export const useInfinityCLPositionManagerContract = (targetChainId: ChainId | undefined) => {
-  const { data: signer } = useWalletClient()
-  return useMemo(
-    () => getInfinityCLPositionManagerContract(signer ?? undefined, targetChainId),
-    [signer, targetChainId],
-  )
-}
-
-export const useInfinityBinPositionManagerContract = (targetChainId: ChainId) => {
-  const { data: signer } = useWalletClient()
-  return useMemo(
-    () => getInfinityBinPositionManagerContract(signer ?? undefined, targetChainId),
-    [signer, targetChainId],
-  )
 }
 
 export function usePositionManagerWrapperContract(address: Address) {

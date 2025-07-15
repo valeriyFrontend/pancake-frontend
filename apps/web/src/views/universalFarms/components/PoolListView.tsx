@@ -1,13 +1,13 @@
 import { BottomDrawer, Button, ChevronRightIcon, Column, MoreIcon } from '@pancakeswap/uikit'
-import { useRouter } from 'next/router'
+import { TokenOverview } from '@pancakeswap/widgets-internal'
+import { TokenPairImage } from 'components/TokenImage'
 import { memo, ReactNode, useCallback, useState } from 'react'
-import { getFarmAprInfo } from 'state/farmsV4/search/farm.util'
 import { PoolInfo } from 'state/farmsV4/state/type'
 import styled from 'styled-components'
-import { getPoolDetailPageLink } from 'utils/getPoolLink'
+import { getChainFullName } from '../utils'
 import { PoolGlobalAprButton } from './PoolAprButton'
 import { ActionItems } from './PoolListItemAction'
-import { PoolTokenOverview, useColumnMobileConfig } from './useColumnConfig'
+import { useColumnMobileConfig } from './useColumnConfig'
 
 const ListContainer = styled.ul``
 
@@ -25,46 +25,41 @@ const ListItemContainer = styled.li`
   }
 `
 
-interface IPoolListViewProps<T extends PoolInfo> {
-  data: T[]
-  onRowClick?: (item: PoolInfo) => void
-  getItemKey?: (item: T) => string
+interface IPoolListViewProps {
+  data: PoolInfo[]
 }
-export const ListView = <T extends PoolInfo>({ data, getItemKey, onRowClick }: IPoolListViewProps<T>) => {
+export const ListView: React.FC<IPoolListViewProps> = ({ data }) => {
   const [openItem, setOpenItem] = useState<PoolInfo | null>(null)
   const handleDrawerChange = useCallback((status: boolean) => {
     if (!status) setOpenItem(null)
   }, [])
-  const router = useRouter()
-  const handleItemClick = useCallback(
-    async (item: PoolInfo) => {
-      const link = await getPoolDetailPageLink(item)
-      router.push(link)
-    },
-    [router],
-  )
-
-  const getListItemKey = useCallback(
-    (item: T) => (getItemKey ? getItemKey(item) : [item.chainId, item.protocol, item.lpAddress].join(':')),
-    [getItemKey],
-  )
-
-  const handleMoreClick = (e, item) => {
-    e.stopPropagation()
-    setOpenItem(item)
-  }
 
   return (
     <ListContainer>
       {data.map((item) => (
-        <ListItemContainer key={getListItemKey(item)} onClick={() => onRowClick?.(item)}>
-          <Column gap="12px" onClick={() => handleItemClick(item)}>
-            <PoolTokenOverview data={item} />
-            <PoolGlobalAprButton pool={item} aprInfo={getFarmAprInfo(item.farm)} />
+        <ListItemContainer key={`${item.chainId}-${item.lpAddress}`}>
+          <Column gap="12px">
+            <TokenOverview
+              isReady
+              token={item.token0}
+              quoteToken={item.token1}
+              width="48px"
+              getChainName={getChainFullName}
+              icon={
+                <TokenPairImage
+                  width={44}
+                  height={44}
+                  variant="inverted"
+                  primaryToken={item.token0}
+                  secondaryToken={item.token1}
+                />
+              }
+            />
+            <PoolGlobalAprButton pool={item} />
           </Column>
 
           <Column>
-            <Button scale="xs" variant="text" onClick={(e) => handleMoreClick(e, item)} py="2rem" pl="1rem">
+            <Button scale="xs" variant="text" onClick={() => setOpenItem(item)}>
               <MoreIcon />
             </Button>
           </Column>
@@ -152,7 +147,22 @@ const ListItemDetails: React.FC<IListItemDetailsProps> = memo(({ data }) => {
         <Grabber />
       </ItemDetailHeader>
       <ItemDetailBody>
-        <PoolTokenOverview data={data} />
+        <TokenOverview
+          isReady
+          token={data.token0}
+          quoteToken={data.token1}
+          width="48px"
+          getChainName={getChainFullName}
+          icon={
+            <TokenPairImage
+              width={44}
+              height={44}
+              variant="inverted"
+              primaryToken={data.token0}
+              secondaryToken={data.token1}
+            />
+          }
+        />
         {columns.map((col) => (
           <ListItem key={col.key}>
             <ListItemLabel>

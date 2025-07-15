@@ -12,6 +12,7 @@ import PoolTypeTag from '../../PoolTypeTag'
 interface FooterProps {
   pool: Pool.DeserializedPool<Token>
   account: string
+  totalCakeInVault?: BigNumber
   defaultExpanded?: boolean
   isLocked?: boolean
 }
@@ -37,6 +38,7 @@ const Footer: React.FC<React.PropsWithChildren<FooterProps>> = ({
   children,
   isLocked = false,
 }) => {
+  const { vaultKey } = pool
   const { t } = useTranslation()
   const [isExpanded, setIsExpanded] = useState(defaultExpanded || false)
 
@@ -44,7 +46,7 @@ const Footer: React.FC<React.PropsWithChildren<FooterProps>> = ({
     <CardFooter>
       <ExpandableButtonWrapper>
         <Flex alignItems="center">
-          <PoolTypeTag isLocked={isLocked} account={account}>
+          <PoolTypeTag vaultKey={vaultKey} isLocked={isLocked} account={account}>
             {(targetRef) => (
               <Flex ref={targetRef}>
                 <HelpIcon ml="4px" width="20px" height="20px" color="textSubtle" />

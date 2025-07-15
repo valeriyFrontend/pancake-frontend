@@ -19,23 +19,18 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { styled } from 'styled-components'
 
 import { formatNumber } from '@pancakeswap/utils/formatBalance'
-import isUndefinedOrNull from '@pancakeswap/utils/isUndefinedOrNull'
 import { useStablecoinPriceAmount } from 'hooks/useStablecoinPrice'
 import { StablePair } from 'views/AddLiquidity/AddStableLiquidity/hooks/useStableLPDerivedMintInfo'
 
 import { RiskInputPanelDisplay } from 'components/AccessRisk/SwapRevampRiskDisplay'
 import { FiatLogo } from 'components/Logo/CurrencyLogo'
-import { useActiveChainId } from 'hooks/useActiveChainId'
 import { useCurrencyBalance } from 'state/wallet/hooks'
-import { getFullChainNameById } from 'utils/getFullChainNameById'
-import { getTokenSymbolAlias } from 'utils/getTokenAlias'
 import { useAccount } from 'wagmi'
 import CurrencySearchModal from '../SearchModal/CurrencySearchModal'
 import { FONT_SIZE, LOGO_SIZE, useFontSize } from './state'
 
 const CurrencySelectButton = styled(Button).attrs({ variant: 'text', scale: 'sm' })`
-  padding: 24px 8px 22px;
-  margin-top: 2px;
+  padding: 24px 4px;
 
   &:hover {
     background: ${({ theme }) => theme.colors.invertedContrast};
@@ -43,7 +38,6 @@ const CurrencySelectButton = styled(Button).attrs({ variant: 'text', scale: 'sm'
 `
 const SymbolText = styled(Text)`
   font-size: ${FONT_SIZE.LARGE}px;
-  line-height: 1.1;
 `
 
 const formatDollarAmount = (amount: number) => {
@@ -152,7 +146,7 @@ const useSizeAdaption = (value: string, currencySymbol?: string, otherCurrencySy
 }
 
 interface CurrencyInputPanelProps {
-  defaultValue: string | undefined
+  value: string | undefined
   onUserInput: (value: string) => void
   onInputBlur?: () => void
   onPercentInput?: (percent: number) => void
@@ -173,25 +167,18 @@ interface CurrencyInputPanelProps {
   commonBasesType?: string
   showSearchInput?: boolean
   beforeButton?: React.ReactNode
-  isDependent?: boolean
   disabled?: boolean
   error?: boolean | string
   showUSDPrice?: boolean
-  topOptions?: {
-    show: boolean
-    walletDisplay: boolean
-  }
   tokensToShow?: Token[]
   currencyLoading?: boolean
   inputLoading?: boolean
   title?: React.ReactNode
   hideBalanceComp?: boolean
   isUserInsufficientBalance?: boolean
-  modalTitle?: React.ReactNode
-  showSearchHeader?: boolean
 }
 const CurrencyInputPanelSimplify = memo(function CurrencyInputPanel({
-  defaultValue,
+  value,
   onUserInput,
   onInputBlur,
   onPercentInput,
@@ -211,24 +198,13 @@ const CurrencyInputPanelSimplify = memo(function CurrencyInputPanel({
   error,
   showUSDPrice,
   tokensToShow,
-  topOptions = {
-    show: true,
-    walletDisplay: true,
-  },
   currencyLoading,
   inputLoading,
   title,
   isUserInsufficientBalance,
-  modalTitle,
-  showSearchHeader,
 }: CurrencyInputPanelProps) {
   const { address: account } = useAccount()
-  // const value = useRef<string | undefined>(defaultValue)
-  const [value, setValue] = useState<string | undefined>(defaultValue)
-  const { chainId } = useActiveChainId()
-
   const selectedCurrencyBalance = useCurrencyBalance(account ?? undefined, currency ?? undefined)
-
   const { t } = useTranslation()
 
   const mode = id
@@ -238,11 +214,14 @@ const CurrencyInputPanelSimplify = memo(function CurrencyInputPanel({
   const amountInDollar = useStablecoinPriceAmount(
     showUSDPrice ? currency ?? undefined : undefined,
     value !== undefined && Number.isFinite(+value) ? +value : undefined,
+    {
+      hideIfPriceImpactTooHigh: true,
+      enabled: Boolean(value !== undefined && Number.isFinite(+value)),
+    },
   )
 
   const [onPresentCurrencyModal] = useModal(
     <CurrencySearchModal
-      supportCrossChain
       onCurrencySelect={onCurrencySelect}
       selectedCurrency={currency}
       otherSelectedCurrency={otherCurrency}
@@ -251,43 +230,22 @@ const CurrencyInputPanelSimplify = memo(function CurrencyInputPanel({
       showSearchInput={showSearchInput}
       tokensToShow={tokensToShow}
       mode={mode}
-      modalTitle={modalTitle}
-      showSearchHeader={showSearchHeader}
+      showCurrencyInHeader
     />,
   )
 
   const { shortedSymbol, inputRef, wrapperRef, tokenImageRef, symbolRef } = useSizeAdaption(
     value ?? '',
-    getTokenSymbolAlias(currency?.wrapped?.address, currency?.chainId, currency?.symbol),
-    getTokenSymbolAlias(otherCurrency?.wrapped?.address, otherCurrency?.chainId, otherCurrency?.symbol),
+    currency?.symbol,
+    otherCurrency?.symbol,
   )
 
-  useEffect(() => {
-    if (isInputFocus) {
-      return
-    }
-    setValue(defaultValue)
-  }, [defaultValue, isInputFocus])
-
-  useEffect(() => {
-    if (isInputFocus) {
-      onUserInput(value ?? '')
-    }
-  }, [value, defaultValue, isInputFocus, onUserInput])
-
-  const handlePercentInput = useCallback(
-    (percent: number) => {
-      if (onPercentInput) {
-        setIsInputFocus(false)
-        onPercentInput(percent)
-      }
+  const handleUserInput = useCallback(
+    (val: string) => {
+      onUserInput(val)
     },
-    [onPercentInput],
+    [onUserInput],
   )
-
-  const handleUserInput = useCallback((val: string) => {
-    setValue(val)
-  }, [])
   const handleUserInputBlur = useCallback(() => {
     onInputBlur?.()
     setTimeout(() => setIsInputFocus(false), 300)
@@ -303,17 +261,7 @@ const CurrencyInputPanelSimplify = memo(function CurrencyInputPanel({
     }
   }, [onPresentCurrencyModal, disableCurrencySelect])
 
-  const balance = useMemo(
-    () =>
-      !hideBalance &&
-      !!currency &&
-      selectedCurrencyBalance &&
-      !isUndefinedOrNull(selectedCurrencyBalance?.currency?.decimals)
-        ? formatAmount(selectedCurrencyBalance, selectedCurrencyBalance?.currency?.decimals)
-        : undefined,
-    [selectedCurrencyBalance, currency, hideBalance],
-  )
-
+  const balance = !hideBalance && !!currency ? formatAmount(selectedCurrencyBalance, 6) : undefined
   return (
     <SwapUIV2.CurrencyInputPanelSimplify
       id={id}
@@ -327,26 +275,22 @@ const CurrencyInputPanelSimplify = memo(function CurrencyInputPanel({
       inputRef={inputRef}
       wrapperRef={wrapperRef}
       top={
-        topOptions.show ? (
-          <Flex justifyContent="space-between" alignItems="center" width="100%" position="relative">
-            {title}
-            {topOptions.walletDisplay && (
-              <LazyAnimatePresence mode="wait" features={domAnimation}>
-                {account ? (
-                  !isInputFocus || !onMax ? (
-                    <SwapUIV2.WalletAssetDisplay
-                      isUserInsufficientBalance={isUserInsufficientBalance}
-                      balance={balance}
-                      onMax={onMax}
-                    />
-                  ) : (
-                    <SwapUIV2.AssetSettingButtonList onPercentInput={handlePercentInput} />
-                  )
-                ) : null}
-              </LazyAnimatePresence>
-            )}
-          </Flex>
-        ) : null
+        <Flex justifyContent="space-between" alignItems="center" width="100%" position="relative">
+          {title}
+          <LazyAnimatePresence mode="wait" features={domAnimation}>
+            {account ? (
+              !isInputFocus || !onMax ? (
+                <SwapUIV2.WalletAssetDisplay
+                  isUserInsufficientBalance={isUserInsufficientBalance}
+                  balance={balance}
+                  onMax={onMax}
+                />
+              ) : (
+                <SwapUIV2.AssetSettingButtonList onPercentInput={onPercentInput} />
+              )
+            ) : null}
+          </LazyAnimatePresence>
+        </Flex>
       }
       inputLeft={
         <>
@@ -366,52 +310,28 @@ const CurrencyInputPanelSimplify = memo(function CurrencyInputPanel({
                     <FiatLogo currency={currency} size={`${LOGO_SIZE.MAX}px`} style={{ marginRight: '8px' }} />
                   ) : (
                     <CurrencyLogo
-                      showChainLogo
                       imageRef={tokenImageRef}
                       currency={currency}
                       size={`${LOGO_SIZE.MAX}px`}
-                      containerStyle={{ marginRight: '8px' }}
+                      style={{
+                        marginRight: '8px',
+                      }}
                     />
                   )
                 ) : currencyLoading ? (
                   <Skeleton width="40px" height="40px" variant="circle" />
-                ) : (
-                  <CurrencyLogo
-                    imageRef={tokenImageRef}
-                    currency={{ chainId }}
-                    size={`${LOGO_SIZE.MAX}px`}
-                    containerStyle={{ marginRight: '8px' }}
-                    showChainLogo
-                  />
-                )}
+                ) : null}
                 {currencyLoading ? null : pair ? (
                   <Text id="pair" bold fontSize="24px">
-                    {getTokenSymbolAlias(pair?.token0.wrapped?.address, pair?.token0.chainId, pair?.token0.symbol)}:
-                    {getTokenSymbolAlias(pair?.token1.wrapped?.address, pair?.token1.chainId, pair?.token1.symbol)}
+                    {pair?.token0.symbol}:{pair?.token1.symbol}
                   </Text>
                 ) : (
                   <Flex alignItems="start" flexDirection="column">
-                    <Flex flexDirection="column" alignItems="flex-start">
-                      <Flex alignItems="center" justifyContent="space-between">
-                        <SymbolText id="pair" bold ref={symbolRef}>
-                          {(currency && currency.symbol && shortedSymbol) || t('Select Token')}
-                        </SymbolText>
-                        {!currencyLoading && !disableCurrencySelect && <ChevronDownIcon />}
-                      </Flex>
-
-                      {currency && currency.symbol && (
-                        <Text
-                          style={{
-                            fontSize: `${Math.max(
-                              Number(symbolRef.current?.style.fontSize.replace('px', '')) - 7,
-                              12,
-                            )}px`,
-                          }}
-                          color="textSubtle"
-                        >
-                          {getFullChainNameById(currency.chainId)}
-                        </Text>
-                      )}
+                    <Flex alignItems="center" justifyContent="space-between">
+                      <SymbolText id="pair" bold ref={symbolRef}>
+                        {(currency && currency.symbol && shortedSymbol) || t('Select a currency')}
+                      </SymbolText>
+                      {!currencyLoading && !disableCurrencySelect && <ChevronDownIcon />}
                     </Flex>
                     <RiskInputPanelDisplay token={token ?? undefined} />
                   </Flex>

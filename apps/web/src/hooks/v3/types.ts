@@ -22,5 +22,3 @@ export interface TickProcessed {
   liquidityNet: bigint
   price0: string
 }
-
-export type { ChartSupportedProtocol } from 'hooks/useAllTicksQuery'

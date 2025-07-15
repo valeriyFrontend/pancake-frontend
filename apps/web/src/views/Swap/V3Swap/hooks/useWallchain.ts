@@ -1,18 +1,20 @@
 import { ChainId } from '@pancakeswap/chains'
 import { Currency, Token, TradeType } from '@pancakeswap/sdk'
 import { SmartRouterTrade } from '@pancakeswap/smart-router'
+import { useUserSlippage } from '@pancakeswap/utils/user'
 import { FeeOptions } from '@pancakeswap/v3-sdk'
 import { captureException } from '@sentry/nextjs'
 import { useQuery } from '@tanstack/react-query'
 import type WallchainSDK from '@wallchain/sdk'
 import type { TMEVFoundResponse } from '@wallchain/sdk'
 import { TOptions } from '@wallchain/sdk'
+import { INITIAL_ALLOWED_SLIPPAGE } from 'config/constants'
+import useAccountActiveChain from 'hooks/useAccountActiveChain'
 import { useActiveChainId } from 'hooks/useActiveChainId'
-import { useAutoSlippageWithFallback } from 'hooks/useAutoSlippageWithFallback'
 import { atom, useAtom } from 'jotai'
 import { useEffect, useMemo, useState } from 'react'
 import { basisPointsToPercent } from 'utils/exchange'
-import { useAccount, useWalletClient } from 'wagmi'
+import { useWalletClient } from 'wagmi'
 
 import { ClassicOrder } from '@pancakeswap/price-api-sdk'
 import Bottleneck from 'bottleneck'
@@ -128,9 +130,8 @@ export function useWallchainApi(
     undefined | [TMEVFoundResponse['searcherRequest'], string | undefined]
   >(undefined)
   const { data: walletClient } = useWalletClient()
-  const { address: account } = useAccount()
-
-  const { slippageTolerance: allowedSlippageRaw } = useAutoSlippageWithFallback()
+  const { account } = useAccountActiveChain()
+  const [allowedSlippageRaw] = useUserSlippage() || [INITIAL_ALLOWED_SLIPPAGE]
   const allowedSlippage = useMemo(() => basisPointsToPercent(allowedSlippageRaw), [allowedSlippageRaw])
   const [lastUpdate, setLastUpdate] = useState(0)
   const useUniversalRouter = true

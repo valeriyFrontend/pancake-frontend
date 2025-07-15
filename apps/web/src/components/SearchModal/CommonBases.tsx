@@ -10,29 +10,28 @@ import { SUGGESTED_BASES } from 'config/constants/exchange'
 import { AutoRow } from '../Layout/Row'
 import { CommonBasesType } from './types'
 
-export const ButtonWrapper = styled.div`
+const ButtonWrapper = styled.div`
   display: inline-block;
   vertical-align: top;
-  margin-right: 8px;
+  margin-right: 10px;
 `
 
-export const BaseWrapper = styled.div<{ disable?: boolean }>`
+const BaseWrapper = styled.div<{ disable?: boolean }>`
+  border: 1px solid ${({ theme, disable }) => (disable ? 'transparent' : theme.colors.dropdown)};
+  border-radius: ${({ theme }) => theme.radii['20px']};
+  padding-left: 2px;
   display: flex;
   align-items: center;
-  padding: 6px 4px;
-  transition: background-color 0.15s;
-
-  border-radius: ${({ theme }) => theme.radii.default};
-  color: ${({ theme, disable }) => (disable ? theme.colors.backgroundAlt : theme.colors.textSubtle)} !important;
-  background-color: ${({ theme, disable }) => (disable ? theme.colors.textSubtle : theme.colors.input)};
-
   &:hover {
     cursor: ${({ disable }) => !disable && 'pointer'};
     background-color: ${({ theme, disable }) => !disable && theme.colors.background};
   }
+  background-color: ${({ theme }) => theme.colors.tertiary};
+  opacity: ${({ disable }) => disable && '0.4'};
+  transition: background-color 0.15s;
 `
 
-export const RowWrapper = styled.div`
+const RowWrapper = styled.div`
   white-space: nowrap;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -50,17 +49,15 @@ export default function CommonBases({
   onSelect,
   selectedCurrency,
   commonBasesType,
-  supportCrossChain,
 }: {
   chainId?: ChainId
   commonBasesType
   selectedCurrency?: Currency | null
   onSelect: (currency: Currency) => void
-  supportCrossChain?: boolean
 }) {
-  const native = useNativeCurrency(chainId)
+  const native = useNativeCurrency()
   const { t } = useTranslation()
-  const pinTokenDescText = commonBasesType === CommonBasesType.SWAP_LIMITORDER ? t('Popular tokens') : t('Common bases')
+  const pinTokenDescText = commonBasesType === CommonBasesType.SWAP_LIMITORDER ? t('Select token') : t('Common bases')
 
   return (
     <AutoColumn gap="sm">
@@ -76,25 +73,14 @@ export default function CommonBases({
         <ButtonWrapper>
           <BaseWrapper
             onClick={() => {
-              if (selectedCurrency && selectedCurrency.isNative && selectedCurrency.chainId === chainId) {
-                return
+              if (!selectedCurrency || !selectedCurrency.isNative) {
+                onSelect(native)
               }
-
-              onSelect(native)
             }}
-            disable={selectedCurrency?.isNative && selectedCurrency?.chainId === chainId}
+            disable={selectedCurrency?.isNative}
           >
-            <CurrencyLogo
-              showChainLogo={supportCrossChain}
-              currency={native}
-              containerStyle={{
-                position: 'relative',
-                top: '1px',
-              }}
-            />
-            <Text px="4px" color="inherit">
-              {native?.symbol}
-            </Text>
+            <CurrencyLogo currency={native} />
+            <Text p="2px 6px">{native?.symbol}</Text>
           </BaseWrapper>
         </ButtonWrapper>
         {(chainId ? SUGGESTED_BASES[chainId] || [] : []).map((token: Token) => {
@@ -102,18 +88,8 @@ export default function CommonBases({
           return (
             <ButtonWrapper key={`buttonBase#${token.address}`}>
               <BaseWrapper onClick={() => !selected && onSelect(token)} disable={selected}>
-                <CurrencyLogo
-                  showChainLogo={supportCrossChain}
-                  currency={token}
-                  style={{ borderRadius: '50%' }}
-                  containerStyle={{
-                    position: 'relative',
-                    top: '1px',
-                  }}
-                />
-                <Text px="4px" color="inherit">
-                  {token.symbol}
-                </Text>
+                <CurrencyLogo currency={token} style={{ borderRadius: '50%' }} />
+                <Text p="2px 6px">{token.symbol}</Text>
               </BaseWrapper>
             </ButtonWrapper>
           )

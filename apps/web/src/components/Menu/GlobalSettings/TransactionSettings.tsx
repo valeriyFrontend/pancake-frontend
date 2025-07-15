@@ -1,21 +1,10 @@
 import { useTranslation } from '@pancakeswap/localization'
-import {
-  Box,
-  Button,
-  Flex,
-  FlexGap,
-  Input,
-  Message,
-  QuestionHelper,
-  Text,
-  useMatchBreakpoints,
-} from '@pancakeswap/uikit'
+import { Box, Button, Flex, FlexGap, Input, Message, QuestionHelper, Text } from '@pancakeswap/uikit'
 import { useUserSlippage } from '@pancakeswap/utils/user'
 import { useEffect, useState } from 'react'
 import { escapeRegExp } from 'utils'
 
 import { VerticalDivider } from '@pancakeswap/widgets-internal'
-import { useAutoSlippageEnabled } from 'hooks/useAutoSlippageWithFallback'
 import { useUserTransactionTTL } from 'hooks/useTransactionDeadline'
 import styled from 'styled-components'
 import { PrimaryOutlineButton } from './styles'
@@ -30,12 +19,7 @@ const ButtonsContainer = styled(FlexGap).attrs({ flexWrap: 'wrap', gap: '4px' })
 `
 
 const StyledButton = styled(Button)`
-  height: 48px;
-  padding: 0 8px;
-  ${({ theme }) => theme.mediaQueries.md} {
-    height: 52px;
-    padding: 0 16px;
-  }
+  height: 52px;
 `
 
 const StyledVerticalDivider = styled(VerticalDivider).attrs(({ theme }) => ({ bg: theme.colors.inputSecondary }))`
@@ -65,8 +49,7 @@ const SlippageTabs = () => {
   const [ttl, setTTL] = useUserTransactionTTL()
   const [slippageInput, setSlippageInput] = useState('')
   const [deadlineInput, setDeadlineInput] = useState('')
-  const [isAutoSlippageEnabled, setIsAutoSlippageEnabled] = useAutoSlippageEnabled()
-  const { isMobile } = useMatchBreakpoints()
+
   const { t } = useTranslation()
 
   const slippageInputIsValid =
@@ -141,26 +124,14 @@ const SlippageTabs = () => {
             ml="4px"
           />
         </Flex>
-
-        <ButtonsContainer style={{ flexWrap: isMobile ? 'nowrap' : 'wrap' }}>
-          <StyledButton
-            scale="sm"
-            onClick={() => {
-              setSlippageInput('')
-              setIsAutoSlippageEnabled(true)
-            }}
-            variant={isAutoSlippageEnabled ? 'subtle' : 'light'}
-          >
-            {t('Auto')}
-          </StyledButton>
+        <ButtonsContainer>
           <StyledButton
             scale="sm"
             onClick={() => {
               setSlippageInput('')
               setUserSlippageTolerance(10)
-              setIsAutoSlippageEnabled(false)
             }}
-            variant={userSlippageTolerance === 10 && !isAutoSlippageEnabled ? 'subtle' : 'light'}
+            variant={userSlippageTolerance === 10 ? 'subtle' : 'light'}
           >
             0.1%
           </StyledButton>
@@ -169,9 +140,8 @@ const SlippageTabs = () => {
             onClick={() => {
               setSlippageInput('')
               setUserSlippageTolerance(50)
-              setIsAutoSlippageEnabled(false)
             }}
-            variant={userSlippageTolerance === 50 && !isAutoSlippageEnabled ? 'subtle' : 'light'}
+            variant={userSlippageTolerance === 50 ? 'subtle' : 'light'}
           >
             0.5%
           </StyledButton>
@@ -180,9 +150,8 @@ const SlippageTabs = () => {
             onClick={() => {
               setSlippageInput('')
               setUserSlippageTolerance(100)
-              setIsAutoSlippageEnabled(false)
             }}
-            variant={userSlippageTolerance === 100 && !isAutoSlippageEnabled ? 'subtle' : 'light'}
+            variant={userSlippageTolerance === 100 ? 'subtle' : 'light'}
           >
             1.0%
           </StyledButton>
@@ -192,15 +161,12 @@ const SlippageTabs = () => {
                 scale="md"
                 inputMode="decimal"
                 pattern="^[0-9]*[.,]?[0-9]{0,2}$"
-                placeholder={isAutoSlippageEnabled ? 'Auto' : (userSlippageTolerance / 100).toFixed(2)}
+                placeholder={(userSlippageTolerance / 100).toFixed(2)}
                 value={slippageInput}
                 onBlur={() => {
                   parseCustomSlippage((userSlippageTolerance / 100).toFixed(2))
                 }}
                 onChange={(event) => {
-                  if (isAutoSlippageEnabled) {
-                    setIsAutoSlippageEnabled(false)
-                  }
                   if (event.currentTarget.validity.valid) {
                     parseCustomSlippage(event.target.value.replace(/,/g, '.'))
                   }
@@ -218,8 +184,7 @@ const SlippageTabs = () => {
             </Box>
           </Flex>
         </ButtonsContainer>
-
-        {!isAutoSlippageEnabled && !!slippageError && (
+        {!!slippageError && (
           <Message
             mt="8px"
             variant={

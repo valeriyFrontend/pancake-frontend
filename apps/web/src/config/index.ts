@@ -1,8 +1,6 @@
-import { AVERAGE_CHAIN_BLOCK_TIMES, ChainId } from '@pancakeswap/chains'
 import { getFullDecimalMultiplier } from '@pancakeswap/utils/getFullDecimalMultiplier'
 
-// BNB Chain Maxwell upgrade halves the block time from 1.5s to 0.75s
-export const BSC_BLOCK_TIME = AVERAGE_CHAIN_BLOCK_TIMES[ChainId.BSC]
+export const BSC_BLOCK_TIME = 3
 
 // CAKE_PER_BLOCK details
 // 40 CAKE is minted per block
@@ -13,7 +11,7 @@ export const BSC_BLOCK_TIME = AVERAGE_CHAIN_BLOCK_TIMES[ChainId.BSC]
 // CAKE/Block in src/views/Home/components/CakeDataRow.tsx = 15 (40 - Amount sent to burn pool)
 export const CAKE_PER_BLOCK = 40
 export const BLOCKS_PER_DAY = (60 / BSC_BLOCK_TIME) * 60 * 24
-export const BLOCKS_PER_YEAR = BLOCKS_PER_DAY * 365 // 42048000
+export const BLOCKS_PER_YEAR = BLOCKS_PER_DAY * 365 // 10512000
 export const SECONDS_PER_YEAR = 31536000 // 60 * 60 * 24 * 365
 export const CAKE_PER_YEAR = CAKE_PER_BLOCK * BLOCKS_PER_YEAR
 export const BASE_URL = 'https://pancakeswap.finance'
@@ -26,4 +24,3 @@ export const AUCTION_BIDDERS_TO_FETCH = 500
 export const RECLAIM_AUCTIONS_TO_FETCH = 500
 export const AUCTION_WHITELISTED_BIDDERS_TO_FETCH = 500
 export const IPFS_GATEWAY = 'https://ipfs.io/ipfs'
-export const DAY_PER_YEAR = 365

@@ -14,10 +14,8 @@ import { useSignTypedData, useWalletClient } from 'wagmi'
 import useAccountActiveChain from './useAccountActiveChain'
 import { useIsSmartContract } from './useIsSmartContract'
 
-const useAllowanceTransferPermit = (overrideChainId?: number) => {
-  const { account, chainId: activeChainId } = useAccountActiveChain()
-  const chainId = overrideChainId ?? activeChainId
-
+const useAllowanceTransferPermit = () => {
+  const { account, chainId } = useAccountActiveChain()
   const { data: walletClient } = useWalletClient()
 
   return useCallback(
@@ -43,13 +41,11 @@ const useAllowanceTransferPermit = (overrideChainId?: number) => {
   )
 }
 
-export const useWritePermit = (token?: Token, spender?: Address, nonce?: number, overrideChainId?: number) => {
-  const { account, chainId: activeChainId } = useAccountActiveChain()
-  const chainId = overrideChainId ?? activeChainId
-
+export const useWritePermit = (token?: Token, spender?: Address, nonce?: number) => {
+  const { account, chainId } = useAccountActiveChain()
   const { signTypedDataAsync } = useSignTypedData()
-  const scWritePermit = useAllowanceTransferPermit(chainId)
-  const isSC = useIsSmartContract(account, chainId)
+  const scWritePermit = useAllowanceTransferPermit()
+  const isSC = useIsSmartContract(account)
 
   return useCallback(async (): Promise<Permit2Signature> => {
     if (!chainId) throw new Error('PERMIT: missing chainId')

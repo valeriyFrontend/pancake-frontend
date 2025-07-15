@@ -11,7 +11,7 @@ import { usePredictionConfigs } from 'views/Predictions/hooks/usePredictionConfi
 import { usePredictionToken } from 'views/Predictions/hooks/usePredictionToken'
 import ConfigProvider from './ConfigProvider'
 
-const PredictionConfigProviders = ({ children }: { children?: React.ReactNode }) => {
+const PredictionConfigProviders = ({ children }) => {
   const router = useRouter()
   const { chainId } = useActiveChainId()
   const predictionConfigs = usePredictionConfigs()

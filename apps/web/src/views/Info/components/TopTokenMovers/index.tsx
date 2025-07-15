@@ -1,7 +1,6 @@
 import { useTranslation } from '@pancakeswap/localization'
 import { Box, Card, Flex, Text } from '@pancakeswap/uikit'
 import { NextLinkFromReactRouter } from '@pancakeswap/widgets-internal'
-import { useInfinityContext } from 'hooks/infinity/useInfinityContext'
 
 import { useEffect, useMemo, useRef } from 'react'
 import { checkIsStableSwap } from 'state/info/constant'
@@ -42,13 +41,8 @@ const DataCard = ({ tokenData }: { tokenData: TokenData }) => {
   const chainName = useChainNameByQuery()
   const chainPath = useMultiChainPath()
   const stableSwapQuery = checkIsStableSwap() ? '?type=stableSwap' : ''
-  const { isInfinity } = useInfinityContext()
-
-  const url = isInfinity
-    ? `/info/infinity/tokens/${tokenData.address}`
-    : `/info${chainPath}/tokens/${tokenData.address}${stableSwapQuery}`
   return (
-    <CardWrapper to={url}>
+    <CardWrapper to={`/info${chainPath}/tokens/${tokenData.address}${stableSwapQuery}`}>
       <TopMoverCard>
         <Flex>
           <Box width="32px" height="32px">

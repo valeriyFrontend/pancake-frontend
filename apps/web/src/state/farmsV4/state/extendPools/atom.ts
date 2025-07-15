@@ -1,11 +1,8 @@
 import { ChainId } from '@pancakeswap/chains'
 import { Protocol, supportedChainIdV4 } from '@pancakeswap/farms'
-import { atom, useAtom, useAtomValue } from 'jotai'
-import isEqual from 'lodash/isEqual'
-import uniqWith from 'lodash/uniqWith'
-import { useMemo } from 'react'
+import { atom } from 'jotai'
 import { isAddressEqual } from 'utils'
-import { type Address, isAddress } from 'viem'
+import { type Address } from 'viem'
 import { farmPoolsAtom } from '../farmPools/atom'
 import { ChainIdAddressKey, PoolInfo } from '../type'
 
@@ -15,22 +12,18 @@ export enum PoolSortBy {
   VOL = 'volumeUSD24h',
 }
 
-export interface FetchPoolsProps {
+export type ExtendPoolsQuery = {
   protocols?: Protocol[]
-  chains?: ChainId[]
-  tokens?: ChainIdAddressKey[]
-  pageNo?: number
-}
-
-export type ExtendPoolsQuery = FetchPoolsProps & {
   orderBy: PoolSortBy
+  chains?: ChainId[]
   pools?: ChainIdAddressKey[]
+  tokens?: ChainIdAddressKey[]
   before: string
   after: string
 }
 
 export const DEFAULT_QUERIES = {
-  protocols: Object.values(Protocol),
+  protocols: [Protocol.V2, Protocol.V3, Protocol.STABLE],
   orderBy: PoolSortBy.VOL,
   chains: [...supportedChainIdV4],
   pools: [],
@@ -39,43 +32,17 @@ export const DEFAULT_QUERIES = {
   after: '',
 }
 
-export const extendPoolsAtom = atom([] as PoolInfo[], (get, set, values: PoolInfo[], replaced = false) => {
+export const extendPoolsQueryAtom = atom<ExtendPoolsQuery>(DEFAULT_QUERIES)
+
+export const extendPoolsAtom = atom([] as PoolInfo[], (get, set, values: PoolInfo[]) => {
   // remove duplicates pools with farmPoolsAtom
   const farms = get(farmPoolsAtom)
   const newData = values.filter(
     (pool) => !farms.some((farm) => isAddressEqual(farm.lpAddress, pool.lpAddress) && farm.protocol === pool.protocol),
   )
 
-  const updatedPools = replaced ? newData : uniqWith([...get(extendPoolsAtom), ...newData], isEqual)
-  set(extendPoolsAtom, updatedPools)
+  set(extendPoolsAtom, [...get(extendPoolsAtom), ...newData])
 })
-
-export const useExtendPoolsAtom = () => {
-  const [pools, setPools] = useAtom(extendPoolsAtom)
-  const farms = useAtomValue(farmPoolsAtom)
-
-  return useMemo(
-    () => ({
-      pools,
-      setPools: (values: PoolInfo[], replaced = false, removeFarms = false) => {
-        const newData = removeFarms
-          ? values.filter(
-              (pool) =>
-                !farms.some(
-                  (farm) =>
-                    isAddress(pool.lpAddress) &&
-                    isAddressEqual(farm.lpAddress, pool.lpAddress) &&
-                    farm.protocol === pool.protocol,
-                ),
-            )
-          : values
-
-        setPools(newData, replaced)
-      },
-    }),
-    [farms, pools, setPools],
-  )
-}
 
 interface PoolsOfPositionType {
   [address: Address]: PoolInfo

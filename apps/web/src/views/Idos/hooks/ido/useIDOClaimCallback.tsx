@@ -1,19 +1,18 @@
 import { useTranslation } from '@pancakeswap/localization'
 import { useToast } from '@pancakeswap/uikit'
 import { ToastDescriptionWithTx } from 'components/Toast'
+import useAccountActiveChain from 'hooks/useAccountActiveChain'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { useCallback } from 'react'
 import { useLatestTxReceipt } from 'state/farmsV4/state/accountPositions/hooks/useLatestTxReceipt'
-import { logGTMIdoClaimEvent } from 'utils/customGTMEventTracking'
 import { isUserRejected } from 'utils/sentry'
-import { useAccount } from 'wagmi'
 import { useIDOContract } from './useIDOContract'
 import { useIDOUserInfo } from './useIDOUserInfo'
 
 export const useIDOClaimCallback = () => {
   const idoContract = useIDOContract()
   const { t } = useTranslation()
-  const { address: account } = useAccount()
+  const { account } = useAccountActiveChain()
   const { toastSuccess, toastWarning } = useToast()
   const { fetchWithCatchTxError, loading: isPending } = useCatchTxError({ throwUserRejectError: true })
   const { refetch } = useIDOUserInfo()
@@ -31,8 +30,7 @@ export const useIDOClaimCallback = () => {
         )
         if (receipt?.status) {
           setLatestTxReceipt(receipt)
-          toastSuccess(t('Claim successful'), <ToastDescriptionWithTx bscTrace txHash={receipt.transactionHash} />)
-          logGTMIdoClaimEvent()
+          toastSuccess(t('Claim successful'), <ToastDescriptionWithTx txHash={receipt.transactionHash} />)
         }
       } catch (error) {
         if (isUserRejected(error)) {

@@ -1,4 +1,5 @@
-import { WalletConfigV2, WalletIds } from '@pancakeswap/ui-wallets'
+import { WalletConfigV2 } from '@pancakeswap/ui-wallets'
+import { isFirefox } from 'react-device-detect'
 
 export enum ConnectorNames {
   Petra = 'petra',
@@ -14,7 +15,7 @@ export enum ConnectorNames {
 
 export const wallets: WalletConfigV2<ConnectorNames>[] = [
   {
-    id: WalletIds.Petra,
+    id: 'petra',
     title: 'Petra',
     icon: '/images/wallets/petra.png',
     get installed() {
@@ -26,7 +27,7 @@ export const wallets: WalletConfigV2<ConnectorNames>[] = [
     },
   },
   {
-    id: WalletIds.Martian,
+    id: 'martian',
     title: 'Martian',
     icon: '/images/wallets/martian.png',
     get installed() {
@@ -38,7 +39,7 @@ export const wallets: WalletConfigV2<ConnectorNames>[] = [
     },
   },
   {
-    id: WalletIds.Pontem,
+    id: 'pontem',
     title: 'Pontem',
     icon: '/images/wallets/pontem.png',
     get installed() {
@@ -50,7 +51,28 @@ export const wallets: WalletConfigV2<ConnectorNames>[] = [
     },
   },
   {
-    id: WalletIds.TrustWallet,
+    id: 'fewcha',
+    title: 'Fewcha',
+    icon: '/images/wallets/fewcha.png',
+    get installed() {
+      return typeof window !== 'undefined' && Boolean(window.fewcha)
+    },
+    connectorId: ConnectorNames.Fewcha,
+    downloadLink: {
+      desktop: 'https://fewcha.app/',
+    },
+  },
+  {
+    id: 'blocto',
+    title: 'Blocto',
+    icon: '/images/wallets/blocto.png',
+    get installed() {
+      return typeof window !== 'undefined' && Boolean(window.bloctoAptos) ? true : undefined // undefined to show SDK
+    },
+    connectorId: ConnectorNames.Blocto,
+  },
+  {
+    id: 'trustWallet',
     title: 'Trust Wallet',
     icon: 'https://pancakeswap.finance/images/wallets/trust.png',
     get installed() {
@@ -60,7 +82,7 @@ export const wallets: WalletConfigV2<ConnectorNames>[] = [
     connectorId: ConnectorNames.TrustWallet,
   },
   {
-    id: WalletIds.SafePal,
+    id: 'safePal',
     title: 'SafePal',
     icon: 'https://pancakeswap.finance/images/wallets/safepal.png',
     get installed() {
@@ -72,7 +94,21 @@ export const wallets: WalletConfigV2<ConnectorNames>[] = [
     },
   },
   {
-    id: WalletIds.Msafe,
+    id: 'rise',
+    title: 'Rise Wallet',
+    icon: '/images/wallets/rise.png',
+    get installed() {
+      return typeof window !== 'undefined' && Boolean(window.rise)
+    },
+    connectorId: ConnectorNames.Rise,
+    downloadLink: {
+      desktop: isFirefox
+        ? 'https://addons.mozilla.org/en-US/firefox/addon/rise-wallet/'
+        : 'https://chrome.google.com/webstore/detail/rise-aptos-wallet/hbbgbephgojikajhfbomhlmmollphcad',
+    },
+  },
+  {
+    id: 'msafe',
     title: 'Msafe',
     icon: '/images/wallets/msafe.png',
     get installed() {
@@ -93,7 +129,3 @@ export const wallets: WalletConfigV2<ConnectorNames>[] = [
     connectorId: ConnectorNames.Msafe,
   },
 ]
-
-export const TOP_WALLET_MAP: WalletConfigV2<ConnectorNames>[] = [WalletIds.Pontem, WalletIds.Petra]
-  .map((id) => wallets.find((w) => w.id === id))
-  .filter((w): w is WalletConfigV2<ConnectorNames> => Boolean(w))

@@ -1,9 +1,9 @@
-import { Currency, Price, Token } from '@pancakeswap/sdk'
-import { Bound } from 'config/constants/types'
+import { Price, Token } from '@pancakeswap/sdk'
 import { formatPrice } from 'utils/formatCurrencyAmount'
+import { Bound } from 'config/constants/types'
 
 export function formatTickPrice(
-  price: Price<Token, Token> | Price<Currency, Currency> | undefined,
+  price: Price<Token, Token> | undefined,
   atLimit: { [bound in Bound]?: boolean | undefined },
   direction: Bound,
   locale: string,

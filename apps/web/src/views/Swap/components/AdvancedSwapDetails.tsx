@@ -143,7 +143,10 @@ export const TradeSummary = memo(function TradeSummary({
                     <Text bold display="inline-block">
                       {t('AMM')}
                     </Text>
-                    : {t('Trading fee varies by pool fee tier. Check it via the magnifier icon under "Route."')}
+                    :{' '}
+                    {t(
+                      'Fee ranging from 0.1% to 0.01% depending on the pool fee tier. You can check the fee tier by clicking the magnifier icon under the “Route” section.',
+                    )}
                   </Text>
                   <Text mt="12px">
                     <Link

@@ -1,14 +1,10 @@
 import { ChainId } from '@pancakeswap/chains'
 import { useReadContract } from '@pancakeswap/wagmi'
 import dayjs from 'dayjs'
+import useAccountActiveChain from 'hooks/useAccountActiveChain'
 import { useVeCakeContract } from 'hooks/useContract'
 import { useCallback, useMemo } from 'react'
 import { Address } from 'viem'
-import { useAccount } from 'wagmi'
-import { convertSharesToCake } from 'views/Pools/helpers'
-import BigNumber from 'bignumber.js'
-import { BIG_ZERO } from '@pancakeswap/utils/bigNumber'
-import { useCakePoolV1Info } from 'views/CakeStaking/hooks/useCakePoolV1Info'
 import { CakeLockStatus, CakePoolType } from '../types'
 import { useCakePoolLockInfo } from './useCakePoolLockInfo'
 import { useCheckIsUserAllowMigrate } from './useCheckIsUserAllowMigrate'
@@ -51,7 +47,7 @@ export const useVeCakeUserInfo = (
   refetch: () => void
 } => {
   const veCakeContract = useVeCakeContract(targetChain)
-  const { address: account } = useAccount()
+  const { account } = useAccountActiveChain()
 
   const { data, refetch, isLoading, isPending } = useReadContract({
     chainId: targetChain ?? veCakeContract?.chain?.id,
@@ -94,7 +90,6 @@ export const useCakeLockStatus = (
   cakeLockedAmount: bigint
   nativeCakeLockedAmount: bigint
   proxyCakeLockedAmount: bigint
-  cakeV1Amount: bigint
   cakeLocked: boolean
   cakeLockExpired: boolean
   cakePoolLocked: boolean
@@ -107,7 +102,6 @@ export const useCakeLockStatus = (
   const { data: userInfo } = useVeCakeUserInfo(targetChain)
   // if user locked at cakePool before, should migrate
   const cakePoolLockInfo = useCakePoolLockInfo(targetChain)
-  const cakePoolV1Info = useCakePoolV1Info(targetChain)
 
   const isAllowMigrate = useCheckIsUserAllowMigrate(String(cakePoolLockInfo.lockEndTime))
 
@@ -153,46 +147,10 @@ export const useCakeLockStatus = (
   }, [userInfo])
 
   const proxyCakeLockedAmount = useMemo(() => {
-    if (delegated) {
-      return 0n
-    }
-    if (!cakePoolLocked) {
-      const currentOverdueFee = cakePoolLockInfo?.overdueFee
-        ? new BigNumber(cakePoolLockInfo?.overdueFee?.toString())
-        : BIG_ZERO
-      const currentPerformanceFee = cakePoolLockInfo?.performanceFee
-        ? new BigNumber(cakePoolLockInfo?.performanceFee?.toString())
-        : BIG_ZERO
-      const { cakeAsBigNumber } = convertSharesToCake(
-        new BigNumber(cakePoolLockInfo?.shares?.toString() ?? 0),
-        new BigNumber(cakePoolLockInfo?.pricePerFullShare?.toString() ?? 0),
-        undefined,
-        undefined,
-        currentOverdueFee
-          .plus(currentPerformanceFee)
-          .plus(new BigNumber(cakePoolLockInfo?.userBoostedShare?.toString() ?? 0)),
-      )
-
-      return BigInt(cakeAsBigNumber.gt(0) ? cakeAsBigNumber.toFixed(0) : 0)
-    }
+    if (!cakePoolLocked || delegated) return 0n
 
     return userInfo?.cakeAmount ?? 0n
-  }, [cakePoolLocked, cakePoolLockInfo, delegated, userInfo?.cakeAmount])
-
-  const cakeV1Amount = useMemo(() => {
-    const currentPerformanceFee = cakePoolV1Info?.performanceFee
-      ? new BigNumber(cakePoolV1Info?.performanceFee?.toString())
-      : BIG_ZERO
-    const { cakeAsBigNumber } = convertSharesToCake(
-      new BigNumber(cakePoolV1Info?.shares?.toString() ?? 0),
-      new BigNumber(cakePoolV1Info?.pricePerFullShare?.toString() ?? 0),
-      undefined,
-      undefined,
-      currentPerformanceFee,
-    )
-
-    return BigInt(cakeAsBigNumber.gt(0) ? cakeAsBigNumber.toFixed(0) : 0)
-  }, [cakePoolV1Info])
+  }, [cakePoolLocked, delegated, userInfo?.cakeAmount])
 
   const cakeLockedAmount = useMemo(() => {
     return nativeCakeLockedAmount + proxyCakeLockedAmount
@@ -218,7 +176,6 @@ export const useCakeLockStatus = (
     cakeLockedAmount,
     nativeCakeLockedAmount,
     proxyCakeLockedAmount,
-    cakeV1Amount,
     delegated,
     cakeLocked,
     cakeLockExpired,

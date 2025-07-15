@@ -5,11 +5,11 @@ import { CommitButton } from 'components/CommitButton'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import { ApprovalState } from 'hooks/useApproveCallback'
 import { ReactNode, useMemo } from 'react'
-import { CurrencyField as Field } from 'utils/types'
 import { Address } from 'viem'
 import ApproveLiquidityTokens from 'views/AddLiquidityV3/components/ApproveLiquidityTokens'
+import { CurrencyField as Field } from 'utils/types'
 
-export interface V3SubmitButtonProps {
+interface V3SubmitButtonProps {
   addIsUnsupported: boolean
   addIsWarning: boolean
   account?: string
@@ -37,7 +37,6 @@ export interface V3SubmitButtonProps {
   attemptingTxn: boolean
   errorMessage: ReactNode
   buttonText: string
-  endIcon?: ReactNode
   depositADisabled: boolean
   depositBDisabled: boolean
 }
@@ -64,7 +63,6 @@ export function V3SubmitButton({
   attemptingTxn,
   errorMessage,
   buttonText,
-  endIcon,
   depositADisabled,
   depositBDisabled,
 }: V3SubmitButtonProps) {
@@ -109,7 +107,6 @@ export function V3SubmitButton({
           shouldShowApprovalGroup={shouldShowApprovalGroup}
         />
         <CommitButton
-          endIcon={endIcon}
           variant={
             !isValid && !!parsedAmounts[Field.CURRENCY_A] && !!parsedAmounts[Field.CURRENCY_B] ? 'danger' : 'primary'
           }

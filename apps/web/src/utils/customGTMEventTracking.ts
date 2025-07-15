@@ -1,13 +1,10 @@
 import { PoolIds } from '@pancakeswap/ifos'
 import { BetPosition } from '@pancakeswap/prediction'
-import { BridgeStatus } from 'views/Swap/Bridge/types'
-import { getChainFullName } from 'views/universalFarms/utils'
 
 export enum GTMEvent {
   EventTracking = 'eventTracking',
   Swap = 'swap',
   SwapTxSent = 'swapTxSent',
-  SwapTxSuccess = 'swapTxSuccess',
   SwapConfirmed = 'swapConfirmed',
   AddLiquidity = 'addLiquidity',
   AddLiquidityConfirmed = 'addLiquidityConfirmed',
@@ -17,6 +14,7 @@ export enum GTMEvent {
   StakeFarmConfirmed = 'stakeFarmConfirmed',
   StakeFarmTxSent = 'stakeFarmTxSent',
   UnStakeFarm = 'unStakeFarm',
+  WalletConnect = 'walletConnect',
   Web3WalletView = 'Web3WalletView',
   MenuClick = 'menuClick',
   StakePool = 'stakePool',
@@ -36,22 +34,6 @@ export enum GTMEvent {
   IdoDeposit = 'idoDeposit',
   IdoClaim = 'idoClaim',
   IdoConnectWallet = 'idoConnectWallet',
-
-  // Quote
-  SWAP_QUOTE_START = 'swapQuoteStart',
-  SWAP_QUOTE_RECEIVED = 'swapQuoteReceived',
-  SWAP_QUOTE_FAILED = 'swapQuoteFailed',
-
-  // Cross Chain
-  ORDER_STATUS_START = 'orderStatusStart',
-  ORDER_STATUS_SUCCESS = 'orderStatusSuccess',
-  ORDER_STATUS_FAILED = 'orderStatusFailed',
-
-  // wallet
-  ConnectWallet = 'connectWallet',
-  DisconnectWallet = 'disconnectWallet',
-  WalletConnected = 'walletConnected',
-  WalletConnect = 'walletConnect', // deprecated
 }
 
 export enum GTMCategory {
@@ -78,7 +60,6 @@ export enum GTMAction {
   ClickSwapButton = 'Click Swap Button',
   ClickSwapConfirmButton = 'Click Swap Confirm Button',
   SwapTransactionSent = 'Swap Transaction Sent',
-  SwapTransactionSuccess = 'Swap Transaction Success',
   ClickAddLiquidityConfirmButton = 'Click Add Liquidity Confirm Button',
   AddLiquidityTransactionSent = 'Add Liquidity Transaction Sent',
   ClickAddLiquidityButton = 'Click Add Liquidity Button',
@@ -87,6 +68,7 @@ export enum GTMAction {
   ClickStakeFarmConfirmButton = 'Click Stake Farm Confirm Button',
   StakeFarmTransactionSent = 'Stake Farm Transaction Sent',
   ClickUnStakeFarmButton = 'Click UnStake Farm Button',
+  ClickWalletConnectButton = 'Click Wallet Connect and Connected',
   Web3WalletView = 'Web3 Wallet Page View',
   ClickStakePoolButton = 'Click Stake Pool Button',
   ClickEnablePoolButton = 'Click Enable Pool Button',
@@ -111,25 +93,13 @@ export enum GTMAction {
   ConfirmIDOClaim = 'Confirm IDO Claim After TGE',
   IDOConnectWalletPreTGE = 'IDO Connect Wallet Pre TGE',
   IDOConnectWalletDuringTGE = 'IDO Connect Wallet During TGE',
-
-  // Quote
-  QuoterQuery = 'Query price from Quoter',
-
-  // Cross Chain
-  UpdateOrderStatus = 'Update Order Status',
-
-  // Wallet
-  ClickWalletConnectButton = 'Click Wallet Connect and Connected', // deprecated
-  ClickOnWalletBtn = 'click on the connect wallet button',
-  WalletConnectSucc = 'wallet connected successfully',
-  ClickOnDisconnectedBtn = 'click on the disconnected wallet button',
 }
 
 interface CustomGTMDataLayer {
   event: GTMEvent
   category?: GTMCategory
   action?: GTMAction
-  [key: string]: unknown
+  label?: string
 }
 
 type WindowWithDataLayer = Window & {
@@ -151,94 +121,30 @@ export const logGTMClickTokenHighLightTradeEvent = (label?: string) => {
   })
 }
 
-interface LogGTMClickSwapEventOptions {
-  fromChain?: number
-  toChain?: number
-  fromToken?: string
-  toToken?: string
-  amount?: string
-  amountOut?: string
-  priceImpact?: number
-}
-
-export const logGTMClickSwapEvent = ({
-  fromChain,
-  toChain,
-  fromToken,
-  toToken,
-  amount,
-  amountOut,
-  priceImpact,
-}: LogGTMClickSwapEventOptions) => {
+export const logGTMClickSwapEvent = () => {
   console.info('---Swap---')
   window?.dataLayer?.push({
     event: GTMEvent.Swap,
     action: GTMAction.ClickSwapButton,
     category: GTMCategory.Swap,
-    fromChain,
-    toChain,
-    fromToken,
-    toToken,
-    amount,
-    amountOut,
-    priceImpact,
   })
 }
 
-export const logGTMClickSwapConfirmEvent = ({
-  fromChain,
-  toChain,
-  fromToken,
-  toToken,
-  amount,
-  amountOut,
-  priceImpact,
-}: LogGTMClickSwapEventOptions) => {
+export const logGTMClickSwapConfirmEvent = () => {
   console.info('---SwapClickConfirm---')
   window?.dataLayer?.push({
     event: GTMEvent.SwapConfirmed,
     action: GTMAction.ClickSwapConfirmButton,
     category: GTMCategory.Swap,
-    fromChain,
-    toChain,
-    fromToken,
-    toToken,
-    amount,
-    amountOut,
-    priceImpact,
   })
 }
 
-export const logGTMSwapTxSentEvent = (options?: {
-  walletType?: string
-  txType?: 'batch' | 'normal' | 'fallback'
-  chainId?: number
-  symbol?: string
-}) => {
-  // NOTE: SwapTxSent is called when the confirm wallet is clicked, not when the tx is sent
-  // There is no txHash in this event.
-  // SwapTxSuccess is called when the txHash is confirmed.
+export const logGTMSwapTxSentEvent = () => {
   console.info('---SwapTxSent---')
   window?.dataLayer?.push({
     event: GTMEvent.SwapTxSent,
     action: GTMAction.SwapTransactionSent,
     category: GTMCategory.Swap,
-    walletType: options?.walletType,
-    txType: options?.txType,
-    chainId: options?.chainId,
-    symbol: options?.symbol,
-  })
-}
-
-export const logGTMSwapTxSuccessEvent = ({ txHash }: LogGTMClickSwapEventOptions & { txHash: string }) => {
-  console.info('---SwapTxSuccess---', {
-    txHash,
-  })
-  window?.dataLayer?.push({
-    event: GTMEvent.SwapTxSuccess,
-    action: GTMAction.SwapTransactionSuccess,
-    category: GTMCategory.Swap,
-    txHash,
   })
 }
 
@@ -314,46 +220,13 @@ export const logGTMClickRemoveLiquidityEvent = () => {
   })
 }
 
-export const logGTMConnectWalletEvent = (chainId: number | undefined) => {
-  const info = chainId && getChainFullName(chainId)
-  console.info('---ConnectWallet---', info)
+export const logGTMWalletConnectEvent = (walletTitle?: string) => {
+  console.info('---WalletConnect---')
   window?.dataLayer?.push({
-    event: GTMEvent.ConnectWallet,
-    action: GTMAction.ClickOnWalletBtn,
-    category: GTMCategory.WalletConnect,
-    info,
-  })
-}
-export const logGTMWalletConnectedEvent = (
-  chainId: number | undefined,
-  walletTitle: string | undefined,
-  address: string | undefined,
-) => {
-  const info = chainId && getChainFullName(chainId)
-  console.info('---WalletConnected---', info, walletTitle, address)
-  window?.dataLayer?.push({
-    event: GTMEvent.WalletConnected,
-    action: GTMAction.WalletConnectSucc,
+    event: GTMEvent.WalletConnect,
+    action: GTMAction.ClickWalletConnectButton,
     category: GTMCategory.WalletConnect,
     label: walletTitle,
-    desc: address,
-    info,
-  })
-}
-export const logGTMDisconnectWalletEvent = (
-  chainId: number | undefined,
-  walletTitle: string | undefined,
-  address: string | undefined,
-) => {
-  const info = chainId && getChainFullName(chainId)
-  console.info('---DisconnectWallet---', info, walletTitle, address)
-  window?.dataLayer?.push({
-    event: GTMEvent.DisconnectWallet,
-    action: GTMAction.ClickOnDisconnectedBtn,
-    category: GTMCategory.WalletConnect,
-    label: walletTitle,
-    desc: address,
-    info,
   })
 }
 
@@ -442,24 +315,22 @@ export const logGTMFiatOnRampModalEvent = (provider: string | undefined) => {
   })
 }
 
-export const logGTMPredictionBetEvent = (position: BetPosition, address?: string) => {
-  console.info(`---PredictionBet${position}---`, address)
+export const logGTMPredictionBetEvent = (position: BetPosition) => {
+  console.info(`---PredictionBet${position}---`)
   window?.dataLayer?.push({
     event: GTMEvent.PredictionBet,
     action: position === BetPosition.BULL ? GTMAction.ClickBetUpButton : GTMAction.ClickBetDownButton,
     category: GTMCategory.Prediction,
-    desc: address,
   })
 }
 
-export const logGTMPredictionBetPlacedEvent = (position: string, address?: string) => {
-  console.info('---PredictionBetPlaced---', address)
+export const logGTMPredictionBetPlacedEvent = (position: string) => {
+  console.info('---PredictionBetPlaced---')
   window?.dataLayer?.push({
     event: GTMEvent.PredictionBetPlaced,
     action: GTMAction.PredictionBetPlaced,
     category: GTMCategory.Prediction,
     label: `Position: ${position}`,
-    desc: address,
   })
 }
 
@@ -514,50 +385,5 @@ export const logGTMIdoConnectWalletEvent = (preTGE: boolean) => {
     event: GTMEvent.IdoConnectWallet,
     action: preTGE ? GTMAction.IDOConnectWalletPreTGE : GTMAction.IDOConnectWalletDuringTGE,
     category: GTMCategory.IDO,
-  })
-}
-
-export const logGTMOrderStatusEvent = (status: BridgeStatus) => {
-  console.info('---OrderStatus---', status)
-  const event = status === BridgeStatus.SUCCESS ? GTMEvent.ORDER_STATUS_SUCCESS : GTMEvent.ORDER_STATUS_FAILED
-
-  window?.dataLayer?.push({
-    event: GTMEvent.ORDER_STATUS_START,
-    action: GTMAction.UpdateOrderStatus,
-  })
-}
-
-export const logGTMQuoteQueryEvent = (
-  type: 'start' | 'succ' | 'fail',
-  options: LogGTMClickSwapEventOptions & { errorMessage?: string },
-) => {
-  const { fromChain, toChain, fromToken, toToken, amount, amountOut } = options
-
-  const event =
-    type === 'succ'
-      ? GTMEvent.SWAP_QUOTE_RECEIVED
-      : type === 'start'
-      ? GTMEvent.SWAP_QUOTE_START
-      : GTMEvent.SWAP_QUOTE_FAILED
-
-  if (type === 'start') {
-    console.info('---QuoteStart---', options)
-  } else if (type === 'succ') {
-    console.info('---QuoteSuccess---', options, amountOut)
-  } else {
-    console.info('---QuoteFailed---', options)
-  }
-
-  window?.dataLayer?.push({
-    event,
-    action: GTMAction.QuoterQuery,
-    category: GTMCategory.Swap,
-    fromChain,
-    toChain,
-    fromToken,
-    toToken,
-    amount,
-    amountOut,
-    type,
   })
 }

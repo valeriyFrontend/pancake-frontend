@@ -6,13 +6,14 @@ import { CommitButton } from 'components/CommitButton'
 import CurrencyInputPanel from 'components/CurrencyInputPanel'
 
 import { ApprovalState } from 'hooks/useApproveCallback'
-import { logGTMClickAddLiquidityEvent } from 'utils/customGTMEventTracking'
 import { CurrencyField as Field } from 'utils/types'
+import { logGTMClickAddLiquidityEvent } from 'utils/customGTMEventTracking'
 
 import { useTranslation } from '@pancakeswap/localization'
 import { useIsExpertMode } from '@pancakeswap/utils/user'
 import { LightGreyCard } from 'components/Card'
 import ConnectWalletButton from 'components/ConnectWalletButton'
+import useActiveWeb3React from 'hooks/useActiveWeb3React'
 
 import { CurrencyAmount, Percent } from '@pancakeswap/sdk'
 import { BIG_ONE_HUNDRED } from '@pancakeswap/utils/bigNumber'
@@ -25,11 +26,8 @@ import { FormattedSlippage } from 'views/AddLiquidity/AddStableLiquidity/compone
 
 import { RowFixed } from 'components/Layout/Row'
 
-import { useActiveChainId } from 'hooks/useActiveChainId'
 import { ReactElement } from 'react'
 import { formatAmount } from 'utils/formatInfoNumbers'
-import { MevProtectToggle } from 'views/Mev/MevProtectToggle'
-import { useAccount } from 'wagmi'
 import { HideMedium, MediumOnly, RightContainer } from './V3FormView'
 
 export default function StableFormView({
@@ -64,8 +62,7 @@ export default function StableFormView({
   const addIsUnsupported = useIsTransactionUnsupported(currencies?.CURRENCY_A, currencies?.CURRENCY_B)
   const addIsWarning = useIsTransactionWarning(currencies?.CURRENCY_A, currencies?.CURRENCY_B)
 
-  const { isWrongNetwork } = useActiveChainId()
-  const { address: account } = useAccount()
+  const { account, isWrongNetwork } = useActiveWeb3React()
   const { t } = useTranslation()
   const expertMode = useIsExpertMode()
 
@@ -183,7 +180,6 @@ export default function StableFormView({
           showCommonBases
           commonBasesType={CommonBasesType.LIQUIDITY}
         />
-        <MevProtectToggle size="sm" />
       </AutoColumn>
       <HideMedium>{buttons}</HideMedium>
 

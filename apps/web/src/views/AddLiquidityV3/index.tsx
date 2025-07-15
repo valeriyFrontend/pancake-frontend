@@ -30,7 +30,6 @@ import { usePreviousValue } from '@pancakeswap/hooks'
 import { useCurrency } from 'hooks/Tokens'
 import AddLiquidity from 'views/AddLiquidity'
 import AddStableLiquidity from 'views/AddLiquidity/AddStableLiquidity'
-import useWarningLiquidity from 'views/AddLiquidity/hooks/useWarningLiquidity'
 import useStableConfig, { StableConfigContext } from 'views/Swap/hooks/useStableConfig'
 
 import { useActiveChainId } from 'hooks/useActiveChainId'
@@ -101,7 +100,6 @@ export function UniversalAddLiquidity({
   const router = useRouter()
   const baseCurrency = useCurrency(currencyIdA)
   const currencyB = useCurrency(currencyIdB)
-  const warningHandler = useWarningLiquidity(currencyIdA, currencyIdB)
 
   const stableConfig = useStableConfig({
     tokenA: baseCurrency,
@@ -150,7 +148,6 @@ export function UniversalAddLiquidity({
 
   const handleCurrencyASelect = useCallback(
     (currencyANew: Currency) => {
-      warningHandler(currencyANew)
       const [idA, idB] = handleCurrencySelect(currencyANew, currencyIdB)
       const newPathname = router.pathname.replace('/v2', '').replace('/stable', '')
       const { minPrice: _minPrice, maxPrice: _maxPrice, ...rest } = router.query
@@ -185,7 +182,6 @@ export function UniversalAddLiquidity({
 
   const handleCurrencyBSelect = useCallback(
     (currencyBNew: Currency) => {
-      warningHandler(currencyBNew)
       const [idB, idA] = handleCurrencySelect(currencyBNew, currencyIdA)
       const newPathname = router.pathname.replace('/v2', '').replace('/stable', '')
       const { minPrice: _minPrice, maxPrice: _maxPrice, ...rest } = router.query
@@ -348,7 +344,6 @@ export function UniversalAddLiquidity({
               )}
             </DynamicSection>
           </AutoColumn>
-
           {selectorType === SELECTOR_TYPE.STABLE && (
             <StableConfigContext.Provider value={stableConfig}>
               <AddStableLiquidity currencyA={baseCurrency} currencyB={quoteCurrency}>
@@ -395,7 +390,6 @@ export function AddLiquidityV3Layout({
 }) {
   const { t } = useTranslation()
   const { chainId } = useActiveChainId()
-  const router = useRouter()
 
   const [selectType] = useAtom(selectTypeAtom)
   const { currencyIdA, currencyIdB, feeAmount } = useCurrencyParams()
@@ -429,7 +423,7 @@ export function AddLiquidityV3Layout({
     <BodyWrapper mb={isMobile ? '40px' : '0px'}>
       <AppHeader
         title={title}
-        backTo={router.back ?? '/liquidity/positions'}
+        backTo="/liquidity/positions"
         IconSlot={
           <>
             {selectType === SELECTOR_TYPE.V3 && <AprCalculatorV2 derived pool={pool} inverted={inverted} />}

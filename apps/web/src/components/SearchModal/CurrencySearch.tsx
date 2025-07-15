@@ -1,23 +1,11 @@
 import { useDebounce, useSortedTokensByQuery } from '@pancakeswap/hooks'
 import { useTranslation } from '@pancakeswap/localization'
 /* eslint-disable no-restricted-syntax */
-import { ChainId, Currency, getTokenComparator, Token } from '@pancakeswap/sdk'
-import { createFilterToken, WrappedTokenInfo } from '@pancakeswap/token-lists'
-import {
-  AutoColumn,
-  Box,
-  CogIcon,
-  Column,
-  Flex,
-  IconButton,
-  ModalCloseButton,
-  ModalTitle,
-  Spinner,
-  Text,
-  useMatchBreakpoints,
-} from '@pancakeswap/uikit'
+import { Currency, Token } from '@pancakeswap/sdk'
+import { WrappedTokenInfo, createFilterToken } from '@pancakeswap/token-lists'
+import { AutoColumn, Box, Column, Input, Text, useMatchBreakpoints } from '@pancakeswap/uikit'
 import { useAudioPlay } from '@pancakeswap/utils/user'
-import { ChangeEvent, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { KeyboardEvent, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FixedSizeList } from 'react-window'
 import { isAddress } from 'viem'
 
@@ -26,17 +14,12 @@ import useNativeCurrency from 'hooks/useNativeCurrency'
 import { useAllLists, useInactiveListUrls } from 'state/lists/hooks'
 import { safeGetAddress } from 'utils'
 
-import { UpdaterByChainId } from 'state/lists/updater'
-import { useAllTokenBalances } from 'state/wallet/hooks'
-import { getTokenAddressFromSymbolAlias } from 'utils/getTokenAlias'
-import { useAccount } from 'wagmi'
+import { useTokenComparator } from 'hooks/useTokenComparator'
 import { useAllTokens, useIsUserAddedToken, useToken } from '../../hooks/Tokens'
 import Row from '../Layout/Row'
-import CommonBases, { BaseWrapper } from './CommonBases'
+import CommonBases from './CommonBases'
 import CurrencyList from './CurrencyList'
-import { CurrencySearchInput } from './CurrencySearchInput'
 import ImportRow from './ImportRow'
-import SwapNetworkSelection from './SwapNetworkSelection'
 import { getSwapSound } from './swapSound'
 
 interface CurrencySearchProps {
@@ -50,25 +33,13 @@ interface CurrencySearchProps {
   setImportToken: (token: Token) => void
   height?: number
   tokensToShow?: Token[]
-  showChainLogo?: boolean
-  showSearchHeader?: boolean
-  headerTitle?: React.ReactNode
-  onDismiss?: () => void
-  setSelectedChainId: (chainId: ChainId) => void
-  selectedChainId?: ChainId
-  mode?: string
-  supportCrossChain?: boolean
-  onSettingsClick?: () => void
 }
 
 function useSearchInactiveTokenLists(search: string | undefined, minResults = 10): WrappedTokenInfo[] {
   const lists = useAllLists()
   const inactiveUrls = useInactiveListUrls()
-
   const { chainId } = useActiveChainId()
-
   const activeTokens = useAllTokens()
-
   return useMemo(() => {
     if (!search || search.trim().length === 0) return []
     const filterToken = createFilterToken(search, (address) => isAddress(address))
@@ -118,40 +89,28 @@ function CurrencySearch({
   setImportToken,
   height,
   tokensToShow,
-  showChainLogo,
-  showSearchHeader,
-  onDismiss,
-  headerTitle,
-  setSelectedChainId,
-  selectedChainId,
-  mode,
-  supportCrossChain = false,
-  onSettingsClick,
 }: CurrencySearchProps) {
   const { t } = useTranslation()
-  const account = useAccount()
-  const [searchQuery, setSearchQuery] = useState<string>('')
-  const debouncedQuery = useDebounce(getTokenAddressFromSymbolAlias(searchQuery, selectedChainId, searchQuery), 200)
+  const { chainId } = useActiveChainId()
+
   // refs for fixed size lists
   const fixedList = useRef<FixedSizeList>()
+
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const debouncedQuery = useDebounce(searchQuery, 200)
+
+  const [invertSearchOrder] = useState<boolean>(false)
+
+  const allTokens = useAllTokens()
+
+  // if they input an address, use it
+  const searchToken = useToken(debouncedQuery)
+  const searchTokenIsAdded = useIsUserAddedToken(searchToken)
 
   const { isMobile } = useMatchBreakpoints()
   const [audioPlay] = useAudioPlay()
 
-  // === use all tokens and native currency related to the chainId
-
-  const allTokens = useAllTokens(selectedChainId)
-  const native = useNativeCurrency(selectedChainId)
-
-  const searchToken = useToken(debouncedQuery, selectedChainId)
-
-  // if they input an address, use it
-  const searchTokenIsAdded = useIsUserAddedToken(searchToken, selectedChainId)
-
-  // if no results on main list, show option to expand into inactive
-  const filteredInactiveTokens = useSearchInactiveTokenLists(debouncedQuery)
-
-  // ====
+  const native = useNativeCurrency()
 
   const showNative: boolean = useMemo(() => {
     if (tokensToShow) return false
@@ -165,14 +124,12 @@ function CurrencySearch({
   }, [tokensToShow, allTokens, debouncedQuery])
 
   const filteredQueryTokens = useSortedTokensByQuery(filteredTokens, debouncedQuery)
+  const tokenComparator = useTokenComparator(invertSearchOrder)
 
-  const { balances, isLoading: isLoadingBalances } = useAllTokenBalances(selectedChainId)
-
-  const filteredSortedTokens: Token[] = useMemo(() => {
-    const tokenComparator = getTokenComparator(balances ?? {})
-
-    return [...filteredQueryTokens].sort(tokenComparator)
-  }, [filteredQueryTokens, balances])
+  const filteredSortedTokens: Token[] = useMemo(
+    () => [...filteredQueryTokens].sort(tokenComparator),
+    [filteredQueryTokens, tokenComparator],
+  )
 
   const handleCurrencySelect = useCallback(
     (currency: Currency) => {
@@ -191,7 +148,7 @@ function CurrencySearch({
     if (!isMobile) inputRef.current?.focus()
   }, [isMobile])
 
-  const handleOnInput = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+  const handleInput = useCallback((event) => {
     const input = event.target.value
     const checksummedInput = safeGetAddress(input)
     setSearchQuery(checksummedInput || input)
@@ -217,6 +174,9 @@ function CurrencySearch({
     [debouncedQuery, filteredSortedTokens, handleCurrencySelect, native],
   )
 
+  // if no results on main list, show option to expand into inactive
+  const filteredInactiveTokens = useSearchInactiveTokenLists(debouncedQuery)
+
   const hasFilteredInactiveTokens = Boolean(filteredInactiveTokens?.length)
 
   const getCurrencyListRows = useCallback(() => {
@@ -224,7 +184,6 @@ function CurrencySearch({
       return (
         <Column style={{ padding: '20px 0', height: '100%' }}>
           <ImportRow
-            chainId={selectedChainId}
             onCurrencySelect={handleCurrencySelect}
             token={searchToken}
             showImportView={showImportView}
@@ -235,9 +194,9 @@ function CurrencySearch({
     }
 
     return Boolean(filteredSortedTokens?.length) || hasFilteredInactiveTokens ? (
-      <Box mx="-24px" mt="20px" height="100%">
+      <Box mx="-24px" mt="20px" mb="24px">
         <CurrencyList
-          height={isMobile ? (showCommonBases ? height || 250 : height ? height + 80 : 350) : 340}
+          height={isMobile ? (showCommonBases ? height || 250 : height ? height + 80 : 350) : 390}
           showNative={showNative}
           currencies={filteredSortedTokens}
           inactiveCurrencies={filteredInactiveTokens}
@@ -250,8 +209,6 @@ function CurrencySearch({
           fixedListRef={fixedList}
           showImportView={showImportView}
           setImportToken={setImportToken}
-          showChainLogo={showChainLogo}
-          chainId={selectedChainId}
         />
       </Box>
     ) : (
@@ -277,74 +234,35 @@ function CurrencySearch({
     showCommonBases,
     isMobile,
     height,
-    showChainLogo,
-    selectedChainId,
   ])
 
   return (
     <>
-      {selectedChainId ? <UpdaterByChainId chainId={selectedChainId} /> : null}
-
-      {showSearchHeader && (
-        <ModalTitle my="12px" display="flex" flexDirection="column">
-          <Flex justifyContent="space-between" alignItems="center" width="100%">
-            <Text fontSize="20px" mr="16px" bold>
-              {headerTitle}
-            </Text>
-            <Box mr="-16px">
-              <ModalCloseButton onDismiss={onDismiss} padding="0" />
-            </Box>
-          </Flex>
-          <Flex width="100%" alignItems="center">
-            <CurrencySearchInput
-              autoFocus={false}
-              inputRef={inputRef}
-              handleEnter={handleEnter}
-              onInput={handleOnInput}
-              compact
-            />
-
-            {onSettingsClick && (
-              <IconButton onClick={onSettingsClick} variant="text" scale="sm" ml="8px">
-                <BaseWrapper style={{ padding: '6px' }}>
-                  <CogIcon height={24} width={24} color="textSubtle" />
-                </BaseWrapper>
-              </IconButton>
-            )}
-          </Flex>
-        </ModalTitle>
-      )}
       <AutoColumn gap="16px">
-        {showSearchInput && !showSearchHeader && (
+        {showSearchInput && (
           <Row>
-            <CurrencySearchInput inputRef={inputRef} handleEnter={handleEnter} onInput={handleOnInput} />
+            <Input
+              id="token-search-input"
+              placeholder={t('Search by name or paste address')}
+              scale="lg"
+              autoComplete="off"
+              value={searchQuery}
+              ref={inputRef as RefObject<HTMLInputElement>}
+              onChange={handleInput}
+              onKeyDown={handleEnter}
+            />
           </Row>
         )}
-        {supportCrossChain ? (
-          <SwapNetworkSelection
-            chainId={selectedChainId}
-            onSelect={(currentChainId) => setSelectedChainId(currentChainId)}
-            isDependent={mode === 'swap-currency-output'}
-          />
-        ) : null}
-
         {showCommonBases && (
           <CommonBases
-            supportCrossChain={supportCrossChain}
-            chainId={selectedChainId}
+            chainId={chainId}
             onSelect={handleCurrencySelect}
             selectedCurrency={selectedCurrency}
             commonBasesType={commonBasesType}
           />
         )}
       </AutoColumn>
-      {account && isLoadingBalances ? (
-        <Flex width="100%" justifyContent="center" alignItems="center" pt="24px">
-          <Spinner />
-        </Flex>
-      ) : (
-        getCurrencyListRows()
-      )}
+      {getCurrencyListRows()}
     </>
   )
 }

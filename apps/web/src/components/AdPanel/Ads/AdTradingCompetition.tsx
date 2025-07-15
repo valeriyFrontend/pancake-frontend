@@ -1,60 +1,50 @@
 import { useTranslation } from '@pancakeswap/localization'
-import { Link, useMatchBreakpoints } from '@pancakeswap/uikit'
-import { useMemo } from 'react'
+import { Link } from '@pancakeswap/uikit'
 import { BodyText } from '../BodyText'
 import { AdButton } from '../Button'
 import { AdCard } from '../Card'
 
+import { tradingCompetitionConfig } from '../InfoStripes/TradingCompetition'
 import { AdPlayerProps } from '../types'
 import { getImageUrl } from '../utils'
 
-const tradingCompetitionConfig: {
-  [key: string]: {
-    imgUrl: string
-    swapUrl: string
-    learnMoreUrl: string
-    reward: string
-    unit: string
-    endTimestamp: number
-  }
-} = {}
-
-export const AdTradingCompetition = (props: AdPlayerProps & { token: string }) => {
+export const AdTradingCompetition = (props: AdPlayerProps & { token: 'aitech' | 'apt' | 'vinu' | 'bfg' | 'andy' }) => {
   const { t } = useTranslation()
-  const { isMobile } = useMatchBreakpoints()
   const { token, ...rest } = props
-  const { unit, reward, imgUrl, swapUrl, learnMoreUrl } = tradingCompetitionConfig[token]
+  const { unit, reward } = tradingCompetitionConfig[token]
 
   return (
-    <AdCard imageUrl={getImageUrl(imgUrl)} {...rest}>
+    <AdCard imageUrl={getImageUrl(tradingCompetitionConfig[token].imgUrl)} {...rest}>
       <BodyText mb="0">
-        {isMobile
-          ? t('Swap %token% to win a share of', { token: token.toUpperCase() })
-          : t('Join %token% Trading Competition to share of', { token: token.toUpperCase() })}{' '}
+        {t('Swap %token% to win a share of', { token: token.toUpperCase() })}{' '}
         {unit === '$' ? `$${reward}` : `${reward} ${unit}`}.{' '}
-        <Link style={!isMobile ? { display: 'inline' } : {}} fontSize="inherit" href={swapUrl} color="secondary" bold>
+        <Link fontSize="inherit" href={tradingCompetitionConfig[token].swapUrl} color="secondary" bold>
           {t('Swap Now')}
         </Link>
       </BodyText>
-      <AdButton mt="16px" href={learnMoreUrl} externalIcon isExternalLink>
+      <AdButton mt="16px" href={tradingCompetitionConfig[token].learnMoreUrl} externalIcon isExternalLink>
         {t('Learn More')}
       </AdButton>
     </AdCard>
   )
 }
 
-export const useTradingCompetitionAds = () => {
-  return useMemo(() => {
-    const currentTime = Math.floor(Date.now() / 1000)
-    return Object.keys(tradingCompetitionConfig)
-      .filter((token) => {
-        const { endTimestamp } = tradingCompetitionConfig[token]
-        return currentTime <= endTimestamp
-      })
-      .reverse()
-      .map((token) => ({
-        id: `ad-${token}-tc`,
-        component: <AdTradingCompetition key={token} token={token} />,
-      }))
-  }, [])
+export const AdTradingCompetitionAiTech = (props: AdPlayerProps) => {
+  return <AdTradingCompetition token="aitech" {...props} />
+}
+
+export const AdTradingCompetitionApt = (props: AdPlayerProps) => {
+  return <AdTradingCompetition token="apt" {...props} />
+}
+
+export const AdTradingCompetitionBfg = (props: AdPlayerProps) => {
+  return <AdTradingCompetition token="bfg" {...props} />
+}
+
+export const AdTradingCompetitionVinu = (props: AdPlayerProps) => {
+  return <AdTradingCompetition token="vinu" {...props} />
+}
+
+export const AdTradingCompetitionAndy = (props: AdPlayerProps) => {
+  return <AdTradingCompetition token="andy" {...props} />
 }

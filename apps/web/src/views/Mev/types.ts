@@ -8,10 +8,3 @@ export interface RPCResponse {
   jsonrpc: string
   result: number
 }
-
-export enum WalletType {
-  mevNotSupported,
-  mevDefaultOnBSC,
-  mevOnlyManualConfig,
-  nativeSupportCustomRPC,
-}

@@ -3,6 +3,8 @@ import BigNumber from 'bignumber.js'
 import { SentryErrorBoundary } from 'components/ErrorBoundary'
 import GlobalCheckClaimStatus from 'components/GlobalCheckClaimStatus'
 import { PageMeta } from 'components/Layout/Page'
+import { AffiliateExpiredModal } from 'components/Modal/AffiliateExpiredModal'
+import { AffiliateSunsetModal } from 'components/Modal/AffiliateSunsetModal'
 import { SimpleStakingSunsetModal } from 'components/Modal/SimpleStakingSunsetModal'
 import { NetworkModal } from 'components/NetworkModal'
 import { FixedSubgraphHealthIndicator } from 'components/SubgraphHealthIndicator/FixedSubgraphHealthIndicator'
@@ -16,36 +18,35 @@ import useLockedEndNotification from 'hooks/useLockedEndNotification'
 import useSentryUser from 'hooks/useSentryUser'
 import useThemeCookie from 'hooks/useThemeCookie'
 import useUserAgent from 'hooks/useUserAgent'
+import { NextPage } from 'next'
 import { DefaultSeo } from 'next-seo'
 import type { AppProps } from 'next/app'
 import dynamic from 'next/dynamic'
 import Head from 'next/head'
 import Script from 'next/script'
-import { Fragment, Suspense } from 'react'
+import { Fragment } from 'react'
 import { PersistGate } from 'redux-persist/integration/react'
 import 'utils/abortcontroller-polyfill'
+import { V4CakeIcon } from 'views/Home/components/V4CakeIcon'
 
-import { DesktopCard } from 'components/AdPanel/DesktopCard'
-import { MobileCard } from 'components/AdPanel/MobileCard'
+import { AdPanel } from 'components/AdPanel'
 import { layoutDesktopAdIgnoredPages, layoutMobileAdIgnoredPages } from 'components/AdPanel/config'
 import { shouldRenderOnPages } from 'components/AdPanel/renderConditions'
-import { Cb1Membership } from 'components/Cb1/Cb1Membership'
 import { ZKSyncAirdropModalWithAutoPopup } from 'components/ClaimZksyncAirdropModal'
 import { useDataDogRUM } from 'hooks/useDataDogRUM'
 import { useLoadExperimentalFeatures } from 'hooks/useExperimentalFeatureEnabled'
 import useInitNotificationsClient from 'hooks/useInitNotificationsClient'
 import { useVercelFeatureFlagOverrides } from 'hooks/useVercelToolbar'
-import { useWalletConnectRouterSync } from 'hooks/useWalletConnectRouterSync'
 import { useWeb3WalletView } from 'hooks/useWeb3WalletView'
 import { useInitGlobalWorker } from 'hooks/useWorker'
 import { persistor, useStore } from 'state'
 import { usePollBlockNumber } from 'state/block/hooks'
+import { useWalletConnectRouterSync } from 'hooks/useWalletConnectRouterSync'
 import { Blocklist, Updaters } from '..'
 import { SEO } from '../../next-seo.config'
 import Providers from '../Providers'
 import Menu, { SharedComponentWithOutMenu } from '../components/Menu'
 import GlobalStyle from '../style/Global'
-import { NextPageWithLayout } from '../utils/page.types'
 
 const EasterEgg = dynamic(() => import('components/EasterEgg'), { ssr: false })
 
@@ -104,7 +105,11 @@ function MyApp(props: AppProps<{ initialReduxState: any; dehydratedState: any }>
       </Head>
       <DefaultSeo {...SEO} />
       {/* <LoadVConsole /> */}
-      <Providers store={store} dehydratedState={pageProps.dehydratedState}>
+      <Providers
+        store={store}
+        dehydratedState={pageProps.dehydratedState}
+        w3wWagmiConfig={(Component as any).w3wWagmiConfig}
+      >
         <PageMeta />
         {(Component as NextPageWithLayout).Meta && (
           // @ts-ignore
@@ -136,6 +141,26 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   )
 }
 
+type NextPageWithLayout = NextPage & {
+  Layout?: React.FC<React.PropsWithChildren<unknown>>
+  /** render component without all layouts */
+  pure?: true
+  /** is mini program */
+  mp?: boolean
+  /**
+   * allow chain per page, empty array bypass chain block modal
+   * @default [ChainId.BSC]
+   * */
+  chains?: number[]
+  isShowScrollToTopButton?: true
+  screen?: true
+  isShowV4IconButton?: false
+  /**
+   * Meta component for page, hacky solution for static build page to avoid `PersistGate` which blocks the page from rendering
+   */
+  Meta?: React.FC<React.PropsWithChildren<unknown>>
+}
+
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout
 }
@@ -152,29 +177,30 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
   const ShowMenu = Component.mp ? SharedComponentWithOutMenu : Menu
   const isShowScrollToTopButton = Component.isShowScrollToTopButton || true
   const shouldScreenWallet = Component.screen || false
+  const isShowV4IconButton = Component.isShowV4IconButton || false
 
   return (
     <ProductionErrorBoundary>
-      <Suspense>
-        <ShowMenu>
-          <Layout>
-            <Component {...pageProps} />
-            <MobileCard shouldRender={!shouldRenderOnPages(layoutMobileAdIgnoredPages)} mt="4px" mb="12px" />
-            <DesktopCard shouldRender={!shouldRenderOnPages(layoutDesktopAdIgnoredPages)} />
-          </Layout>
-        </ShowMenu>
-        <EasterEgg iterations={2} />
-        <ToastListener />
-        <FixedSubgraphHealthIndicator />
-        <NetworkModal pageSupportedChains={Component.chains} />
-        <TransactionsDetailModal />
-        {isShowScrollToTopButton && <ScrollToTopButtonV2 />}
-        {shouldScreenWallet && <Blocklist />}
-        <ZKSyncAirdropModalWithAutoPopup />
-        <SimpleStakingSunsetModal />
-        <VercelToolbar />
-        <Cb1Membership />
-      </Suspense>
+      <ShowMenu>
+        <Layout>
+          <Component {...pageProps} />
+          <AdPanel.MobileCard shouldRender={!shouldRenderOnPages(layoutMobileAdIgnoredPages)} mt="4px" mb="12px" />
+          <AdPanel.DesktopCard shouldRender={!shouldRenderOnPages(layoutDesktopAdIgnoredPages)} />
+        </Layout>
+      </ShowMenu>
+      <EasterEgg iterations={2} />
+      <ToastListener />
+      <FixedSubgraphHealthIndicator />
+      <NetworkModal pageSupportedChains={Component.chains} />
+      <TransactionsDetailModal />
+      {isShowScrollToTopButton && <ScrollToTopButtonV2 />}
+      {shouldScreenWallet && <Blocklist />}
+      {isShowV4IconButton && <V4CakeIcon />}
+      <ZKSyncAirdropModalWithAutoPopup />
+      <AffiliateExpiredModal />
+      <AffiliateSunsetModal />
+      <SimpleStakingSunsetModal />
+      <VercelToolbar />
     </ProductionErrorBoundary>
   )
 }

@@ -1,57 +1,24 @@
 import { useTranslation } from '@pancakeswap/localization'
 import { Card, CardBody, FlexGap, Text } from '@pancakeswap/uikit'
-import getTimePeriods from '@pancakeswap/utils/getTimePeriods'
-import { NumberDisplay } from '@pancakeswap/widgets-internal'
+import { CurrencyLogo, NumberDisplay } from '@pancakeswap/widgets-internal'
 import dayjs from 'dayjs'
-import timezone from 'dayjs/plugin/timezone'
 import useTheme from 'hooks/useTheme'
-import { useMemo } from 'react'
-import { StyledLogo } from 'views/Idos/components/Icons'
-import { useCurrentIDOConfig } from 'views/Idos/hooks/ido/useCurrentIDOConfig'
 import { useIDOConfig } from 'views/Idos/hooks/ido/useIDOConfig'
 import { useIDOCurrencies } from 'views/Idos/hooks/ido/useIDOCurrencies'
 import { useIDODuration } from 'views/Idos/hooks/ido/useIDODuration'
-
-dayjs.extend(timezone)
 
 export const IdoSaleInfoCard: React.FC = () => {
   const { t } = useTranslation()
   const { theme, isDark } = useTheme()
   const { offeringCurrency, stakeCurrency0, stakeCurrency1 } = useIDOCurrencies()
   const { totalSalesAmount, status, duration, startTimestamp, endTimestamp } = useIDOConfig()
-  const { icon } = useCurrentIDOConfig() ?? {}
-  const preSaleDurationText = useIDODuration(duration)
-
-  const durationText = useMemo(() => {
-    if (status !== 'finished') {
-      return preSaleDurationText
-    }
-
-    const { days } = getTimePeriods(duration)
-    if (days < 1) {
-      return (
-        <>
-          {dayjs.unix(startTimestamp).format('DD-MM-YYYY')}
-          <br />
-          {dayjs.unix(startTimestamp).tz('Asia/Singapore').format('HH:mm')} -{' '}
-          {dayjs.unix(endTimestamp).tz('Asia/Singapore').format('HH:mm')} (UTC+8)
-        </>
-      )
-    }
-
-    return (
-      <>
-        {dayjs.unix(startTimestamp).format('DD-MM-YYYY')} {t('to')} <br />
-        {dayjs.unix(endTimestamp).format('DD-MM-YYYY')}
-      </>
-    )
-  }, [duration, endTimestamp, preSaleDurationText, startTimestamp, status, t])
+  const durationText = useIDODuration(duration)
 
   return (
     <Card background={isDark ? '#18171A' : theme.colors.background} mb="16px">
       <CardBody>
         <FlexGap gap="8px">
-          {icon && <StyledLogo size="40px" srcs={[icon]} />}
+          {offeringCurrency ? <CurrencyLogo size="40px" currency={offeringCurrency} /> : null}
           <FlexGap flexDirection="column">
             <Text fontSize="12px" bold color="secondary" lineHeight="18px" textTransform="uppercase">
               {t('Total Sale')}
@@ -70,7 +37,16 @@ export const IdoSaleInfoCard: React.FC = () => {
             <Text color="textSubtle" style={{ whiteSpace: 'nowrap' }}>
               {t('Project Duration')}
             </Text>
-            <Text textAlign="right">{durationText}</Text>
+            <Text textAlign="right">
+              {status !== 'finished' ? (
+                <>{durationText}</>
+              ) : (
+                <>
+                  {dayjs.unix(startTimestamp).format('DD-MM-YYYY')} {t('to')} <br />
+                  {dayjs.unix(endTimestamp).format('DD-MM-YYYY')}
+                </>
+              )}
+            </Text>
           </FlexGap>
         </FlexGap>
         {status !== 'finished' && (

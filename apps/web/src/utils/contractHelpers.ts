@@ -1,10 +1,4 @@
 import { ChainId } from '@pancakeswap/chains'
-import {
-  BinPoolManagerAbi,
-  BinPositionManagerAbi,
-  CLPoolManagerAbi,
-  CLPositionManagerAbi,
-} from '@pancakeswap/infinity-sdk'
 import { CAKE } from '@pancakeswap/tokens'
 
 // Addresses
@@ -18,9 +12,7 @@ import {
   getBCakeFarmWrapperBoosterVeCakeAddress,
   getBunnyFactoryAddress,
   getCakeFlexibleSideVaultAddress,
-  getCakePoolAddress,
   getCakeVaultAddress,
-  getCakeVaultV1Address,
   getCalcGaugesVotingAddress,
   getCrossFarmingReceiverAddress,
   getCrossFarmingSenderAddress,
@@ -28,7 +20,6 @@ import {
   getFarmAuctionAddress,
   getFixedStakingAddress,
   getGaugesVotingAddress,
-  getInfinityPositionManagerAddress,
   getLotteryV2Address,
   getMasterChefV2Address,
   getMasterChefV3Address,
@@ -38,7 +29,6 @@ import {
   getPancakeSquadAddress,
   getPancakeVeSenderV2Address,
   getPointCenterIfoAddress,
-  getPoolManagerAddress,
   getPotteryDrawAddress,
   getPredictionsV1Address,
   getRevenueSharingCakePoolAddress,
@@ -73,7 +63,7 @@ import { bCakeFarmBoosterVeCakeABI } from '@pancakeswap/farms/constants/v3/abi/b
 import { bCakeFarmWrapperBoosterVeCakeABI } from '@pancakeswap/farms/constants/v3/abi/bCakeFarmWrapperBoosterVeCake'
 import { calcGaugesVotingABI, gaugesVotingABI } from '@pancakeswap/gauges'
 import { getIfoCreditAddressContract as getIfoCreditAddressContract_ } from '@pancakeswap/ifos'
-import { cakeFlexibleSideVaultV2ABI, cakeVaultV1ABI, cakeVaultV2ABI } from '@pancakeswap/pools'
+import { cakeFlexibleSideVaultV2ABI, cakeVaultV2ABI } from '@pancakeswap/pools'
 import {
   positionManagerAdapterABI,
   positionManagerVeBCakeWrapperABI,
@@ -88,7 +78,6 @@ import { bCakeFarmBoosterABI } from 'config/abi/bCakeFarmBooster'
 import { bCakeFarmBoosterProxyFactoryABI } from 'config/abi/bCakeFarmBoosterProxyFactory'
 import { bCakeProxyABI } from 'config/abi/bCakeProxy'
 import { bunnyFactoryABI } from 'config/abi/bunnyFactory'
-import { cakePoolAbi } from 'config/abi/cakePool'
 import { chainlinkOracleABI } from 'config/abi/chainlinkOracle'
 import { crossFarmingReceiverABI } from 'config/abi/crossFarmingReceiver'
 import { farmAuctionABI } from 'config/abi/farmAuction'
@@ -127,10 +116,6 @@ import {
   erc721Abi,
   getContract as viemGetContract,
 } from 'viem'
-
-export type GetContractFn<TAbi extends Abi | readonly unknown[], TWalletClient extends WalletClient> = (
-  ...args: any[]
-) => ReturnType<typeof getContract<TAbi, TWalletClient>>
 
 export const getContract = <TAbi extends Abi | readonly unknown[], TWalletClient extends WalletClient>({
   abi,
@@ -233,10 +218,6 @@ export const getCakeVaultV2Contract = (signer?: WalletClient, chainId?: number) 
   return getContract({ abi: cakeVaultV2ABI, address: getCakeVaultAddress(chainId), signer, chainId })
 }
 
-export const getCakeVaultV1Contract = (signer?: WalletClient, chainId?: number) => {
-  return getContract({ abi: cakeVaultV1ABI, address: getCakeVaultV1Address(chainId), signer, chainId })
-}
-
 export const getCakeFlexibleSideVaultV2Contract = (signer?: WalletClient, chainId?: number) => {
   return getContract({
     abi: cakeFlexibleSideVaultV2ABI,
@@ -318,42 +299,6 @@ export const getZksyncAirDropContract = (signer?: WalletClient, chainId?: number
   return getContract({
     abi: zkSyncAirDropABI,
     address: getZkSyncAirDropAddress(chainId),
-    signer,
-    chainId,
-  })
-}
-
-export const getInfinityCLPoolManagerContract = (signer?: WalletClient, chainId?: number) => {
-  return getContract({
-    abi: CLPoolManagerAbi,
-    address: getPoolManagerAddress('CL', chainId),
-    signer,
-    chainId,
-  })
-}
-
-export const getInfinityBinPoolManagerContract = (signer?: WalletClient, chainId?: number) => {
-  return getContract({
-    abi: BinPoolManagerAbi,
-    address: getPoolManagerAddress('Bin', chainId),
-    signer,
-    chainId,
-  })
-}
-
-export const getInfinityCLPositionManagerContract = (signer?: WalletClient, chainId?: number) => {
-  return getContract({
-    abi: CLPositionManagerAbi,
-    address: getInfinityPositionManagerAddress('CL', chainId),
-    signer,
-    chainId,
-  })
-}
-
-export const getInfinityBinPositionManagerContract = (signer?: WalletClient, chainId?: number) => {
-  return getContract({
-    abi: BinPositionManagerAbi,
-    address: getInfinityPositionManagerAddress('Bin', chainId) ?? '0x',
     signer,
     chainId,
   })
@@ -585,10 +530,7 @@ export const getFixedStakingContract = (signer?: WalletClient, chainId?: number)
   })
 }
 
-export const getVeCakeContract: GetContractFn<typeof veCakeABI, WalletClient> = (
-  signer?: WalletClient,
-  chainId?: number,
-) => {
+export const getVeCakeContract = (signer?: WalletClient, chainId?: number) => {
   return getContract({
     abi: veCakeABI,
     address: getVeCakeAddress(chainId) ?? getVeCakeAddress(ChainId.BSC),
@@ -642,37 +584,10 @@ export const getRevenueSharingVeCakeContract = (signer?: WalletClient, chainId?:
   })
 }
 
-export const getRevenueSharingPoolGatewayContract: GetContractFn<typeof revenueSharingPoolGatewayABI, WalletClient> = (
-  signer?: WalletClient,
-  chainId?: number,
-) => {
+export const getRevenueSharingPoolGatewayContract = (signer?: WalletClient, chainId?: number) => {
   return getContract({
     abi: revenueSharingPoolGatewayABI,
     address: getRevenueSharingPoolGatewayAddress(chainId) ?? getRevenueSharingPoolGatewayAddress(ChainId.BSC),
-    signer,
-    chainId,
-  })
-}
-
-export const getCakePoolContract: GetContractFn<typeof cakePoolAbi, WalletClient> = (
-  signer?: WalletClient,
-  chainId?: number,
-) => {
-  return getContract({
-    abi: cakePoolAbi,
-    address: getCakePoolAddress(ChainId.BSC),
-    signer,
-    chainId,
-  })
-}
-
-export const getCakePoolV1Contract: GetContractFn<typeof cakeVaultV1ABI, WalletClient> = (
-  signer?: WalletClient,
-  chainId?: number,
-) => {
-  return getContract({
-    abi: cakeVaultV1ABI,
-    address: getCakeVaultV1Address(ChainId.BSC),
     signer,
     chainId,
   })

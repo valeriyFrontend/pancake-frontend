@@ -1,35 +1,27 @@
 import { getChainNameInKebabCase } from '@pancakeswap/chains'
 import {
   FarmV4SupportedChainId,
-  Protocol,
-  UniversalFarmConfigV4,
   fetchAllUniversalFarms,
   masterChefV3Addresses,
+  Protocol,
   supportedChainIdV4,
 } from '@pancakeswap/farms'
 import { smartChefABI } from '@pancakeswap/pools'
 import { getStableSwapPools } from '@pancakeswap/stable-swap-sdk'
 import { FeeAmount, masterChefV3ABI } from '@pancakeswap/v3-sdk'
-import dayjs from 'dayjs'
-import utc from 'dayjs/plugin/utc'
 import { explorerApiClient } from 'state/info/api/client'
 import { isAddressEqual } from 'utils'
-import { isInfinityProtocol } from 'utils/protocols'
 import { publicClient } from 'utils/viem'
 import { type Address } from 'viem'
-
-import uniqWith from '@pancakeswap/utils/uniqWith'
-import { InfinityPoolInfo, PoolInfo } from '../type'
+import { PoolInfo } from '../type'
 import { parseFarmPools } from '../utils'
 
-dayjs.extend(utc)
-
-export const DEFAULT_PROTOCOLS: Protocol[] = Object.values(Protocol)
-export const DEFAULT_CHAINS: FarmV4SupportedChainId[] = Object.values(supportedChainIdV4)
+const DEFAULT_PROTOCOLS: Protocol[] = [Protocol.V3, Protocol.V2, Protocol.STABLE]
+const DEFAULT_CHAINS: FarmV4SupportedChainId[] = Object.values(supportedChainIdV4)
 
 export const fetchExplorerFarmPools = async (
   args: {
-    protocols?: Protocol[]
+    protocols?: Protocol[] // after v4 starts to be used, we can add 'v4Bin'
     chainId?: FarmV4SupportedChainId | FarmV4SupportedChainId[]
   } = {
     protocols: DEFAULT_PROTOCOLS,
@@ -60,27 +52,11 @@ export const fetchExplorerFarmPools = async (
   }
 
   return parseFarmPools(resp.data, { isFarming: true })
-
-  // TODO: @chef-eric this tvl & vol data is not correct
-  // const tvlAndVolume = await fetchTvlVolumeFromSubgraph(resp.data)
-
-  // return parseFarmPools(
-  //   resp.data.map((p) => {
-  //     const infoFromSubgraph = tvlAndVolume[getPoolKey(p)]
-  //     if (!infoFromSubgraph) return p
-  //     return {
-  //       ...p,
-  //       tvlUSD: infoFromSubgraph.tvlUSD,
-  //       volumeUSD24h: infoFromSubgraph.volumeUSD24h,
-  //     }
-  //   }),
-  //   { isFarming: true },
-  // )
 }
 
 export const fetchFarmPools = async (
   args: {
-    protocols?: Protocol[]
+    protocols?: Protocol[] // after v4 starts to be used, we can add 'v4Bin'
     chainId?: FarmV4SupportedChainId | FarmV4SupportedChainId[]
   } = {
     protocols: DEFAULT_PROTOCOLS,
@@ -101,15 +77,12 @@ export const fetchFarmPools = async (
   }
 
   const fetchFarmConfig = await fetchAllUniversalFarms()
-  const localPools = uniqWith(
-    fetchFarmConfig.filter((farm) => {
-      return (
-        args.protocols?.includes(farm.protocol) &&
-        (Array.isArray(args.chainId) ? args.chainId.includes(farm.chainId) : farm.chainId === args.chainId)
-      )
-    }),
-    (a, b) => a.chainId === b.chainId && a.lpAddress === b.lpAddress && a.protocol === b.protocol,
-  )
+  const localPools = fetchFarmConfig.filter((farm) => {
+    return (
+      args.protocols?.includes(farm.protocol) &&
+      (Array.isArray(args.chainId) ? args.chainId.includes(farm.chainId) : farm.chainId === args.chainId)
+    )
+  })
   const remoteMissedPoolsIndex: number[] = []
 
   const finalPools = await Promise.all(
@@ -117,10 +90,8 @@ export const fetchFarmPools = async (
       const pool = remotePools?.find((p) => {
         return (
           p.chainId === farm.chainId &&
+          isAddressEqual(p.lpAddress, farm.lpAddress) &&
           p.protocol === farm.protocol &&
-          (isInfinityProtocol(p.protocol)
-            ? (p as InfinityPoolInfo).poolId.toLowerCase() === (farm as UniversalFarmConfigV4).poolId.toLowerCase()
-            : isAddressEqual(p.lpAddress, farm.lpAddress)) &&
           (p.protocol === Protocol.V3 ? p.pid === farm.pid : true)
         )
       })

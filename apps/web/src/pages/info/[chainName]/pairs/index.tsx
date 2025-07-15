@@ -1,17 +1,11 @@
-import dynamic from 'next/dynamic'
-import { NextPageWithLayout } from 'utils/page.types'
-import { InfoPageLayout } from 'views/Info'
 import Pools from 'views/Info/Pools'
+import { InfoPageLayout } from 'views/Info'
 
 const InfoPoolsPage = () => {
   return <Pools />
 }
 
-const Page = dynamic(() => Promise.resolve(InfoPoolsPage), {
-  ssr: false,
-}) as NextPageWithLayout
+InfoPoolsPage.Layout = InfoPageLayout
+InfoPoolsPage.chains = []
 
-Page.Layout = InfoPageLayout
-Page.chains = []
-
-export default Page
+export default InfoPoolsPage

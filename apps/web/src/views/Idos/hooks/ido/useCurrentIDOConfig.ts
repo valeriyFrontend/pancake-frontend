@@ -1,8 +1,8 @@
 import { useRouter } from 'next/router'
-import { IDOConfig, idoConfigDict } from '../../config'
+import { idoConfigDict } from '../../config'
 
-export const useCurrentIDOConfig = (): IDOConfig | undefined => {
+export const useCurrentIDOConfig = () => {
   const { query } = useRouter()
   const currentIdo = query.ido as string
-  return idoConfigDict[currentIdo]
+  return idoConfigDict[currentIdo] ?? idoConfigDict.myshell
 }

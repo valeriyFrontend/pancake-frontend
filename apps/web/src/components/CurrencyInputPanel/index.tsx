@@ -104,6 +104,10 @@ const CurrencyInputPanel = memo(function CurrencyInputPanel({
   const amountInDollar = useStablecoinPriceAmount(
     showUSDPrice ? currency ?? undefined : undefined,
     value !== undefined && Number.isFinite(+value) ? +value : undefined,
+    {
+      hideIfPriceImpactTooHigh: true,
+      enabled: Boolean(value !== undefined && Number.isFinite(+value)),
+    },
   )
 
   const [onPresentCurrencyModal] = useModal(

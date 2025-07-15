@@ -1,17 +1,15 @@
-import { Protocol } from '@pancakeswap/farms'
-import { InfinityProtocol } from 'config/constants/protocols'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { explorerApiClient } from 'state/info/api/client'
 import { components } from 'state/info/api/schema'
-import { PriceChartEntry } from 'state/info/types'
+import { PriceChartEntry } from '../../types'
 
 // format dayjs with the libraries that we need
 dayjs.extend(utc)
 
 export async function fetchTokenPriceData(
   address: string,
-  protocol: 'v2' | 'v3' | 'stable' | 'infinityBin' | 'infinityCl',
+  protocol: 'v2' | 'v3' | 'stable',
   duration: 'day' | 'week' | 'month' | 'year',
   chainName: components['schemas']['ChainName'],
   signal: AbortSignal,
@@ -75,7 +73,6 @@ export async function fetchTokenPriceData(
 export async function fetchPairPriceChartTokenData(
   address: string,
   chainName: components['schemas']['ChainName'],
-  protocol: Protocol.V3 | InfinityProtocol,
   duration: 'hour' | 'day' | 'week' | 'month' | 'year',
   signal: AbortSignal,
 ): Promise<{
@@ -91,11 +88,10 @@ export async function fetchPairPriceChartTokenData(
   let maxPrice = 0
   try {
     const data = await explorerApiClient
-      .GET('/cached/pools/chart/{protocol}/{chainName}/{address}/rate', {
+      .GET('/cached/pools/chart/v3/{chainName}/{address}/rate', {
         signal,
         params: {
           path: {
-            protocol,
             chainName,
             address,
           },

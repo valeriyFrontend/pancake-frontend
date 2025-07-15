@@ -28,10 +28,12 @@ import {
 import { formatAmount } from '@pancakeswap/utils/formatFractions'
 import { CurrencyLogo, NumberDisplay } from '@pancakeswap/widgets-internal'
 import { ASSET_CDN } from 'config/constants/endpoints'
+import memoize from 'lodash/memoize'
 import { useCallback, useEffect, useMemo } from 'react'
 import { FixedSizeList } from 'react-window'
 import { useNativeBalances, useTokenBalancesWithLoadingIndicator } from 'state/wallet/hooks'
 import styled from 'styled-components'
+import { Address } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
 
 import { Currency } from '@pancakeswap/swap-sdk-core'
@@ -124,10 +126,6 @@ interface GasTokenSelectorProps extends AtomBoxProps {
   inputCurrency?: Currency
 }
 
-const getCurrencyKey = (item: Currency): string => {
-  return `${item.chainId}-${item.wrapped.address}`
-}
-
 export const GasTokenSelector = ({ inputCurrency, ...props }: GasTokenSelectorProps) => {
   const { t } = useTranslation()
   const { isOpen, setIsOpen, onDismiss } = useModalV2()
@@ -138,7 +136,7 @@ export const GasTokenSelector = ({ inputCurrency, ...props }: GasTokenSelectorPr
   const [gasToken, setGasToken] = useGasToken()
   const gasTokenInfo = paymasterInfo[gasToken.isToken ? gasToken?.wrapped.address : '']
 
-  const nativeBalances = useNativeBalances(account)
+  const nativeBalances = useNativeBalances([account])
   const [balances, balancesLoading] = useTokenBalancesWithLoadingIndicator(
     account,
     paymasterTokens.filter((token) => token.isToken) as any[],
@@ -164,6 +162,8 @@ export const GasTokenSelector = ({ inputCurrency, ...props }: GasTokenSelectorPr
     })
   }, [config, setGasToken])
 
+  const getTokenBalance = memoize((address: Address) => balances[address])
+
   const onSelectorButtonClick = useCallback(() => {
     setIsOpen(true)
   }, [setIsOpen])
@@ -180,22 +180,19 @@ export const GasTokenSelector = ({ inputCurrency, ...props }: GasTokenSelectorPr
    * Sort tokens based on balances
    * Keeps the Native Token in the first position
    */
-  const tokenListSortComparator = useCallback(
-    (tokenA: Currency, tokenB: Currency) => {
-      if (tokenA.isNative || tokenB.isNative) return 1
+  const tokenListSortComparator = (tokenA: Currency, tokenB: Currency) => {
+    if (tokenA.isNative || tokenB.isNative) return 1
 
-      const balanceA = balances[getCurrencyKey(tokenA)]
-      const balanceB = balances[getCurrencyKey(tokenB)]
+    const balanceA = getTokenBalance(tokenA.wrapped.address)
+    const balanceB = getTokenBalance(tokenB.wrapped.address)
 
-      if (!balanceA || !balanceB) return 0
+    if (!balanceA || !balanceB) return 0
 
-      if (balanceA.greaterThan(balanceB)) return -1
-      if (balanceA.lessThan(balanceB)) return 1
+    if (balanceA.greaterThan(balanceB)) return -1
+    if (balanceA.lessThan(balanceB)) return 1
 
-      return 0
-    },
-    [balances],
-  )
+    return 0
+  }
 
   // Item Key for FixedSizeList
   const itemKey = useCallback((index: number, data: any) => `${data[index]}-${index}`, [])
@@ -217,7 +214,7 @@ export const GasTokenSelector = ({ inputCurrency, ...props }: GasTokenSelectorPr
       () =>
         account && itemInfo?.discount !== 'FREE'
           ? Boolean(item.isToken) &&
-            (!balances[getCurrencyKey(item)] || formatAmount(balances[getCurrencyKey(item)]) === '0')
+            (!getTokenBalance(item.wrapped.address) || formatAmount(getTokenBalance(item.wrapped.address)) === '0')
           : false,
       [item, itemInfo],
     )
@@ -253,13 +250,13 @@ export const GasTokenSelector = ({ inputCurrency, ...props }: GasTokenSelectorPr
 
           {balancesLoading ? (
             <CircleLoader />
-          ) : (account && nativeBalances[account]) || balances[getCurrencyKey(item)] ? (
+          ) : (account && nativeBalances[account]) || getTokenBalance(item.wrapped.address) ? (
             <StyledBalanceText>
               <NumberDisplay
                 value={
                   item.isNative && account
                     ? formatAmount(nativeBalances[account])
-                    : formatAmount(balances[getCurrencyKey(item)])
+                    : formatAmount(getTokenBalance(item.wrapped.address))
                 }
               />
             </StyledBalanceText>

@@ -93,22 +93,16 @@ const TableLoader: React.FC<React.PropsWithChildren> = () => {
 
 const DataRow: React.FC<React.PropsWithChildren<{ tokenData: TokenData; index: number }>> = ({ tokenData, index }) => {
   const { isXs, isSm } = useMatchBreakpoints()
-  const chainPath = useMultiChainPath()
+  const chianPath = useMultiChainPath()
   const chainName = useChainNameByQuery()
   const chainId = multiChainId[chainName]
   const stableSwapPath = useStableSwapPath()
 
   const tokenSymbol = getTokenSymbolAlias(tokenData.address, chainId, tokenData.symbol)
   const tokenName = getTokenNameAlias(tokenData.address, chainId, tokenData.name)
-  const path = useMemo(() => {
-    if (typeof window !== 'undefined' && window.location.pathname.includes('info/infinity')) {
-      return `/info/infinity${chainPath}/tokens/${tokenData.address}${stableSwapPath}`
-    }
-    return `/info${chainPath}/tokens/${tokenData.address}${stableSwapPath}`
-  }, [chainPath, stableSwapPath, tokenData.address])
 
   return (
-    <LinkWrapper to={path}>
+    <LinkWrapper to={`/info${chianPath}/tokens/${tokenData.address}${stableSwapPath}`}>
       <ResponsiveGrid>
         <Flex>
           <Text>{index + 1}</Text>

@@ -28,12 +28,11 @@ import { PancakeSwapXTag } from 'components/PancakeSwapXTag'
 import { paymasterInfo } from 'config/paymaster'
 import { usePaymaster } from 'hooks/usePaymaster'
 import { isAddressEqual } from 'utils'
-import { SlippageButton } from 'views/Swap/components/SlippageButton'
-import { InterfaceOrder, isBridgeOrder, isXOrder } from 'views/Swap/utils'
-import { useHasDynamicHook } from 'views/SwapSimplify/hooks/useHasDynamicHook'
+import { InterfaceOrder, isXOrder } from 'views/Swap/utils'
 import FormattedPriceImpact from '../../components/FormattedPriceImpact'
 import { StyledBalanceMaxMini, SwapCallbackError } from '../../components/styleds'
 import { SlippageAdjustedAmounts, formatExecutionPrice } from '../utils/exchange'
+import { SlippageButton } from './SlippageButton'
 
 const SwapModalFooterContainer = styled(AutoColumn)`
   margin-top: 12px;
@@ -100,7 +99,6 @@ export const SwapModalFooterV2 = memo(function SwapModalFooterV2({
   const [gasToken] = useGasToken()
   const { isPaymasterAvailable, isPaymasterTokenActive } = usePaymaster()
   const gasTokenInfo = paymasterInfo[gasToken.isToken ? gasToken?.wrapped.address : '']
-  const hasDynamicHook = useHasDynamicHook(order)
 
   const displayDecimals = isMobile ? 6 : 12
 
@@ -166,7 +164,7 @@ export const SwapModalFooterV2 = memo(function SwapModalFooterV2({
           </RowFixed>
           <FormattedPriceImpact isX={isXOrder(order)} priceImpact={priceImpactWithoutFee} />
         </RowBetween>
-        {!isXOrder(order) && !isBridgeOrder(order) && (
+        {!isXOrder(order) && (
           <RowBetween mb="8px">
             <RowFixed>
               <QuestionHelperV2
@@ -216,7 +214,9 @@ export const SwapModalFooterV2 = memo(function SwapModalFooterV2({
               text={
                 <>
                   <Text>
-                    {t('Trading fee varies by pool fee tier. Check it via the magnifier icon under "Route."')}
+                    {t(
+                      'Fee ranging from 0.1% to 0.01% depending on the pool fee tier. You can check the fee tier by clicking the magnifier icon under the “Route” section.',
+                    )}
                   </Text>
                   <Text mt="12px">
                     <Link
@@ -241,27 +241,12 @@ export const SwapModalFooterV2 = memo(function SwapModalFooterV2({
                   0
                 </Text>
               ) : null}
-              {hasDynamicHook ? (
-                <QuestionHelperV2 text={t('This route uses a dynamic fee pool; actual fees may vary.')}>
-                  <Flex style={{ textDecoration: 'underline dotted', cursor: 'help' }}>
-                    <Text fontSize="14px" ml="8px" strikeThrough={isXOrder(order)}>
-                      ~{formatAmount(realizedLPFee, 6)}
-                    </Text>
-                    <Text ml="4px" fontSize="14px">
-                      {inputAmount.currency.symbol}
-                    </Text>
-                  </Flex>
-                </QuestionHelperV2>
-              ) : (
-                <>
-                  <Text fontSize="14px" ml="8px" strikeThrough={isXOrder(order)}>
-                    {formatAmount(realizedLPFee, 6)}
-                  </Text>
-                  <Text ml="4px" fontSize="14px">
-                    {inputAmount.currency.symbol}
-                  </Text>
-                </>
-              )}
+              <Text fontSize="14px" ml="8px" strikeThrough={isXOrder(order)}>
+                {formatAmount(realizedLPFee, 6)}
+              </Text>
+              <Text ml="4px" fontSize="14px">
+                {inputAmount.currency.symbol}
+              </Text>
             </Flex>
           ) : (
             <Text fontSize="14px" textAlign="right">

@@ -1,5 +1,5 @@
 import { ChainId, chainNames } from '@pancakeswap/chains'
-import memoize from '@pancakeswap/utils/memoize'
+import memoize from 'lodash/memoize'
 import {
   Chain,
   arbitrum,
@@ -44,11 +44,11 @@ const bsc = {
     ...bsc_.rpcUrls,
     public: {
       ...bsc_.rpcUrls,
-      http: ['https://bsc-dataseed.bnbchain.org/'],
+      http: ['https://bsc-dataseed.binance.org/'],
     },
     default: {
       ...bsc_.rpcUrls.default,
-      http: ['https://bsc-dataseed.bnbchain.org/'],
+      http: ['https://bsc-dataseed.binance.org/'],
     },
   },
 } satisfies Chain

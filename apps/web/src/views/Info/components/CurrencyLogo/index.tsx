@@ -1,12 +1,11 @@
-import { zeroAddress } from '@pancakeswap/price-api-sdk'
 import { Token } from '@pancakeswap/sdk'
 import { TokenLogo } from '@pancakeswap/uikit'
 import { chainName as CHAIN_PATH } from '@pancakeswap/widgets-internal'
 import { useMemo } from 'react'
-import { multiChainId, MultiChainNameExtend } from 'state/info/constant'
+import { multiChainId, MultiChainName } from 'state/info/constant'
 import { styled } from 'styled-components'
 import { safeGetAddress } from 'utils'
-import { Address, isAddressEqual } from 'viem'
+import { Address } from 'viem'
 import getTokenLogoURL from '../../../../utils/getTokenLogoURL'
 
 const StyledLogo = styled(TokenLogo)<{ size: string }>`
@@ -15,7 +14,7 @@ const StyledLogo = styled(TokenLogo)<{ size: string }>`
   border-radius: ${({ size }) => size};
 `
 
-const chainNameToPath = (chainName: MultiChainNameExtend) => {
+const chainNameToPath = (chainName: MultiChainName) => {
   if (chainName === 'BSC') return ''
   if (CHAIN_PATH[multiChainId[chainName]]) return `${CHAIN_PATH[multiChainId[chainName]]}/`
   return `${chainName.toLowerCase()}/`
@@ -26,7 +25,7 @@ export const CurrencyLogo: React.FC<
     address?: string
     token?: Token
     size?: string
-    chainName?: MultiChainNameExtend
+    chainName?: MultiChainName
   }>
 > = ({ address, size = '24px', chainName = 'BSC', ...rest }) => {
   const src = useMemo(() => {
@@ -35,13 +34,9 @@ export const CurrencyLogo: React.FC<
 
   const imagePath = chainNameToPath(chainName)
   const checkedsummedAddress = safeGetAddress(address)
-
-  let srcFromPCS = checkedsummedAddress
+  const srcFromPCS = checkedsummedAddress
     ? `https://tokens.pancakeswap.finance/images/${imagePath}${checkedsummedAddress}.png`
     : ''
-  if (checkedsummedAddress && isAddressEqual(checkedsummedAddress, zeroAddress)) {
-    srcFromPCS = `https://assets.pancakeswap.finance/web/native/${multiChainId[chainName]}.png`
-  }
 
   return <StyledLogo size={size} srcs={src ? [srcFromPCS, src] : [srcFromPCS]} alt="token logo" {...rest} />
 }
@@ -58,7 +53,7 @@ interface DoubleCurrencyLogoProps {
   address0?: string
   address1?: string
   size?: number
-  chainName?: MultiChainNameExtend
+  chainName?: MultiChainName
 }
 
 export const DoubleCurrencyLogo: React.FC<React.PropsWithChildren<DoubleCurrencyLogoProps>> = ({

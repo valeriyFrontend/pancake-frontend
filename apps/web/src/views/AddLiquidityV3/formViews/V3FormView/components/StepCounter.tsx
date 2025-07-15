@@ -1,5 +1,5 @@
 import { useTranslation } from '@pancakeswap/localization'
-import { Currency, Price } from '@pancakeswap/swap-sdk-core'
+import { Currency, Price, Token } from '@pancakeswap/swap-sdk-core'
 import { AddCircleIcon, AutoColumn, AutoRow, IconButton, RemoveIcon } from '@pancakeswap/uikit'
 import { FeeAmount } from '@pancakeswap/v3-sdk'
 import { NumericalInput } from '@pancakeswap/widgets-internal'
@@ -9,9 +9,9 @@ import { ReactNode, useCallback, useEffect, useState } from 'react'
 
 interface StepCounterProps {
   value: string
-  onUserInput: (value: Price<Currency, Currency> | undefined) => void
-  decrement: () => Price<Currency, Currency> | undefined
-  increment: () => Price<Currency, Currency> | undefined
+  onUserInput: (value: Price<Token, Token> | undefined) => void
+  decrement: () => Price<Token, Token> | undefined
+  increment: () => Price<Token, Token> | undefined
   decrementDisabled?: boolean
   incrementDisabled?: boolean
   feeAmount?: FeeAmount
@@ -104,7 +104,6 @@ const StepCounter = ({
 
           <NumericalInput
             value={localValue}
-            maxDecimals={9}
             fontSize="20px"
             align="center"
             disabled={locked}

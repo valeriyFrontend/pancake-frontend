@@ -1,5 +1,5 @@
 import { useTranslation } from '@pancakeswap/localization'
-import { AutoColumn, AutoRow, Box, Flex, Text } from '@pancakeswap/uikit'
+import { AutoColumn, AutoRow, Box, Text } from '@pancakeswap/uikit'
 import { formatNumber, getBalanceNumber } from '@pancakeswap/utils/formatBalance'
 import { useVeCakeBalance } from 'hooks/useTokenBalance'
 import styled from 'styled-components'
@@ -12,29 +12,6 @@ export const StyledBox = styled(Box)`
   display: flex;
   flex-direction: row;
 `
-
-export const MyVeCakeCardMobile: React.FC<{
-  value?: string
-}> = ({ value }) => {
-  const { t } = useTranslation()
-  const { balance } = useVeCakeBalance()
-
-  return (
-    <AutoRow justifyContent="space-between" alignItems="center" mb="8px">
-      <Flex alignItems="center">
-        <img src="/images/cake-staking/token-vecake.png" alt="token-vecake" width="32px" />
-
-        <Text fontSize="14px" ml="4px">
-          {t('You will get')}
-        </Text>
-      </Flex>
-
-      <Text fontSize="16px" bold>
-        {value ?? formatNumber(getBalanceNumber(balance))} veCAKE
-      </Text>
-    </AutoRow>
-  )
-}
 
 export const MyVeCakeCard: React.FC<{
   type?: 'row' | 'column'
@@ -49,7 +26,7 @@ export const MyVeCakeCard: React.FC<{
       {type === 'column' ? (
         <AutoColumn gap="2px" ml="6px">
           <Text fontSize="12px" bold color="white" lineHeight="120%">
-            {t('MY CAKE')}
+            {t('MY veCAKE')}
           </Text>
           <Text fontSize="24px" bold color="white" lineHeight="110%">
             {value ?? formatNumber(getBalanceNumber(balance))}
@@ -59,7 +36,7 @@ export const MyVeCakeCard: React.FC<{
       {type === 'row' ? (
         <AutoRow justifyContent="space-between" ml="8px">
           <Text fontSize="20px" bold color="white" lineHeight="120%">
-            {t('MY CAKE')}
+            {t('MY veCAKE')}
           </Text>
 
           <Text fontSize="20px" bold color="white" lineHeight="110%">

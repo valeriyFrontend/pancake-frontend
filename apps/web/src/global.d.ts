@@ -1,7 +1,6 @@
 import type { WindowProvider } from 'wagmi/window'
 
 export interface ExtendEthereum extends WindowProvider {
-  request?: (args: { method: string; params?: unknown[] }) => Promise<unknown>
   isSafePal?: true
   isCoin98?: true
   isBlocto?: true
@@ -29,7 +28,6 @@ declare global {
       bnbSign?: (address: string, message: string) => Promise<{ publicKey: string; signature: string }>
       switchNetwork?: (networkId: string) => Promise<string>
     } & Ethereum
-    tokenpocket?: any
   }
 
   namespace JSX {

@@ -7,14 +7,16 @@ import {
   IconButton,
   LinkExternal,
   PairDataTimeWindowEnum,
+  RocketIcon,
   Skeleton,
   Text,
   TooltipText,
+  useMatchBreakpoints,
   useModalV2,
   useTooltip,
 } from '@pancakeswap/uikit'
 import { BIG_ZERO } from '@pancakeswap/utils/bigNumber'
-import { Position, TICK_SPACINGS, TickMath, encodeSqrtRatioX96 } from '@pancakeswap/v3-sdk'
+import { Position, TickMath, encodeSqrtRatioX96 } from '@pancakeswap/v3-sdk'
 import { FarmWidget } from '@pancakeswap/widgets-internal'
 import { RoiCalculatorModalV2, useRoi } from '@pancakeswap/widgets-internal/roi'
 import BigNumber from 'bignumber.js'
@@ -30,11 +32,13 @@ import { useAllV3Ticks } from 'hooks/v3/usePoolTickData'
 import useV3DerivedInfo from 'hooks/v3/useV3DerivedInfo'
 import { type V3Farm } from 'state/farms/types'
 import { useFarmsV3Public } from 'state/farmsV3/hooks'
-import { getActiveTick } from 'utils/getActiveTick'
 import { CurrencyField as Field } from 'utils/types'
 import LiquidityFormProvider from 'views/AddLiquidityV3/formViews/V3FormView/form/LiquidityFormProvider'
 import { useV3FormState } from 'views/AddLiquidityV3/formViews/V3FormView/form/reducer'
 import { FarmsV3Context } from 'views/Farms'
+import { getActiveTick } from 'utils/getActiveTick'
+import { USER_ESTIMATED_MULTIPLIER, useUserPositionInfo } from '../../YieldBooster/hooks/bCakeV3/useBCakeV3Info'
+import { BoostStatus, useBoostStatus } from '../../YieldBooster/hooks/bCakeV3/useBoostStatus'
 import { getDisplayApr } from '../../getDisplayApr'
 
 const ApyLabelContainer = styled(Flex)`
@@ -87,7 +91,13 @@ export function FarmV3ApyButton(props: FarmV3ApyButtonProps) {
   )
 }
 
-function FarmV3ApyButton_({ farm, existingPosition, isPositionStaked, additionAprInfo }: FarmV3ApyButtonProps) {
+function FarmV3ApyButton_({
+  farm,
+  existingPosition,
+  isPositionStaked,
+  tokenId,
+  additionAprInfo,
+}: FarmV3ApyButtonProps) {
   const { farmsAvgInfo } = useContext(FarmsV3Context)
   const { token: baseCurrency, quoteToken: quoteCurrency, feeAmount, lpAddress } = farm
   const { t } = useTranslation()
@@ -109,7 +119,7 @@ function FarmV3ApyButton_({ farm, existingPosition, isPositionStaked, additionAp
     () => (sqrtRatioX96 ? TickMath.getTickAtSqrtRatio(sqrtRatioX96) : undefined),
     [sqrtRatioX96],
   )
-  const activeTick = useMemo(() => getActiveTick(tickCurrent, TICK_SPACINGS[feeAmount]), [tickCurrent, feeAmount])
+  const activeTick = useMemo(() => getActiveTick(tickCurrent, feeAmount), [tickCurrent, feeAmount])
   const { ticks: data } = useAllV3Ticks({
     currencyA: baseCurrency,
     currencyB: quoteCurrency,
@@ -127,6 +137,8 @@ function FarmV3ApyButton_({ farm, existingPosition, isPositionStaked, additionAp
   const currencyBUsdPrice = +farm.quoteTokenPriceBusd
 
   const isSorted = farm.token.sortsBefore(farm.quoteToken)
+
+  const { status: boostedStatus } = useBoostStatus(farm.pid, tokenId)
 
   const poolAvgInfo = usePoolAvgInfo({
     address: farm.lpAddress,
@@ -165,7 +177,7 @@ function FarmV3ApyButton_({ farm, existingPosition, isPositionStaked, additionAp
   const cakeAprFactor = useMemo(
     () =>
       new BigNumber(farm.poolWeight)
-        .times(farmV3?.cakePerSecond ?? 1)
+        .times(farmV3.cakePerSecond)
         .times(365 * 60 * 60 * 24)
         .times(cakePrice)
         .div(
@@ -179,7 +191,7 @@ function FarmV3ApyButton_({ farm, existingPosition, isPositionStaked, additionAp
       existingPosition?.liquidity,
       farm.lmPoolLiquidity,
       farm.poolWeight,
-      farmV3?.cakePerSecond,
+      farmV3.cakePerSecond,
       isPositionStaked,
     ],
   )
@@ -219,18 +231,39 @@ function FarmV3ApyButton_({ farm, existingPosition, isPositionStaked, additionAp
   const positionCakeAprDisplay = positionCakeApr.toFixed(2)
   const lpAprDisplay = lpApr.toFixed(2)
   const additionalAprDisplay = (additionAprInfo?.aprValue ?? 0).toFixed(2)
+  const { isDesktop } = useMatchBreakpoints()
+  const {
+    data: { boostMultiplier },
+  } = useUserPositionInfo(tokenId ?? '-1')
+
+  const estimatedAPR = useMemo(() => {
+    return (
+      parseFloat(cakeAprDisplay) * USER_ESTIMATED_MULTIPLIER +
+      parseFloat(lpAprDisplay) +
+      (additionAprInfo?.aprValue ?? 0)
+    ).toLocaleString('en-US', {
+      maximumFractionDigits: 2,
+    })
+  }, [cakeAprDisplay, lpAprDisplay, additionAprInfo])
+  const canBoosted = useMemo(() => boostedStatus !== BoostStatus.CanNotBoost, [boostedStatus])
+  const isBoosted = useMemo(() => boostedStatus === BoostStatus.Boosted, [boostedStatus])
   const positionDisplayApr = getDisplayApr(+positionCakeApr, lpApr)
+  const positionBoostedDisplayApr = getDisplayApr(boostMultiplier * positionCakeApr, lpApr)
 
   const aprTooltip = useTooltip(
     <>
       <Text>
-        {t('Combined APR')}: <b>{displayApr}%</b>
+        {t('Combined APR')}: <b>{canBoosted ? estimatedAPR : displayApr}%</b>
       </Text>
       <ul>
         <li>
           {t('Farm APR')}:{' '}
           <b>
-            <Text display="inline-block" style={{ fontWeight: 800 }}>
+            {canBoosted && <>{parseFloat(cakeAprDisplay) * USER_ESTIMATED_MULTIPLIER}% </>}
+            <Text
+              display="inline-block"
+              style={{ textDecoration: canBoosted ? 'line-through' : 'none', fontWeight: 800 }}
+            >
               {cakeAprDisplay}%
             </Text>
           </b>
@@ -253,19 +286,29 @@ function FarmV3ApyButton_({ farm, existingPosition, isPositionStaked, additionAp
       <Text>
         {t('Calculated using the total active liquidity staked versus the CAKE reward emissions for the farm.')}
       </Text>
+      {canBoosted && (
+        <Text mt="15px">
+          {t('bCAKE only boosts Farm APR. Actual boost multiplier is subject to farm and pool conditions.')}
+        </Text>
+      )}
       <Text mt="15px">{t('APRs for individual positions may vary depending on the configs.')}</Text>
     </>,
   )
   const existingPositionAprTooltip = useTooltip(
     <>
       <Text>
-        {t('Combined APR')}: <b>{positionDisplayApr}%</b>
+        {t('Combined APR')}: <b>{isBoosted ? positionBoostedDisplayApr : positionDisplayApr}%</b>
       </Text>
       <ul>
         <li>
           {t('Farm APR')}:{' '}
           <b>
-            <Text display="inline-block" bold>
+            {isBoosted && <>{(positionCakeApr * boostMultiplier).toFixed(2)}% </>}
+            <Text
+              display="inline-block"
+              bold={!isBoosted}
+              style={{ textDecoration: isBoosted ? 'line-through' : 'none' }}
+            >
               {positionCakeAprDisplay}%
             </Text>
           </b>
@@ -306,7 +349,17 @@ function FarmV3ApyButton_({ farm, existingPosition, isPositionStaked, additionAp
               <>
                 <TooltipText ref={existingPositionAprTooltip.targetRef} decorationColor="secondary">
                   <Flex style={{ gap: 3 }}>
-                    <Text fontSize="14px">{positionDisplayApr}%</Text>
+                    {isBoosted && (
+                      <>
+                        {isDesktop && <RocketIcon color="success" />}
+                        <Text fontSize="14px" color="success">
+                          {positionBoostedDisplayApr}%
+                        </Text>
+                      </>
+                    )}
+                    <Text fontSize="14px" style={{ textDecoration: isBoosted ? 'line-through' : 'none' }}>
+                      {positionDisplayApr}%
+                    </Text>
                   </Flex>
                 </TooltipText>
                 {existingPositionAprTooltip.tooltipVisible && existingPositionAprTooltip.tooltip}
@@ -329,7 +382,20 @@ function FarmV3ApyButton_({ farm, existingPosition, isPositionStaked, additionAp
           >
             <TooltipText ref={aprTooltip.targetRef} decorationColor="secondary">
               <Flex ml="4px" mr="5px" style={{ gap: 5 }}>
-                <Text>{displayApr}%</Text>
+                {canBoosted && (
+                  <>
+                    {isDesktop && <RocketIcon color="success" />}
+                    <Text bold color="success" fontSize={16}>
+                      <>
+                        <Text bold color="success" fontSize={14} display="inline-block" mr="3px">
+                          {t('Up to')}
+                        </Text>
+                        {`${estimatedAPR}%`}
+                      </>
+                    </Text>
+                  </>
+                )}
+                <Text style={{ textDecoration: canBoosted ? 'line-through' : 'none' }}>{displayApr}%</Text>
               </Flex>
             </TooltipText>
           </FarmWidget.FarmApyButton>
@@ -359,7 +425,7 @@ function FarmV3ApyButton_({ farm, existingPosition, isPositionStaked, additionAp
           priceUpper={priceUpper}
           priceLower={priceLower}
           cakePrice={cakePrice.toFixed(3)}
-          cakeAprFactor={cakeAprFactor}
+          cakeAprFactor={cakeAprFactor.times(isBoosted ? boostMultiplier : 1)}
           prices={prices}
           priceSpan={priceTimeWindow}
           onPriceSpanChange={setPriceTimeWindow}

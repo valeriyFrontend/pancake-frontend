@@ -15,7 +15,7 @@ import useAccountActiveChain from 'hooks/useAccountActiveChain'
 import { safeGetAddress } from 'utils'
 import { Address, Hex } from 'viem'
 
-export interface SwapCall {
+interface SwapCall {
   address: Address
   calldata: Hex
   value: Hex
@@ -52,14 +52,13 @@ export function useSwapCallArguments(
   return useMemo(() => {
     if (!trade || !recipient || !account || !chainId) return []
 
-    const options = {
+    const methodParameters = PancakeSwapUniversalRouter.swapERC20CallParameters(trade, {
       fee: feeOptions,
       recipient,
       inputTokenPermit: permitSignature,
       slippageTolerance: allowedSlippage,
       deadlineOrPreviousBlockhash: deadline?.toString(),
-    }
-    const methodParameters = PancakeSwapUniversalRouter.swapERC20CallParameters(trade, options)
+    })
     const swapRouterAddress = getUniversalRouterAddress(chainId)
     if (!swapRouterAddress) return []
     return [

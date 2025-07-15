@@ -1,19 +1,9 @@
-import { Orders, TWAP as PancakeTWAP, ToastProps } from '@orbs-network/twap-ui-pancake'
+import { Orders, ToastProps, TWAP as PancakeTWAP } from '@orbs-network/twap-ui-pancake'
 import { useTheme } from '@pancakeswap/hooks'
-import { Percent } from '@pancakeswap/sdk'
 import { Currency, CurrencyAmount, TradeType } from '@pancakeswap/swap-sdk-core'
-import {
-  AutoColumn,
-  Button,
-  domAnimation,
-  LazyAnimatePresence,
-  useMatchBreakpoints,
-  useModal,
-  useToast,
-  useTooltip,
-} from '@pancakeswap/uikit'
-
+import { AutoColumn, Button, useMatchBreakpoints, useModal, useToast, useTooltip } from '@pancakeswap/uikit'
 import replaceBrowserHistoryMultiple from '@pancakeswap/utils/replaceBrowserHistoryMultiple'
+import { useUserSingleHopOnly } from '@pancakeswap/utils/user'
 import { CurrencyLogo, NumericalInput, SwapUIV2 } from '@pancakeswap/widgets-internal'
 import ConnectWalletButton from 'components/ConnectWalletButton'
 import { AutoRow } from 'components/Layout/Row'
@@ -21,25 +11,23 @@ import CurrencySearchModal from 'components/SearchModal/CurrencySearchModal'
 import { CommonBasesType } from 'components/SearchModal/types'
 import { useAllTokens, useCurrency } from 'hooks/Tokens'
 import { useActiveChainId } from 'hooks/useActiveChainId'
+import { useBestAMMTrade } from 'hooks/useBestAMMTrade'
 import { useCurrencyUsdPrice } from 'hooks/useCurrencyUsdPrice'
 import useNativeCurrency from 'hooks/useNativeCurrency'
-import { useAtomValue } from 'jotai'
 import { LottieRefCurrentProps } from 'lottie-react'
 import dynamic from 'next/dynamic'
-import { bestSameChainAtom } from 'quoter/atom/bestSameChainAtom'
-import { useQuoteContext } from 'quoter/hook/QuoteContext'
-import { multicallGasLimitAtom } from 'quoter/hook/useMulticallGasLimit'
-import { QuoteProvider } from 'quoter/QuoteProvider'
-import { createQuoteQuery } from 'quoter/utils/createQuoteQuery'
 import { memo, useCallback, useMemo, useRef } from 'react'
-import { useCurrentBlock } from 'state/block/hooks'
 import { Field } from 'state/swap/actions'
 import { useSwapState } from 'state/swap/hooks'
 import { useSwapActionHandlers } from 'state/swap/useSwapActionHandlers'
-import { useCurrencyBalances } from 'state/wallet/hooks'
+import {
+  useUserSplitRouteEnable,
+  useUserStableSwapEnable,
+  useUserV2SwapEnable,
+  useUserV3SwapEnable,
+} from 'state/user/smartRouter'
 import { keyframes, styled } from 'styled-components'
 import currencyId from 'utils/currencyId'
-import { maxAmountSpend } from 'utils/maxAmountSpend'
 import { useAccount } from 'wagmi'
 import ArrowDark from '../../../../public/images/swap/arrow_dark.json' assert { type: 'json' }
 import ArrowLight from '../../../../public/images/swap/arrow_light.json' assert { type: 'json' }
@@ -61,11 +49,13 @@ const useBestTrade = (fromToken?: string, toToken?: string, value?: string) => {
   }, [independentCurrency, value])
 
   const dependentCurrency = useCurrency(toToken)
-  const { singleHopOnly, split, v2Swap, v3Swap, stableSwap } = useQuoteContext()
-  const blockNumber = useCurrentBlock()
-  const { chainId } = useActiveChainId()
-  const gasLimit = useAtomValue(multicallGasLimitAtom(chainId))
-  const quoteOption = createQuoteQuery({
+  const [singleHopOnly] = useUserSingleHopOnly()
+  const [split] = useUserSplitRouteEnable()
+  const [v2Swap] = useUserV2SwapEnable()
+  const [v3Swap] = useUserV3SwapEnable()
+  const [stableSwap] = useUserStableSwapEnable()
+
+  const { trade } = useBestAMMTrade({
     amount,
     currency: dependentCurrency,
     baseCurrency: independentCurrency,
@@ -75,17 +65,10 @@ const useBestTrade = (fromToken?: string, toToken?: string, value?: string) => {
     v2Swap,
     v3Swap,
     stableSwap,
+    type: 'auto',
     trackPerf: true,
     autoRevalidate: false,
-    xEnabled: false,
-    speedQuoteEnabled: true,
-    infinitySwap: false,
-    blockNumber,
-    routeKey: 'twap',
-    gasLimit,
   })
-  const tradeResult = useAtomValue(bestSameChainAtom(quoteOption))
-  const trade = tradeResult.map((x) => x.trade).unwrapOr(undefined)
 
   const inCurrency = useCurrency(fromToken)
   const outCurrency = useCurrency(toToken)
@@ -195,90 +178,31 @@ export function TWAPPanel({ limit }: { limit?: boolean }) {
   const outputCurrency = useCurrency(outputCurrencyId)
 
   return (
-    <QuoteProvider>
-      <PancakeTWAP
-        ConnectButton={ConnectWalletButton}
-        connectedChainId={chainId}
-        account={address}
-        limit={limit}
-        usePriceUSD={useUsd}
-        useTrade={useBestTrade}
-        dappTokens={tokens}
-        isDarkTheme={isDark}
-        srcToken={inputCurrency as any}
-        dstToken={outputCurrency as any}
-        useTokenModal={useTokenModal}
-        onSrcTokenSelected={onSrcTokenSelected}
-        onDstTokenSelected={onDstTokenSelected}
-        isMobile={!isDesktop}
-        nativeToken={native}
-        connector={connector}
-        useTooltip={useTooltip}
-        Button={Button}
-        TransactionErrorContent={TransactionErrorContent}
-        toast={toast}
-        FlipButton={FlipButton}
-        Input={Input}
-        CurrencyLogo={TokenLogo}
-        Balance={Balance}
-      />
-    </QuoteProvider>
-  )
-}
-
-const Balance = ({
-  balance,
-  insufficientBalance,
-  isInputFocus,
-  onValueChange,
-  isSrcToken,
-}: {
-  balance?: string
-  insufficientBalance: boolean
-  isInputFocus: boolean
-  onValueChange: (value: string) => void
-  isSrcToken?: boolean
-}) => {
-  const { address: account } = useAccount()
-  const {
-    [Field.INPUT]: { currencyId: inputCurrencyId },
-    [Field.OUTPUT]: { currencyId: outputCurrencyId },
-  } = useSwapState()
-  const inputCurrency = useCurrency(inputCurrencyId)
-  const outputCurrency = useCurrency(outputCurrencyId)
-  const [inputBalance] = useCurrencyBalances(account, [inputCurrency, outputCurrency])
-  const maxAmountInput = useMemo(() => maxAmountSpend(inputBalance), [inputBalance])
-  const onPercentInput = useCallback(
-    (percent: number) => {
-      if (!isSrcToken) return
-      if (maxAmountInput) {
-        onValueChange(maxAmountInput.multiply(new Percent(percent, 100)).toExact())
-      }
-    },
-    [maxAmountInput, onValueChange, isSrcToken],
-  )
-
-  const onMax = useCallback(() => {
-    if (!isSrcToken) return
-    if (maxAmountInput) {
-      onValueChange(maxAmountInput.toExact())
-    }
-  }, [maxAmountInput, onValueChange, isSrcToken])
-
-  return (
-    <LazyAnimatePresence mode="wait" features={domAnimation}>
-      {account ? (
-        !isInputFocus ? (
-          <SwapUIV2.WalletAssetDisplay
-            isUserInsufficientBalance={insufficientBalance}
-            balance={balance}
-            onMax={onMax}
-          />
-        ) : (
-          <SwapUIV2.AssetSettingButtonList onPercentInput={onPercentInput} />
-        )
-      ) : null}
-    </LazyAnimatePresence>
+    <PancakeTWAP
+      ConnectButton={ConnectWalletButton}
+      connectedChainId={chainId}
+      account={address}
+      limit={limit}
+      usePriceUSD={useUsd}
+      useTrade={useBestTrade}
+      dappTokens={tokens}
+      isDarkTheme={isDark}
+      srcToken={inputCurrency as any}
+      dstToken={outputCurrency as any}
+      useTokenModal={useTokenModal}
+      onSrcTokenSelected={onSrcTokenSelected}
+      onDstTokenSelected={onDstTokenSelected}
+      isMobile={!isDesktop}
+      nativeToken={native}
+      connector={connector}
+      useTooltip={useTooltip}
+      Button={Button}
+      TransactionErrorContent={TransactionErrorContent}
+      toast={toast}
+      FlipButton={FlipButton}
+      Input={Input}
+      CurrencyLogo={TokenLogo}
+    />
   )
 }
 

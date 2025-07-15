@@ -1,7 +1,9 @@
 import { languageList, useTranslation } from '@pancakeswap/localization'
-import { Menu as UikitMenu, footerLinks, useModal } from '@pancakeswap/uikit'
+import { Text, Menu as UikitMenu, footerLinks, useModal } from '@pancakeswap/uikit'
 import { BIG_ZERO } from '@pancakeswap/utils/bigNumber'
+import { usePhishingBanner } from '@pancakeswap/utils/user'
 import { NextLinkFromReactRouter } from '@pancakeswap/widgets-internal'
+import InfoStripes from 'components/AdPanel/InfoStripes'
 import USCitizenConfirmModal from 'components/Modal/USCitizenConfirmModal'
 import { NetworkSwitcher } from 'components/NetworkSwitcher'
 import { useActiveChainId } from 'hooks/useActiveChainId'
@@ -13,6 +15,7 @@ import { useWebNotifications } from 'hooks/useWebNotifications'
 import { useRouter } from 'next/router'
 import { Suspense, lazy, useCallback, useMemo } from 'react'
 import { styled } from 'styled-components'
+import { getOptionsUrl } from 'utils/getOptionsUrl'
 import GlobalSettings from './GlobalSettings'
 import { SettingsMode } from './GlobalSettings/types'
 import UserMenu from './UserMenu'
@@ -34,6 +37,7 @@ const Menu = (props) => {
   const { pathname } = useRouter()
   const perpUrl = usePerpUrl({ chainId, isDark, languageCode: currentLanguage.code })
   const [perpConfirmed] = useUserNotUsCitizenAcknowledgement(IdType.PERPETUALS)
+  const [optionsConfirmed] = useUserNotUsCitizenAcknowledgement(IdType.OPTIONS)
 
   const [onPerpConfirmModalPresent] = useModal(
     <USCitizenConfirmModal title={t('PancakeSwap Perpetuals')} id={IdType.PERPETUALS} href={perpUrl} />,
@@ -41,16 +45,42 @@ const Menu = (props) => {
     false,
     'perpConfirmModal',
   )
+  const [onOptionsConfirmModalPresent] = useModal(
+    <USCitizenConfirmModal
+      title={t('PancakeSwap Options')}
+      id={IdType.OPTIONS}
+      href={getOptionsUrl()}
+      desc={
+        <Text mt="0.5rem">
+          {t(
+            'Please note that you are being redirected to an externally hosted website associated with our partner Stryke (formerly Dopex).',
+          )}
+        </Text>
+      }
+    />,
+    true,
+    false,
+    'optionsConfirmModal',
+  )
   const onSubMenuClick = useCallback<NonNullable<UseMenuItemsParams['onClick']>>(
     (e, item) => {
-      if (item.confirmModalId === 'perpConfirmModal' && !perpConfirmed) {
+      const preventRedirect = () => {
         e.preventDefault()
         e.stopPropagation()
+      }
+      if (item.confirmModalId === 'perpConfirmModal' && !perpConfirmed) {
+        preventRedirect()
         onPerpConfirmModalPresent()
+        return
+      }
+      if (item.confirmModalId === 'optionsConfirmModal' && !optionsConfirmed) {
+        preventRedirect()
+        onOptionsConfirmModalPresent()
       }
     },
-    [perpConfirmed, onPerpConfirmModalPresent],
+    [perpConfirmed, optionsConfirmed, onPerpConfirmModalPresent, onOptionsConfirmModalPresent],
   )
+  const [showPhishingWarningBanner] = usePhishingBanner()
 
   const menuItems = useMenuItems({
     onClick: onSubMenuClick,
@@ -90,14 +120,14 @@ const Menu = (props) => {
         </>
       }
       chainId={chainId}
-      banner={null}
+      banner={showPhishingWarningBanner && typeof window !== 'undefined' && <InfoStripes />}
       isDark={isDark}
       toggleTheme={toggleTheme}
       currentLang={currentLanguage.code}
       langs={languageList}
       setLang={setLanguage}
       cakePriceUsd={cakePrice.eq(BIG_ZERO) ? undefined : cakePrice}
-      links={filterItemsProps(menuItems)}
+      links={menuItems}
       subLinks={
         activeSubMenuItem?.overrideSubNavItems ??
         activeMenuItem?.overrideSubNavItems ??
@@ -114,18 +144,6 @@ const Menu = (props) => {
       {...props}
     />
   )
-}
-
-function filterItemsProps(items: ReturnType<typeof useMenuItems>) {
-  return items.map((item) => {
-    return {
-      ...item,
-      items: item.items?.map((subItem) => {
-        const { matchHrefs, overrideSubNavItems, ...rest } = subItem
-        return rest
-      }),
-    }
-  })
 }
 
 export default Menu

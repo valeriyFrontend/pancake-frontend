@@ -1,6 +1,6 @@
 import { Token } from '@pancakeswap/sdk'
 import { tickToPrice } from '@pancakeswap/v3-sdk'
-import { Ticks } from 'hooks/useAllTicksQuery'
+import { Ticks } from '../useAllV3TicksQuery'
 import { TickProcessed } from '../types'
 
 const PRICE_FIXED_DIGITS = 8

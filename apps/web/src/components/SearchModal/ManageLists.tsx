@@ -31,12 +31,7 @@ import { useListState } from 'state/lists/lists'
 import { styled } from 'styled-components'
 
 import { useActiveChainId } from 'hooks/useActiveChainId'
-import {
-  selectorByUrlsAtom,
-  useActiveListUrlsByChainId,
-  useAllListsByChainId,
-  useIsListActiveByChainId,
-} from '../../state/lists/hooks'
+import { selectorByUrlsAtom, useActiveListUrls, useAllLists, useIsListActive } from '../../state/lists/hooks'
 
 import Row, { RowBetween, RowFixed } from '../Layout/Row'
 import { CurrencyModalView } from './types'
@@ -65,20 +60,10 @@ function listUrlRowHTMLId(listUrl: string) {
   return `list-row-${listUrl.replace(/\./g, '-')}`
 }
 
-function resolveLogo(list: TokenList): string {
-  const uri = list.logoURI
-  if (uri?.match(/static\.coingecko\.com/)) {
-    return 'https://tokens.pancakeswap.finance/images/projects/coingecko.png'
-  }
-  return uri || ''
-}
-
-const ListRow = memo(function ListRow({ listUrl, chainId: chainIdProp }: { listUrl: string; chainId?: number }) {
-  const { chainId: activeChainId } = useActiveChainId()
-  const chainId = chainIdProp || activeChainId
-
+const ListRow = memo(function ListRow({ listUrl }: { listUrl: string }) {
+  const { chainId } = useActiveChainId()
   const { t } = useTranslation()
-  const isActive = useIsListActiveByChainId(listUrl, chainId)
+  const isActive = useIsListActive(listUrl)
 
   const listsByUrl = useAtomValue(selectorByUrlsAtom)
   const [, dispatch] = useListState()
@@ -132,7 +117,6 @@ const ListRow = memo(function ListRow({ listUrl, chainId: chainIdProp }: { listU
   )
 
   if (!list) return null
-  const logoURI = resolveLogo(list)
 
   return (
     <RowWrapper
@@ -142,8 +126,8 @@ const ListRow = memo(function ListRow({ listUrl, chainId: chainIdProp }: { listU
       id={listUrlRowHTMLId(listUrl)}
     >
       {tooltipVisible && tooltip}
-      {logoURI ? (
-        <ListLogo size="40px" style={{ marginRight: '1rem' }} logoURI={logoURI} alt={`${list.name} list logo`} />
+      {list.logoURI ? (
+        <ListLogo size="40px" style={{ marginRight: '1rem' }} logoURI={list.logoURI} alt={`${list.name} list logo`} />
       ) : (
         <div style={{ width: '24px', height: '24px', marginRight: '1rem' }} />
       )}
@@ -184,26 +168,22 @@ function ManageLists({
   setModalView,
   setImportList,
   setListUrl,
-  chainId: chainIdProp,
 }: {
   setModalView: (view: CurrencyModalView) => void
   setImportList: (list: TokenList) => void
   setListUrl: (url: string) => void
-  chainId?: number
 }) {
   const [listUrlInput, setListUrlInput] = useState<string>('')
 
-  const { chainId: activeChainId } = useActiveChainId()
-  const chainId = chainIdProp || activeChainId
+  const { chainId } = useActiveChainId()
 
   const { t } = useTranslation()
   const [, dispatch] = useListState()
 
-  const lists = useAllListsByChainId(chainId)
+  const lists = useAllLists()
 
   // sort by active but only if not visible
-  const activeListUrls = useActiveListUrlsByChainId(chainId)
-
+  const activeListUrls = useActiveListUrls()
   const [activeCopy, setActiveCopy] = useState<string[] | undefined>()
   useEffect(() => {
     if (!activeCopy && activeListUrls) {
@@ -347,7 +327,7 @@ function ManageLists({
       <ListContainer>
         <AutoColumn gap="md">
           {sortedLists.map((listUrl) => (
-            <ListRow key={listUrl} listUrl={listUrl} chainId={chainId} />
+            <ListRow key={listUrl} listUrl={listUrl} />
           ))}
         </AutoColumn>
       </ListContainer>

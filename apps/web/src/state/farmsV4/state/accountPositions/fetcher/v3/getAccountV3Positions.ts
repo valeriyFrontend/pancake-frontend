@@ -3,8 +3,7 @@ import { NFT_POSITION_MANAGER_ADDRESSES, nonfungiblePositionManagerABI } from '@
 import BigNumber from 'bignumber.js'
 import { getMasterChefV3Contract } from 'utils/contractHelpers'
 import { publicClient } from 'utils/viem'
-import { Address, isAddress } from 'viem'
-import { zksync } from 'viem/chains'
+import { Address } from 'viem'
 import { PositionDetail } from '../../type'
 import { getAccountV3TokenIds } from './getAccountV3TokenIds'
 
@@ -13,7 +12,7 @@ export const readPositions = async (chainId: number, tokenIds: bigint[]): Promis
   const client = publicClient({ chainId })
   const masterChefV3 = getMasterChefV3Contract(undefined, chainId)
 
-  if (!client || !nftPositionManagerAddress || !tokenIds.length) {
+  if (!client || !nftPositionManagerAddress || !tokenIds.length || !masterChefV3) {
     return []
   }
 
@@ -25,31 +24,24 @@ export const readPositions = async (chainId: number, tokenIds: bigint[]): Promis
       args: [tokenId] as const,
     } as const
   })
-  const farmingCalls =
-    masterChefV3 && isAddress(masterChefV3.address)
-      ? tokenIds.map((tokenId) => {
-          return {
-            abi: masterChefV3.abi,
-            address: masterChefV3.address,
-            functionName: 'userPositionInfos',
-            args: [tokenId] as const,
-          } as const
-        })
-      : []
-  const batchSize = chainId === zksync.id ? 1024 * 10 : undefined
+  const farmingCalls = tokenIds.map((tokenId) => {
+    return {
+      abi: masterChefV3.abi,
+      address: masterChefV3.address,
+      functionName: 'userPositionInfos',
+      args: [tokenId] as const,
+    } as const
+  })
+
   const [positions, farmingPosition] = await Promise.all([
     client.multicall({
       contracts: positionCalls,
       allowFailure: false,
-      batchSize,
     }),
-    masterChefV3 && isAddress(masterChefV3.address)
-      ? client.multicall({
-          contracts: farmingCalls,
-          allowFailure: false,
-          batchSize,
-        })
-      : [],
+    client.multicall({
+      contracts: farmingCalls,
+      allowFailure: false,
+    }),
   ])
 
   return positions.map((position, index) => {
@@ -67,8 +59,7 @@ export const readPositions = async (chainId: number, tokenIds: bigint[]): Promis
       tokensOwed0,
       tokensOwed1,
     ] = position
-    const farmingLiquidity = farmingPosition?.[index]?.[0] ?? 0n
-    const boostMultiplier = farmingPosition?.[index]?.[8] ?? 0n
+    const [farmingLiquidity, , , , , , , , boostMultiplier] = farmingPosition[index]
     return {
       tokenId: tokenIds[index],
       nonce,

@@ -7,12 +7,9 @@ import { Abi, Account, Address, CallParameters, Chain, WriteContractParameters }
 import { useWalletClient } from 'wagmi'
 import { useActiveChainId } from './useActiveChainId'
 
-export function useCallWithGasPrice(overrideChainId?: number) {
-  const { chainId: activeChainId } = useActiveChainId()
-  const chainId = overrideChainId ?? activeChainId
-
-  const gasPrice = useGasPrice(chainId)
-
+export function useCallWithGasPrice() {
+  const gasPrice = useGasPrice()
+  const { chainId } = useActiveChainId()
   const { data: walletClient } = useWalletClient()
 
   const callWithGasPriceWithSimulate = useCallback(

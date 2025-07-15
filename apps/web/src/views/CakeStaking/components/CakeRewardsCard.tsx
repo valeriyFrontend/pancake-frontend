@@ -26,7 +26,6 @@ import { getBalanceAmount } from '@pancakeswap/utils/formatBalance'
 import getTimePeriods from '@pancakeswap/utils/getTimePeriods'
 import BigNumber from 'bignumber.js'
 import { ToastDescriptionWithTx } from 'components/Toast'
-import { WEEK } from 'config/constants/veCake'
 import useAccountActiveChain from 'hooks/useAccountActiveChain'
 import { useCakePrice } from 'hooks/useCakePrice'
 import useCatchTxError from 'hooks/useCatchTxError'
@@ -35,9 +34,10 @@ import { useCallback, useMemo } from 'react'
 import styled from 'styled-components'
 import { getRevenueSharingCakePoolAddress, getRevenueSharingVeCakeAddress } from 'utils/addressHelpers'
 import { stringify } from 'viem'
-import { poolStartWeekCursors } from 'views/CakeStaking/config'
 import BenefitsTooltipsText from 'views/Pools/components/RevenueSharing/BenefitsModal/BenefitsTooltipsText'
 import { timeFormat } from 'views/TradingReward/utils/timeFormat'
+import { poolStartWeekCursors } from 'views/CakeStaking/config'
+import { WEEK } from 'config/constants/veCake'
 import {
   useCakePoolEmission,
   useRevShareEmission,
@@ -47,8 +47,8 @@ import {
 } from '../hooks/useAPR'
 import { useCurrentBlockTimestamp } from '../hooks/useCurrentBlockTimestamp'
 import { useRevenueSharingCakePool, useRevenueSharingVeCake } from '../hooks/useRevenueSharingProxy'
-import { useCakeLockStatus } from '../hooks/useVeCakeUserInfo'
 import { MyVeCakeCard } from './MyVeCakeCard'
+import { useCakeLockStatus } from '../hooks/useVeCakeUserInfo'
 
 const StyledModalHeader = styled(ModalHeader)`
   padding: 0;
@@ -98,9 +98,8 @@ export const CakeRewardsCard = ({ onDismiss }) => {
   const { isDesktop } = useMatchBreakpoints()
   const cakePrice = useCakePrice()
   const { cakeUnlockTime, cakeLockedAmount } = useCakeLockStatus()
-  const { data: revenueSharingVeCake } = useRevenueSharingVeCake()
   const { balanceOfAt, totalSupplyAt, nextDistributionTimestamp, lastDistributionTimestamp, availableClaim } =
-    revenueSharingVeCake
+    useRevenueSharingVeCake()
   const yourShare = useMemo(() => getBalanceAmount(new BigNumber(balanceOfAt)).toNumber(), [balanceOfAt])
   const yourSharePercentage = useMemo(
     () => new BigNumber(balanceOfAt).div(totalSupplyAt).times(100).toNumber() || 0,
@@ -109,8 +108,7 @@ export const CakeRewardsCard = ({ onDismiss }) => {
 
   const showYourSharePercentage = useMemo(() => new BigNumber(totalSupplyAt).gt(0), [totalSupplyAt])
 
-  const { data: revenueSharingCakePool } = useRevenueSharingCakePool()
-  const { availableClaim: availableClaimFromCakePool } = revenueSharingCakePool
+  const { availableClaim: availableClaimFromCakePool } = useRevenueSharingCakePool()
   const availableCakePoolCake = useMemo(
     () => getBalanceAmount(new BigNumber(availableClaimFromCakePool)).toNumber(),
     [availableClaimFromCakePool],

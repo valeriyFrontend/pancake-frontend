@@ -1,13 +1,10 @@
 import { Protocol, fetchAllUniversalFarms } from '@pancakeswap/farms'
-import { BinPoolManagerAbi } from '@pancakeswap/infinity-sdk'
 import { LegacyRouter } from '@pancakeswap/smart-router/legacy-router'
 import { Token } from '@pancakeswap/swap-sdk-core'
 import { getTokenByAddress } from '@pancakeswap/tokens'
 import BN from 'bignumber.js'
 import { paths } from 'state/info/api/schema'
 import { safeGetAddress } from 'utils'
-import { getPoolManagerAddress } from 'utils/addressHelpers'
-import { getViemClients } from 'utils/viem'
 import { Address } from 'viem'
 import { PoolInfo } from './type'
 
@@ -23,7 +20,7 @@ export const parseFarmPools = async (
   const result = await Promise.all(
     data.map(async (pool) => {
       let stableSwapAddress: Address | undefined
-      let lpAddress = safeGetAddress(pool.id) ?? pool.id
+      let lpAddress = safeGetAddress(pool.id)!
       let feeTier = Number(pool.feeTier ?? 2500)
       if (pool.protocol === 'stable') {
         const pairs = await LegacyRouter.getStableSwapPairs(pool.chainId)
@@ -36,32 +33,9 @@ export const parseFarmPools = async (
           feeTier = stableConfig.stableTotalFee * 1000000
         }
       }
-      let binActiveLiquidity = '0'
-      if (pool.protocol === Protocol.InfinityBIN) {
-        try {
-          const client = getViemClients({ chainId: pool.chainId })
-          const [activeBinId] = await client.readContract({
-            address: getPoolManagerAddress('Bin', pool.chainId),
-            abi: BinPoolManagerAbi,
-            functionName: 'getSlot0',
-            args: [pool.id],
-          })
-          const [, , activeLiquidity] = await client.readContract({
-            address: getPoolManagerAddress('Bin', pool.chainId),
-            abi: BinPoolManagerAbi,
-            functionName: 'getBin',
-            args: [pool.id, activeBinId],
-          })
-          binActiveLiquidity = activeLiquidity.toString()
-        } catch (error) {
-          console.error('error fetch bin active liquidity', error)
-        }
-      }
-      const localFarm = pool.id
-        ? fetchFarmConfig.find(
-            (farm) => farm.lpAddress.toLowerCase() === pool.id.toLowerCase() && farm.chainId === pool.chainId,
-          )
-        : undefined
+      const localFarm = fetchFarmConfig.find(
+        (farm) => safeGetAddress(farm.lpAddress) === safeGetAddress(lpAddress) && farm.chainId === pool.chainId,
+      )
       let pid: number | undefined
       if (localFarm) {
         // eslint-disable-next-line prefer-destructuring
@@ -79,7 +53,6 @@ export const parseFarmPools = async (
         chainId: pool.chainId,
         pid,
         lpAddress,
-        poolId: pool.id,
         stableSwapAddress,
         protocol: pool.protocol as Protocol,
         token0,
@@ -96,14 +69,10 @@ export const parseFarmPools = async (
         vol7dUsd: pool.volumeUSD7d as `${number}`,
         totalFeeUSD: pool.totalFeeUSD as `${number}`,
         fee24hUsd: pool.feeUSD24h as `${number}`,
-        lpFee24hUsd: pool.lpFeeUSD24h as `${number}`,
-        liquidity: pool.liquidity ?? binActiveLiquidity,
+        liquidity: pool.liquidity,
         feeTier,
         feeTierBase: 1_000_000,
-        isDynamicFee: pool.isDynamicFee,
         isFarming: !!options?.isFarming,
-        isActiveFarm: false,
-        hookAddress: pool.hookAddress ?? undefined,
       } satisfies PoolInfo
     }),
   )

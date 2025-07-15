@@ -1,5 +1,4 @@
 import dynamic from 'next/dynamic'
-import { NextPageWithLayout } from 'utils/page.types'
 import { CHAIN_IDS } from 'utils/wagmi'
 import Page from 'views/Page'
 import SwapLayout from 'views/Swap/SwapLayout'
@@ -14,16 +13,11 @@ const Layout: React.FC<React.PropsWithChildren> = ({ children }) => {
   )
 }
 
-const View = () => {
-  return (
-    <SwapLayout>
-      <TwapAndLimitSwap limit />
-    </SwapLayout>
-  )
-}
-const LimitPage = dynamic(() => Promise.resolve(View), {
-  ssr: false,
-}) as NextPageWithLayout
+const LimitPage = () => (
+  <SwapLayout>
+    <TwapAndLimitSwap limit />
+  </SwapLayout>
+)
 
 LimitPage.chains = CHAIN_IDS
 LimitPage.screen = true

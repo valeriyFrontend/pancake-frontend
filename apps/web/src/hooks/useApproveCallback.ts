@@ -12,10 +12,9 @@ import { isUserRejected, logError } from 'utils/sentry'
 import { Address, SendTransactionReturnType, encodeFunctionData, parseAbi } from 'viem'
 import { useAccount } from 'wagmi'
 import useGelatoLimitOrdersLib from './limitOrders/useGelatoLimitOrdersLib'
-import { useActiveChainId } from './useActiveChainId'
 import { useCallWithGasPrice } from './useCallWithGasPrice'
 import { useTokenContract } from './useContract'
-import { useTokenAllowanceByChainId } from './useTokenAllowance'
+import useTokenAllowance from './useTokenAllowance'
 
 export enum ApprovalState {
   UNKNOWN,
@@ -37,29 +36,19 @@ export function useApproveCallback(
      * Enable only if Gas Token Selector is present on the interface.
      */
     enablePaymaster = false,
-    overrideChainId,
   }: {
     addToTransaction?: boolean
     targetAmount?: bigint
     enablePaymaster?: boolean
-    overrideChainId?: number
   } = {},
 ) {
   const { address: account } = useAccount()
-  const { chainId: activeChainId } = useActiveChainId()
-  const chainId = overrideChainId ?? activeChainId
-
-  const { callWithGasPrice } = useCallWithGasPrice(chainId)
+  const { callWithGasPrice } = useCallWithGasPrice()
   const { t } = useTranslation()
   const { toastError } = useToast()
   const token = amountToApprove?.currency?.isToken ? amountToApprove.currency : undefined
-  const { allowance: currentAllowance, refetch } = useTokenAllowanceByChainId({
-    token,
-    owner: account ?? undefined,
-    spender,
-    chainId,
-  })
-  const pendingApproval = useHasPendingApproval(token?.address, spender, chainId)
+  const { allowance: currentAllowance, refetch } = useTokenAllowance(token, account ?? undefined, spender)
+  const pendingApproval = useHasPendingApproval(token?.address, spender)
   const { isPaymasterAvailable, isPaymasterTokenActive, sendPaymasterTransaction } = usePaymaster()
 
   const [pending, setPending] = useState<boolean>(pendingApproval)
@@ -90,8 +79,8 @@ export function useApproveCallback(
       : ApprovalState.APPROVED
   }, [amountToApprove, currentAllowance, pending, spender])
 
-  const tokenContract = useTokenContract(token?.address, chainId)
-  const addTransaction = useTransactionAdder(chainId)
+  const tokenContract = useTokenContract(token?.address)
+  const addTransaction = useTransactionAdder()
 
   const approve = useCallback(
     async (overrideAmountApprove?: bigint, alreadyApproved = approvalState !== ApprovalState.NOT_APPROVED) => {

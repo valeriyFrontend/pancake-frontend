@@ -14,7 +14,7 @@ import {
   useMatchBreakpoints,
 } from '@pancakeswap/uikit'
 import ConnectWalletButton from 'components/ConnectWalletButton'
-import Divider from 'components/Divider'
+import useAccountActiveChain from 'hooks/useAccountActiveChain'
 import keyBy from 'lodash/keyBy'
 import NextLink from 'next/link'
 import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react'
@@ -26,7 +26,6 @@ import { useEpochVotePower } from 'views/GaugesVoting/hooks/useEpochVotePower'
 import { useGauges } from 'views/GaugesVoting/hooks/useGauges'
 import { useUserVoteSlopes } from 'views/GaugesVoting/hooks/useUserVoteGauges'
 import { useWriteGaugesVoteCallback } from 'views/GaugesVoting/hooks/useWriteGaugesVoteCallback'
-import { useAccount } from 'wagmi'
 import { RemainingVotePower } from '../../RemainingVotePower'
 import { AddGaugeModal } from '../AddGauge/AddGaugeModal'
 import { EmptyTable } from './EmptyTable'
@@ -49,7 +48,7 @@ const Scrollable = styled.div.withConfig({ shouldForwardProp: (prop) => !['expan
 `
 
 export const VoteTable = () => {
-  const { address: account } = useAccount()
+  const { account } = useAccountActiveChain()
   const { t } = useTranslation()
   const [submitted, setSubmitted] = useState(false)
   const { cakeLockedAmount } = useCakeLockStatus()
@@ -255,17 +254,8 @@ export const VoteTable = () => {
   }, [rows, rows?.length, votes])
 
   return (
-    <ResponsiveWrapper>
-      <Box padding={['16px', '16px', '0px']}>
-        <RemainingVotePower votedPercent={lockedPowerPercent} />
-      </Box>
-
-      {isMobile ? (
-        <Box my="-8px">
-          <Divider />
-        </Box>
-      ) : null}
-
+    <>
+      <RemainingVotePower votedPercent={lockedPowerPercent} />
       <AddGaugeModal
         selectRows={rowsWithLock}
         onGaugeAdd={onRowSelect}
@@ -356,25 +346,15 @@ export const VoteTable = () => {
           )}
         </Grid>
       </ResponsiveCard>
-    </ResponsiveWrapper>
+    </>
   )
-}
-
-const ResponsiveWrapper: React.FC<PropsWithChildren> = ({ children }) => {
-  const { isMobile } = useMatchBreakpoints()
-
-  if (isMobile) {
-    return <Card>{children}</Card>
-  }
-
-  return <>{children}</>
 }
 
 const ResponsiveCard: React.FC<PropsWithChildren> = ({ children }) => {
   const { isMobile, isDesktop } = useMatchBreakpoints()
 
   if (isMobile) {
-    return <Box px="8px">{children}</Box>
+    return <Box mx="-16px">{children}</Box>
   }
 
   return (

@@ -3,21 +3,17 @@ import { bscTestnetTokens, ethereumTokens, goerliTestnetTokens } from '@pancakes
 import { useMemo } from 'react'
 import { isAddressEqual } from 'utils'
 import { Address } from 'viem'
-import { useAccount } from 'wagmi'
+import useAccountActiveChain from './useAccountActiveChain'
 import useCurrentBlockTimestamp from './useCurrentBlockTimestamp'
 import { usePermit2Allowance } from './usePermit2Allowance'
 import { usePermit2Details } from './usePermit2Details'
 
 const EXPIRES_BUFFER = 60n * 15n // 15 minutes in seconds
 
-export const usePermit2Requires = (
-  amount: CurrencyAmount<Token> | undefined,
-  spender?: Address,
-  overrideChainId?: number,
-) => {
-  const { address: account } = useAccount()
+export const usePermit2Requires = (amount: CurrencyAmount<Token> | undefined, spender?: Address) => {
+  const { account } = useAccountActiveChain()
   const { allowance, refetch } = usePermit2Allowance(account, amount?.currency)
-  const { data } = usePermit2Details(account, amount?.currency, spender, overrideChainId)
+  const { data } = usePermit2Details(account, amount?.currency, spender)
   const { amount: permitAmount, expiration = 0n } = data ?? {}
   const now = useCurrentBlockTimestamp() ?? 0n
 

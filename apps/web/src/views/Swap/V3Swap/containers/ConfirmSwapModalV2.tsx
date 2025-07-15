@@ -6,6 +6,7 @@ import { WrappedTokenInfo } from '@pancakeswap/token-lists'
 import { Box, BscScanIcon, Flex, InjectedModalProps, Link } from '@pancakeswap/uikit'
 import { formatAmount } from '@pancakeswap/utils/formatFractions'
 import truncateHash from '@pancakeswap/utils/truncateHash'
+import { useUserSlippage } from '@pancakeswap/utils/user'
 import {
   ApproveModalContent,
   ConfirmModalState,
@@ -14,7 +15,6 @@ import {
 } from '@pancakeswap/widgets-internal'
 import AddToWalletButton, { AddToWalletTextOptions } from 'components/AddToWallet/AddToWalletButton'
 import { useActiveChainId } from 'hooks/useActiveChainId'
-import { useAutoSlippageWithFallback } from 'hooks/useAutoSlippageWithFallback'
 import { Field } from 'state/swap/actions'
 import { useSwapState } from 'state/swap/hooks'
 import { getBlockExploreLink, getBlockExploreName } from 'utils'
@@ -78,9 +78,7 @@ export const ConfirmSwapModalV2: React.FC<ConfirmSwapModalV2Props> = ({
 }) => {
   const { t } = useTranslation()
   const { chainId } = useActiveChainId()
-  // @ts-ignore
-  const { slippageTolerance: allowedSlippage } = useAutoSlippageWithFallback()
-
+  const [allowedSlippage] = useUserSlippage()
   const slippageAdjustedAmounts = useSlippageAdjustedAmounts(originalOrder)
   const { recipient } = useSwapState()
   const loadingAnimationVisible = useMemo(() => {

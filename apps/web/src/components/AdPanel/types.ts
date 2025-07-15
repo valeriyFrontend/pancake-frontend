@@ -1,12 +1,3 @@
-export enum Priority {
-  FIRST_AD = 6,
-  VERY_HIGH = 5,
-  HIGH = 4,
-  MEDIUM = 3,
-  LOW = 2,
-  VERY_LOW = 1,
-}
-
 export interface AdPlayerProps {
   isDismissible?: boolean
 
@@ -18,23 +9,14 @@ export interface AdPlayerProps {
   forceMobile?: boolean
 }
 
-export interface AdSlide {
-  id: string
-  component: JSX.Element
-  shouldRender?: Array<boolean>
-  priority?: number
-}
-
 export interface AdTextConfig {
   text: string
   highlights?: string[]
   link?: string
-  subTitle?: boolean
 }
 export interface BtnConfig {
   text: string
   link: string
-  mt?: string
 }
 export interface AdsConfig {
   img: string
@@ -51,36 +33,8 @@ export interface InfoStripeConfig {
   btns: BtnConfig[]
 }
 
-export enum AdsConfigTypes {
-  DEFAULT = 'default',
-  PICKS = 'picks',
-}
-
 export interface AdsCampaignConfig {
   id: string
   ad: AdsConfig
-  infoStripe?: InfoStripeConfig
-  priority?: number
-  deadline?: number
-}
-
-type Token = {
-  address: string
-  name: string
-  symbol: string
-  color: string
-  img: string
-}
-
-export type PickConfig = {
-  chain: string
-  poolId: `0x{string}`
-  token0: Token
-  token1: Token
-  url: string
-}
-
-export type PicksConfig = {
-  update: number
-  configs: PickConfig[]
+  infoStripe: InfoStripeConfig
 }

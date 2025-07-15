@@ -5,8 +5,7 @@ import styled from 'styled-components'
 const StyledChangePercent = styled(Flex)<{ $negative: boolean }>`
   background: ${({ theme, $negative }) => ($negative ? theme.colors.destructive10 : theme.colors.positive10)};
   border-radius: 999px;
-  padding: 2px 8px;
-  gap: 2px;
+  padding: 0 4px;
 `
 
 type ChangePercentProps = {

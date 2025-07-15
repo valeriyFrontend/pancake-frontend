@@ -1,4 +1,3 @@
-import { ChainId } from '@pancakeswap/chains'
 import { createAction } from '@reduxjs/toolkit'
 import { Address, Hex } from 'viem'
 
@@ -34,7 +33,6 @@ export interface ListenerOptions {
   // how often this data should be fetched, by default 1
   readonly blocksPerFetch?: number
   enabled?: boolean
-  chainId?: ChainId
 }
 
 export interface ListenerOptionsWithGas extends ListenerOptions {

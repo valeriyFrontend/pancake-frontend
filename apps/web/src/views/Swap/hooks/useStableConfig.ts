@@ -54,10 +54,7 @@ export function useLPTokensWithBalanceByAccount(account) {
   const [stableBalances] = useTokenBalancesWithLoadingIndicator(account ?? undefined, tokens)
 
   const lpTokensWithBalance = useMemo(
-    () =>
-      lpTokens.filter(({ liquidityToken }) =>
-        stableBalances[`${liquidityToken.chainId}-${liquidityToken.address}`]?.greaterThan('0'),
-      ),
+    () => lpTokens.filter(({ liquidityToken }) => stableBalances[liquidityToken.address]?.greaterThan('0')),
     [lpTokens, stableBalances],
   )
 

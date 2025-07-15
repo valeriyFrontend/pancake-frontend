@@ -1,7 +1,7 @@
 import { masterChefV3ABI, NFT_POSITION_MANAGER_ADDRESSES } from '@pancakeswap/v3-sdk'
 import { getMasterChefV3Address } from 'utils/addressHelpers'
 import { publicClient } from 'utils/viem'
-import { Address, isAddress } from 'viem'
+import { Address } from 'viem'
 
 /**
  * Get all token ids of a given account
@@ -11,17 +11,12 @@ import { Address, isAddress } from 'viem'
  * @param account target account address
  * @returns
  */
-export const getAccountV3TokenIds = async (
-  chainId: number,
-  account: Address,
-): Promise<{ farmingTokenIds: bigint[]; nonFarmTokenIds: bigint[] }> => {
+export const getAccountV3TokenIds = async (chainId: number, account: Address) => {
   const masterChefV3Address = getMasterChefV3Address(chainId)
   const nftPositionManagerAddress = NFT_POSITION_MANAGER_ADDRESSES[chainId]
 
   const [farmingTokenIds, nonFarmTokenIds] = await Promise.all([
-    masterChefV3Address && isAddress(masterChefV3Address)
-      ? getAccountV3TokenIdsFromContract(chainId, account, masterChefV3Address)
-      : [],
+    getAccountV3TokenIdsFromContract(chainId, account, masterChefV3Address),
     getAccountV3TokenIdsFromContract(chainId, account, nftPositionManagerAddress),
   ])
 

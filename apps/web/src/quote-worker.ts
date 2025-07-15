@@ -1,13 +1,12 @@
 import 'utils/workerPolyfill'
 
 import { findBestTrade } from '@pancakeswap/routing-sdk'
-import { InfinityRouter, SmartRouter } from '@pancakeswap/smart-router'
-import { RemoteLogger } from '@pancakeswap/utils/RemoteLogger'
+import { SmartRouter, V4Router } from '@pancakeswap/smart-router'
 import { Call } from 'state/multicall/actions'
 import { fetchChunk } from 'state/multicall/fetchChunk'
-import { toRoutingSDKPool, toSerializableInfinityTrade } from 'utils/convertTrade'
 import { getLogger } from 'utils/datadog'
-import { getViemClients } from 'utils/viem'
+import { createViemPublicClientGetter } from 'utils/viem'
+import { toRoutingSDKPool, toSerializableV4Trade } from 'utils/convertTrade'
 
 const { parseCurrency, parseCurrencyAmount, parsePool, serializeTrade } = SmartRouter.Transformer
 
@@ -79,7 +78,7 @@ export type WorkerGetBestTradeOffchainEvent = [
   id: number,
   message: {
     cmd: 'getBestTradeOffchain'
-    params: InfinityRouter.APISchema.RouterPostParams
+    params: V4Router.APISchema.RouterPostParams
   },
 ]
 
@@ -165,10 +164,9 @@ addEventListener('message', (event: MessageEvent<WorkerEvent>) => {
       onChainQuoterGasLimit: gasLimit,
       nativeCurrencyUsdPrice,
       quoteCurrencyUsdPrice,
-      account,
     } = parsed.data
-    const onChainProvider = getViemClients
-    const onChainQuoteProvider = SmartRouter.createQuoteProvider({ onChainProvider, gasLimit, account })
+    const onChainProvider = createViemPublicClientGetter({ transportSignal: abortController.signal })
+    const onChainQuoteProvider = SmartRouter.createQuoteProvider({ onChainProvider, gasLimit })
     const currencyAAmount = parseCurrencyAmount(chainId, amount)
 
     const currencyB = parseCurrency(chainId, currency)
@@ -179,7 +177,6 @@ addEventListener('message', (event: MessageEvent<WorkerEvent>) => {
       ? BigInt(gasPriceWei)
       : async () => BigInt((await onChainProvider({ chainId }).getGasPrice()).toString())
 
-    const quoteId = RemoteLogger.generateUniqId('quote')
     SmartRouter.getBestTrade(currencyAAmount, currencyB, tradeType, {
       gasPriceWei: gasPrice,
       poolProvider: SmartRouter.createStaticPoolProvider(pools),
@@ -192,7 +189,6 @@ addEventListener('message', (event: MessageEvent<WorkerEvent>) => {
       quoteCurrencyUsdPrice,
       nativeCurrencyUsdPrice,
       signal: abortController.signal,
-      quoteId,
     })
       .then((res) => {
         postMessage([
@@ -212,18 +208,11 @@ addEventListener('message', (event: MessageEvent<WorkerEvent>) => {
           },
         ])
       })
-      .finally(() => {
-        cleanupAbortController()
-        if (process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production') {
-          const symbols = `${currencyAAmount.currency.symbol}-${currencyB.symbol}`
-          // eslint-disable-next-line no-restricted-globals, no-console
-          console.log(`[SmartRouter] ${symbols}:  ${self.origin}/api/logger?id=${quoteId}`)
-        }
-      })
+      .finally(cleanupAbortController)
   }
 
   if (message.cmd === 'getBestTradeOffchain') {
-    const parsed = InfinityRouter.APISchema.zRouterPostParams.safeParse(message.params)
+    const parsed = V4Router.APISchema.zRouterPostParams.safeParse(message.params)
     if (parsed.success === false) {
       postMessage([
         id,
@@ -237,12 +226,11 @@ addEventListener('message', (event: MessageEvent<WorkerEvent>) => {
     }
 
     const { amount, chainId, currency, tradeType, gasPriceWei, maxHops, candidatePools, maxSplits } = parsed.data
-    const onChainProvider = getViemClients
+    const onChainProvider = createViemPublicClientGetter({ transportSignal: abortController.signal })
     const currencyAAmount = parseCurrencyAmount(chainId, amount)
     const currencyB = parseCurrency(chainId, currency)
     // FIXME: typing issue
     const pools = candidatePools.map((pool) => parsePool(chainId, pool as any))
-    const quoteId = RemoteLogger.generateUniqId('quote-rsdk')
 
     const gasPrice = gasPriceWei
       ? BigInt(gasPriceWei)
@@ -258,7 +246,6 @@ addEventListener('message', (event: MessageEvent<WorkerEvent>) => {
       candidatePools: initializedPools,
       maxHops,
       maxSplits,
-      quoteId,
     })
       .then((t) => {
         if (!t) {
@@ -266,12 +253,12 @@ addEventListener('message', (event: MessageEvent<WorkerEvent>) => {
         }
         const { graph: _, ...trade } = t
 
-        const infinityTrade = toSerializableInfinityTrade(trade)
+        const v4Trade = toSerializableV4Trade(trade)
         postMessage([
           id,
           {
             success: true,
-            result: infinityTrade,
+            result: v4Trade,
           },
         ])
       })
@@ -284,13 +271,6 @@ addEventListener('message', (event: MessageEvent<WorkerEvent>) => {
           },
         ])
       })
-      .finally(() => {
-        cleanupAbortController()
-        if (process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production') {
-          const symbols = `${currencyAAmount.currency.symbol}-${currencyB.symbol}`
-          // eslint-disable-next-line no-restricted-globals, no-console
-          console.log(`[routing-sdk] ${symbols}:  ${self.origin}/api/logger?id=${quoteId}`)
-        }
-      })
+      .finally(cleanupAbortController)
   }
 })

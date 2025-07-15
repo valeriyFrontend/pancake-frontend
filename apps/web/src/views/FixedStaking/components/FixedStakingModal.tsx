@@ -6,7 +6,7 @@ import dayjs from 'dayjs'
 import { ReactNode, useCallback, useMemo } from 'react'
 
 import ConnectWalletButton from 'components/ConnectWalletButton'
-import { useAccount } from 'wagmi'
+import useAccountActiveChain from 'hooks/useAccountActiveChain'
 import { useCurrentDay } from '../hooks/useStakedPools'
 import { FixedStakingPool, StakedPosition } from '../type'
 import { FixedStakingCalculator } from './FixedStakingCalculator'
@@ -29,7 +29,7 @@ export function FixedStakingModal({
   stakedPositions: StakedPosition[]
   setSelectedPeriodIndex?: (value: number | null) => void
 }) {
-  const { address: account } = useAccount()
+  const { account } = useAccountActiveChain()
 
   const { t } = useTranslation()
   const stakeModal = useModalV2()

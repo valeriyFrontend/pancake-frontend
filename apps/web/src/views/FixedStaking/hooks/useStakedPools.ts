@@ -2,6 +2,7 @@ import { VaultKey } from '@pancakeswap/pools'
 import { getBalanceAmount } from '@pancakeswap/utils/formatBalance'
 import BigNumber from 'bignumber.js'
 import { useOfficialsAndUserAddedTokens } from 'hooks/Tokens'
+import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import { useFixedStakingContract, useVaultPoolContract } from 'hooks/useContract'
 import toNumber from 'lodash/toNumber'
 import { useMemo } from 'react'
@@ -13,7 +14,6 @@ import { useAccount } from 'wagmi'
 import { useActiveChainId } from 'hooks/useActiveChainId'
 import { useReadContract } from '@pancakeswap/wagmi'
 import { safeGetAddress } from 'utils'
-import useAccountActiveChain from 'hooks/useAccountActiveChain'
 import { DISABLED_POOLS } from '../constant'
 import { FixedStakingPool, StakedPosition } from '../type'
 
@@ -46,7 +46,7 @@ export function useShouldNotAllowWithdraw({ lockPeriod, lastDayAction }) {
 
 export function useIfUserLocked() {
   const vaultPoolContract = useVaultPoolContract(VaultKey.CakeVault)
-  const { account, chainId } = useAccountActiveChain()
+  const { account, chainId } = useActiveWeb3React()
 
   const { data } = useReadContract({
     chainId,
@@ -165,8 +165,7 @@ export function useStakedPools(): FixedStakingPool[] {
     args: [],
   })
 
-  const poolLengthNumber = poolLength ? toNumber(poolLength.toString()) : 0
-  const numberOfPools = Number.isSafeInteger(poolLengthNumber) && poolLengthNumber >= 0 ? poolLengthNumber : 0
+  const numberOfPools = poolLength ? toNumber(poolLength.toString()) : 0
 
   const fixedStakePools = useSingleContractMultipleData({
     contract: useMemo(
@@ -181,7 +180,6 @@ export function useStakedPools(): FixedStakingPool[] {
       () => Array.from(Array(numberOfPools).keys()).map((index) => [BigInt(index)] as const),
       [numberOfPools],
     ),
-    options: { enabled: Boolean(numberOfPools) },
   })
 
   return useMemo(() => {

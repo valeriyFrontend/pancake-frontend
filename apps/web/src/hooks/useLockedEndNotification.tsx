@@ -1,13 +1,13 @@
-import { StyledLink, Text, useToast } from '@pancakeswap/uikit'
+import { useToast, Text, StyledLink } from '@pancakeswap/uikit'
 import { NextLinkFromReactRouter } from '@pancakeswap/widgets-internal'
 
+import { useEffect } from 'react'
 import { useTranslation } from '@pancakeswap/localization'
 import isUndefinedOrNull from '@pancakeswap/utils/isUndefinedOrNull'
-import { useQueryClient } from '@tanstack/react-query'
 import { useAtom } from 'jotai'
-import { useEffect } from 'react'
-import atomWithStorageWithErrorCatch from 'utils/atomWithStorageWithErrorCatch'
 import { useAccount } from 'wagmi'
+import atomWithStorageWithErrorCatch from 'utils/atomWithStorageWithErrorCatch'
+import { useQueryClient } from '@tanstack/react-query'
 import { useUserCakeLockStatus } from './useUserCakeLockStatus'
 
 const lockedNotificationShowAtom = atomWithStorageWithErrorCatch('lockedNotificationShow', true, () => sessionStorage)
@@ -49,7 +49,6 @@ const useLockedEndNotification = () => {
   }, [setLockedNotificationShow, account, queryClient, isUserLockedEnd])
 
   useEffect(() => {
-    if (window?.location?.pathname.includes('/ido')) return
     if (toastInfo && isUserLockedEnd && lockedNotificationShow) {
       toastInfo(t('Cake Syrup Pool'), <LockedEndDescription />)
       setLockedNotificationShow(false) // show once

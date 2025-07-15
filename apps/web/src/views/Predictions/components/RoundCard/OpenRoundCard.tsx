@@ -1,4 +1,3 @@
-import { AVERAGE_CHAIN_BLOCK_TIMES } from '@pancakeswap/chains'
 import { useTranslation } from '@pancakeswap/localization'
 import { BetPosition, TRANSACTION_BUFFER_BLOCKS } from '@pancakeswap/prediction'
 import {
@@ -18,11 +17,11 @@ import useTheme from 'hooks/useTheme'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { fetchLedgerData } from 'state/predictions'
 import { NodeLedger, NodeRound } from 'state/types'
-import { logGTMPredictionBetEvent, logGTMPredictionBetPlacedEvent } from 'utils/customGTMEventTracking'
-import { getLogger } from 'utils/datadog'
 import { getNowInSeconds } from 'utils/getNowInSeconds'
 import { useConfig } from 'views/Predictions/context/ConfigProvider'
 import { useAccount } from 'wagmi'
+import { logGTMPredictionBetEvent, logGTMPredictionBetPlacedEvent } from 'utils/customGTMEventTracking'
+import { AVERAGE_CHAIN_BLOCK_TIMES } from '@pancakeswap/chains'
 import { formatTokenv2 } from '../../helpers'
 import CardFlip from '../CardFlip'
 import { PrizePoolRow, RoundResultBox } from '../RoundResult'
@@ -44,7 +43,6 @@ interface State {
   position: BetPosition
 }
 
-const logger = getLogger('prediction')
 const OpenRoundCard: React.FC<React.PropsWithChildren<OpenRoundCardProps>> = ({
   round,
   betAmount,
@@ -126,18 +124,15 @@ const OpenRoundCard: React.FC<React.PropsWithChildren<OpenRoundCardProps>> = ({
     }))
   }, [])
 
-  const handleSetPosition = useCallback(
-    (newPosition: BetPosition) => {
-      logGTMPredictionBetEvent(newPosition, account)
+  const handleSetPosition = useCallback((newPosition: BetPosition) => {
+    logGTMPredictionBetEvent(newPosition)
 
-      setState((prevState) => ({
-        ...prevState,
-        isSettingPosition: true,
-        position: newPosition,
-      }))
-    },
-    [account],
-  )
+    setState((prevState) => ({
+      ...prevState,
+      isSettingPosition: true,
+      position: newPosition,
+    }))
+  }, [])
 
   const togglePosition = useCallback(() => {
     setState((prevState) => ({
@@ -151,11 +146,7 @@ const OpenRoundCard: React.FC<React.PropsWithChildren<OpenRoundCardProps>> = ({
       if (account && chainId) {
         await dispatch(fetchLedgerData({ account, chainId, epochs: [round.epoch] }))
 
-        logGTMPredictionBetPlacedEvent(positionDisplay, account)
-        logger.info('bet-placed', {
-          address: account,
-          position: positionDisplay,
-        })
+        logGTMPredictionBetPlacedEvent(positionDisplay)
 
         handleBack()
 

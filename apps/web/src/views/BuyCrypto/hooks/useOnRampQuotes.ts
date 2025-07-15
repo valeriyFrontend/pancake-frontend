@@ -23,7 +23,6 @@ export const useOnRampQuotes = <selectData = GetOnRampQuoteReturnType>(
 ) => {
   const { fiatAmount, enabled, cryptoCurrency, fiatCurrency, network, onRampUnit, providerAvailabilities, ...query } =
     parameters
-
   return useQuery({
     ...query,
     queryKey: getOnRampQuotesQueryKey([
@@ -42,7 +41,6 @@ export const useOnRampQuotes = <selectData = GetOnRampQuoteReturnType>(
       if (!cryptoCurrency || !fiatAmount || !fiatCurrency || !onRampUnit) {
         throw new Error('Missing buy-crypto fetch-provider-quotes params')
       }
-
       const quotes = await fetchProviderQuotes({
         cryptoCurrency,
         fiatAmount,
@@ -51,13 +49,9 @@ export const useOnRampQuotes = <selectData = GetOnRampQuoteReturnType>(
         onRampUnit,
       })
 
-      if (quotes.length === 0) {
-        throw new Error('No quotes available')
-      }
+      if (quotes.length === 0) throw new Error('No quotes available')
 
-      const filteredQuotes = quotes.filter((q) => providerAvailabilities[q.provider])
-
-      return filteredQuotes.length > 0 ? filteredQuotes : quotes
+      return quotes.filter((q) => providerAvailabilities[q.provider])
     },
   })
 }
@@ -77,8 +71,6 @@ async function fetchProviderQuotes(
       body: JSON.stringify(payload),
     },
   )
-
   const result = await response.json()
-
-  return result.result || []
+  return result.result
 }

@@ -2,12 +2,6 @@ import { ChainId } from '@pancakeswap/chains'
 import { masterChefV3Addresses } from '@pancakeswap/farms'
 import { GAUGES_ADDRESS, GAUGES_CALC_ADDRESS } from '@pancakeswap/gauges'
 import { ICAKE } from '@pancakeswap/ifos'
-import {
-  INFI_BIN_POOL_MANAGER_ADDRESSES,
-  INFI_BIN_POSITION_MANAGER_ADDRESSES,
-  INFI_CL_POOL_MANAGER_ADDRESSES,
-  INFI_CL_POSITION_MANAGER_ADDRESSES,
-} from '@pancakeswap/infinity-sdk'
 import { CAKE_VAULT } from '@pancakeswap/pools'
 import { V3_QUOTER_ADDRESSES } from '@pancakeswap/smart-router'
 import { DEPLOYER_ADDRESSES, NFT_POSITION_MANAGER_ADDRESSES } from '@pancakeswap/v3-sdk'
@@ -98,9 +92,6 @@ export default {
     [ChainId.BSC_TESTNET]: '0x24ec6962dbe874F6B67B5C50857565667fA0854F',
   },
   cakeVault: CAKE_VAULT,
-  cakeVaultV1: {
-    [ChainId.BSC]: '0xa80240Eb5d7E05d3F250cF000eEc0891d00b51CC',
-  },
   cakeFlexibleSideVault: {
     [ChainId.BSC]: '0x615e896A8C2CA8470A2e9dc2E9552998f8658Ea0',
     [ChainId.BSC_TESTNET]: '0x1088Fb24053F03802F673b84d16AE1A7023E400b',
@@ -271,10 +262,4 @@ export default {
     [ChainId.ZKSYNC_TESTNET]: '0xbfcCF87Ee5cd03d4550Cc1526Bf152cc2EE1C7AB',
     [ChainId.ZKSYNC]: '0xB774c13bA5a665713037c42A12f0ED9De70585cB',
   },
-
-  // inifinity
-  poolManagerCL: INFI_CL_POOL_MANAGER_ADDRESSES,
-  poolManagerBin: INFI_BIN_POOL_MANAGER_ADDRESSES,
-  positionManagerCL: INFI_CL_POSITION_MANAGER_ADDRESSES,
-  positionManagerBin: INFI_BIN_POSITION_MANAGER_ADDRESSES,
 } as const satisfies Record<string, Record<number, `0x${string}`>>

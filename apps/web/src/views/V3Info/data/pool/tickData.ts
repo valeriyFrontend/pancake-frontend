@@ -1,12 +1,26 @@
-import { Protocol } from '@pancakeswap/farms'
-import { Token } from '@pancakeswap/sdk'
 import { TickMath, tickToPrice } from '@pancakeswap/v3-sdk'
+import { Token } from '@pancakeswap/sdk'
+import { Address } from 'viem'
 import { explorerApiClient } from 'state/info/api/client'
 import { components } from 'state/info/api/schema'
-import { Address } from 'viem'
 
-const PRICE_FIXED_DIGITS = 8
+const PRICE_FIXED_DIGITS = 4
 const DEFAULT_SURROUNDING_TICKS = 300
+const FEE_TIER_TO_TICK_SPACING = (feeTier: number): number => {
+  switch (feeTier) {
+    case 10000:
+      return 200
+    case 2500:
+      return 50
+    case 500:
+      return 10
+    case 100:
+      return 1
+    default:
+      throw Error(`Tick spacing for fee tier ${feeTier} undefined.`)
+  }
+}
+
 // Tick with fields parsed to bigints, and active liquidity computed.
 export interface TickProcessed {
   liquidityGross: bigint
@@ -24,42 +38,27 @@ export interface PoolTickData {
   activeTickIdx: number
 }
 
-export const fetchTicksSurroundingPrice = async ({
-  protocol,
-  poolAddress,
-  tickSpacing,
-  chainName,
-  chainId,
+export const fetchTicksSurroundingPrice = async (
+  poolAddress: string,
+  chainName: components['schemas']['ChainName'],
+  chainId: number,
   numSurroundingTicks = DEFAULT_SURROUNDING_TICKS,
-  signal,
-}: {
-  protocol: Protocol.V3 | Protocol.InfinityCLAMM
-  poolAddress: string
-  tickSpacing: number
-  chainName: components['schemas']['ChainName']
-  chainId: number
-  numSurroundingTicks?: number
-  signal?: AbortSignal
-}): Promise<{
+  signal?: AbortSignal,
+): Promise<{
   error?: boolean
   data?: PoolTickData
 }> => {
   try {
     const poolData = await explorerApiClient
-      .GET(
-        protocol === Protocol.V3
-          ? '/cached/pools/v3/{chainName}/{address}'
-          : '/cached/pools/infinityCl/{chainName}/{address}',
-        {
-          signal,
-          params: {
-            path: {
-              chainName,
-              address: poolAddress,
-            },
+      .GET('/cached/pools/v3/{chainName}/{address}', {
+        signal,
+        params: {
+          path: {
+            chainName,
+            address: poolAddress,
           },
         },
-      )
+      })
       .then((res) => res.data)
 
     const rawTickData: {
@@ -76,11 +75,10 @@ export const fetchTicksSurroundingPrice = async ({
     while (hasNextPage) {
       // eslint-disable-next-line no-await-in-loop
       const result = await explorerApiClient
-        .GET(`/cached/pools/ticks/{protocol}/{chainName}/{pool}`, {
+        .GET(`/cached/pools/ticks/v3/{chainName}/{pool}`, {
           signal,
           params: {
             path: {
-              protocol,
               chainName,
               pool: poolAddress,
             },
@@ -101,6 +99,7 @@ export const fetchTicksSurroundingPrice = async ({
     }
 
     const poolCurrentTickIdx = poolData.tick ?? 0
+    const tickSpacing = FEE_TIER_TO_TICK_SPACING(poolData.feeTier)
     // The pools current tick isn't necessarily a tick that can actually be initialized.
     // Find the nearest valid tick given the tick spacing.
     const activeTickIdx = Math.floor(poolCurrentTickIdx / tickSpacing) * tickSpacing
@@ -147,7 +146,7 @@ export const fetchTicksSurroundingPrice = async ({
     }
 
     const activeTickProcessed: TickProcessed = {
-      liquidityActive: BigInt(poolData.liquidity ?? 0),
+      liquidityActive: BigInt(poolData.liquidity),
       tickIdx: activeTickIdx,
       liquidityNet: 0n,
       price0: tickToPrice(token0, token1, activeTickIdxForPrice).toFixed(PRICE_FIXED_DIGITS),
@@ -253,7 +252,7 @@ export const fetchTicksSurroundingPrice = async ({
     return {
       data: {
         ticksProcessed,
-        feeTier: poolData.feeTier?.toString() ?? '0',
+        feeTier: poolData.feeTier.toString(),
         tickSpacing,
         activeTickIdx,
       },

@@ -28,7 +28,7 @@ import { useStablecoinPriceAmount } from 'hooks/useStablecoinPrice'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useCurrencyBalance } from 'state/wallet/hooks'
 import { maxAmountSpend } from 'utils/maxAmountSpend'
-import { useAccount } from 'wagmi'
+import { useAccount, useDisconnect } from 'wagmi'
 
 import { getIsAndroid, isInBinance } from '@binance/w3w-utils'
 import { ASSET_CDN } from 'config/constants/endpoints'
@@ -138,6 +138,7 @@ export const IdoDepositButton: React.FC<{
     stakeCurrency ?? undefined,
     value !== undefined && Number.isFinite(+value) ? +value : undefined,
     {
+      hideIfPriceImpactTooHigh: true,
       enabled: Boolean(value !== undefined && Number.isFinite(+value)),
     },
   )
@@ -156,12 +157,6 @@ export const IdoDepositButton: React.FC<{
       onUnverifiedOpen()
     }
   }, [verifyStatus, onOpen, onUnverifiedOpen])
-
-  useEffect(() => {
-    if (verifyStatus === VerifyStatus.eligible && isUnverifiedOpen) {
-      onUnverifiedDismiss()
-    }
-  }, [isUnverifiedOpen, onUnverifiedDismiss, verifyStatus])
 
   const { targetRef, tooltip } = useTooltip(
     <Text>
@@ -183,7 +178,7 @@ export const IdoDepositButton: React.FC<{
     if (inputRef.current) {
       inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       if (isAndroid && isBinance) {
-        setMinHeight('calc(100vh - 80px)')
+        setMinHeight('calc(100vh - 120px)')
       }
     }
   }, [isAndroid, isBinance])
@@ -195,26 +190,20 @@ export const IdoDepositButton: React.FC<{
 
   const accountEllipsis = account ? `${account.substring(0, 2)}...${account.substring(account.length - 4)}` : null
 
-  const [depositing, setDepositing] = useState(false)
   const handleConfirmDeposit = async () => {
-    if (depositing) return
     if (verifyStatus !== VerifyStatus.eligible || !isBinance) {
       onUnverifiedOpen()
       return
     }
     if (depositAmount) {
-      setDepositing(true)
-      try {
-        const hash = await deposit(pid, depositAmount, handleCloseModal)
-        if (hash) {
-          logGTMIdoDepositEvent()
-        }
-      } finally {
-        setDepositing(false)
+      const hash = await deposit(pid, depositAmount, handleCloseModal)
+      if (hash) {
+        logGTMIdoDepositEvent()
       }
     }
   }
 
+  const { disconnectAsync } = useDisconnect()
   const durationText = useIDODuration(duration)
 
   useEffect(() => {
@@ -223,28 +212,12 @@ export const IdoDepositButton: React.FC<{
     }
   }, [account, isBinance, verifyStatus, onUnverifiedOpen])
 
-  // const { disconnectAsync } = useDisconnect()
   const handleUnverifiedDismiss = () => {
     onUnverifiedDismiss()
-    // if (account && isBinance && verifyStatus === VerifyStatus.ineligible) {
-    //   disconnectAsync()
-    // }
-  }
-
-  // issue: https://issues.chromium.org/issues/41177736
-  // android may not trigger blur event when keyboard hide
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const isSoftKeyboardOpen =
-      Math.min(window.innerWidth / window.screen.width, window.innerHeight / window.screen.height) < 0.7
-    if (
-      document.activeElement?.tagName === 'INPUT' &&
-      document.activeElement?.id === `idoStakeCurrency${stakeCurrency?.symbol}` &&
-      !isSoftKeyboardOpen
-    ) {
-      ;(document.activeElement as HTMLInputElement).blur()
+    if (account && isBinance && verifyStatus === VerifyStatus.ineligible) {
+      disconnectAsync()
     }
-  }, [stakeCurrency?.symbol])
+  }
 
   return (
     <>
@@ -376,7 +349,7 @@ export const IdoDepositButton: React.FC<{
                 ) : null}
                 <Text color="textSubtle" fontSize="12px">
                   {t(
-                    'Some Rules/ T&C context or information that user need to know before locking BNB/ participating in TGE, show here.',
+                    'Some Rules/ T&C context or information that user need to know before locking BNB/ participating in IDO, show here.',
                   )}
                 </Text>
                 <Button
@@ -427,9 +400,7 @@ export const IdoDepositButton: React.FC<{
                 <Flex justifyContent="center">
                   <Image src={`${ASSET_CDN}/web/wallets/binance-w3w.png`} width={40} height={40} />
                 </Flex>
-                <Text width="100%" style={{ lineBreak: 'anywhere' }}>
-                  {account}
-                </Text>
+                <Text>{account}</Text>
                 <Text>{t('This IDO subscription is exclusively available using the Binance Keyless Wallet.')}</Text>
               </FlexGap>
               {isAndroid && isBinance ? <Box height="60px" width="100%" /> : null}

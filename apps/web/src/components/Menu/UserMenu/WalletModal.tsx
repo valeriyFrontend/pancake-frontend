@@ -44,14 +44,13 @@ const Tabs = styled.div`
 interface TabsComponentProps {
   view: WalletView
   handleClick: (newIndex: number) => void
-  style?: React.CSSProperties
 }
 
-export const TabsComponent: React.FC<React.PropsWithChildren<TabsComponentProps>> = ({ view, handleClick, style }) => {
+const TabsComponent: React.FC<React.PropsWithChildren<TabsComponentProps>> = ({ view, handleClick }) => {
   const { t } = useTranslation()
 
   return (
-    <Tabs style={style}>
+    <Tabs>
       <ButtonMenu scale="sm" variant="subtle" onItemClick={handleClick} activeIndex={view} fullWidth>
         <ButtonMenuItem>{t('Wallet')}</ButtonMenuItem>
         <ButtonMenuItem>{t('Transactions')}</ButtonMenuItem>

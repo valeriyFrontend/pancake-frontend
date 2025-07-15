@@ -1,5 +1,6 @@
 import { useTranslation } from '@pancakeswap/localization'
-import { Route, RouteType } from '@pancakeswap/smart-router'
+import { Currency } from '@pancakeswap/sdk'
+import { Route, SmartRouter } from '@pancakeswap/smart-router'
 import {
   AtomBox,
   AutoColumn,
@@ -16,11 +17,11 @@ import { memo, useMemo } from 'react'
 
 import { RoutingSettingsButton } from 'components/Menu/GlobalSettings/SettingsModalV2'
 import { CurrencyLogoWrapper, RouterBox, RouterPoolBox, RouterTypeText } from 'views/Swap/components/RouterViewer'
-import { useHookDiscount } from 'views/SwapSimplify/hooks/useHookDiscount'
-import { BridgeRoutesDisplay } from './RouteDisplay/BridgeRoutesDisplay'
-import { getPairNodes, Pair } from './RouteDisplay/pairNode'
+import { v3FeeToPercent } from '../utils/exchange'
 
-export type RouteDisplayEssentials = Pick<Route, 'path' | 'pools' | 'inputAmount' | 'outputAmount' | 'percent' | 'type'>
+type Pair = [Currency, Currency]
+
+export type RouteDisplayEssentials = Pick<Route, 'path' | 'pools' | 'inputAmount' | 'outputAmount' | 'percent'>
 
 interface Props extends UseModalV2Props {
   routes: RouteDisplayEssentials[]
@@ -28,8 +29,6 @@ interface Props extends UseModalV2Props {
 
 export const RouteDisplayModal = memo(function RouteDisplayModal({ isOpen, onDismiss, routes }: Props) {
   const { t } = useTranslation()
-  const isBridgeRouting = routes?.some((route) => route.type === RouteType.BRIDGE)
-
   return (
     <ModalV2 closeOnOverlayClick isOpen={isOpen} onDismiss={onDismiss} minHeight="0">
       <Modal
@@ -46,17 +45,13 @@ export const RouteDisplayModal = memo(function RouteDisplayModal({ isOpen, onDis
         style={{ minHeight: '0' }}
         bodyPadding="24px"
       >
-        {isBridgeRouting ? (
-          <BridgeRoutesDisplay routes={routes} />
-        ) : (
-          <AutoColumn gap="56px" height="100%">
-            {routes.map((route, i) => (
-              // eslint-disable-next-line react/no-array-index-key
-              <RouteDisplay key={i} route={route} />
-            ))}
-            <RoutingSettingsButton />
-          </AutoColumn>
-        )}
+        <AutoColumn gap="48px">
+          {routes.map((route, i) => (
+            // eslint-disable-next-line react/no-array-index-key
+            <RouteDisplay key={i} route={route} />
+          ))}
+          <RoutingSettingsButton />
+        </AutoColumn>
       </Modal>
     </ModalV2>
   )
@@ -67,7 +62,6 @@ interface RouteDisplayProps {
 }
 
 export const RouteDisplay = memo(function RouteDisplay({ route }: RouteDisplayProps) {
-  const { hookDiscount, category } = useHookDiscount(route.pools)
   const { t } = useTranslation()
   const { path, pools, inputAmount, outputAmount } = route
   const { currency: inputCurrency } = inputAmount
@@ -96,15 +90,46 @@ export const RouteDisplay = memo(function RouteDisplay({ route }: RouteDisplayPr
     return currencyPairs
   }, [path])
 
-  const pairNodes = getPairNodes({
-    pairs,
-    pools,
-    routePoolsLength: route.pools.length,
-    hookDiscount,
-    category,
-    t,
-    PairNode,
-  })
+  const pairNodes =
+    pairs.length > 0
+      ? pairs.map((p, index) => {
+          const [input, output] = p
+          const pool = pools[index]
+          const isV4ClPool = SmartRouter.isV4ClPool(pool)
+          const isV4BinPool = SmartRouter.isV4BinPool(pool)
+          const isV4Pool = isV4BinPool || isV4ClPool
+          const isV3Pool = SmartRouter.isV3Pool(pool)
+          const isV2Pool = SmartRouter.isV2Pool(pool)
+          const key = isV2Pool
+            ? `v2_${pool.reserve0.currency.symbol}_${pool.reserve1.currency.symbol}`
+            : SmartRouter.isStablePool(pool) || isV3Pool
+            ? pool.address
+            : isV4Pool
+            ? pool.id
+            : undefined
+          if (!key) return null
+          const feeDisplay = isV3Pool || isV4Pool ? v3FeeToPercent(pool.fee).toSignificant(6) : ''
+          const text = isV2Pool
+            ? 'V2'
+            : isV3Pool
+            ? `V3 (${feeDisplay}%)`
+            : isV4ClPool
+            ? `V4CL (${feeDisplay}%)`
+            : isV4BinPool
+            ? `V4Bin (${feeDisplay}%)`
+            : t('StableSwap')
+          const tooltipText = `${input.symbol}/${output.symbol}${isV3Pool || isV4Pool ? ` (${feeDisplay}%)` : ''}`
+          return (
+            <PairNode
+              pair={p}
+              key={key}
+              text={text}
+              className={isV4Pool || isV3Pool ? 'highlight' : ''}
+              tooltipText={tooltipText}
+            />
+          )
+        })
+      : null
 
   return (
     <AutoColumn gap="24px">
@@ -143,7 +168,7 @@ function PairNode({
   tooltipText,
 }: {
   pair: Pair
-  text: string | React.ReactNode
+  text: string
   className: string
   tooltipText: string
 }) {
@@ -152,26 +177,24 @@ function PairNode({
   const tooltip = useTooltip(tooltipText)
 
   return (
-    <RouterPoolBox className={className}>
+    <RouterPoolBox className={className} ref={tooltip.targetRef}>
       {tooltip.tooltipVisible && tooltip.tooltip}
-      <Flex ref={tooltip.targetRef}>
-        <AtomBox
-          size={{
-            xs: '24px',
-            md: '32px',
-          }}
-        >
-          <CurrencyLogo size="100%" currency={input} />
-        </AtomBox>
-        <AtomBox
-          size={{
-            xs: '24px',
-            md: '32px',
-          }}
-        >
-          <CurrencyLogo size="100%" currency={output} />
-        </AtomBox>
-      </Flex>
+      <AtomBox
+        size={{
+          xs: '24px',
+          md: '32px',
+        }}
+      >
+        <CurrencyLogo size="100%" currency={input} />
+      </AtomBox>
+      <AtomBox
+        size={{
+          xs: '24px',
+          md: '32px',
+        }}
+      >
+        <CurrencyLogo size="100%" currency={output} />
+      </AtomBox>
       <RouterTypeText>{text}</RouterTypeText>
     </RouterPoolBox>
   )

@@ -1,14 +1,14 @@
+import { FAST_INTERVAL, SLOW_INTERVAL } from 'config/constants'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useBlockNumber as useWagmiBlockNumber, useBlock as useWagmiBlock } from 'wagmi'
 import {
+  useWatchBlock,
   useBlockNumber,
   useBlockTimestamp,
-  useInitialBlockTimestamp as useInitBlockTimestamp,
   useInitialBlockNumber,
-  useWatchBlock,
+  useInitialBlockTimestamp as useInitBlockTimestamp,
   getInitialBlockTimestampQueryKey,
 } from '@pancakeswap/wagmi'
-import { FAST_INTERVAL, SLOW_INTERVAL } from 'config/constants'
 
 import { useActiveChainId } from 'hooks/useActiveChainId'
 import { useCallback } from 'react'
@@ -41,9 +41,8 @@ export const usePollBlockNumber = () => {
   })
 }
 
-export const useCurrentBlock = (overrideChainId?: number): number => {
-  const { chainId: activeChainId } = useActiveChainId()
-  const chainId = overrideChainId || activeChainId
+export const useCurrentBlock = (): number => {
+  const { chainId } = useActiveChainId()
   const { data: currentBlock = 0 } = useBlockNumber({
     chainId,
     watch: true,

@@ -50,7 +50,6 @@ import { useGasPrice } from 'state/user/hooks'
 import { logGTMClickRemoveLiquidityEvent } from 'utils/customGTMEventTracking'
 import { formatAmount } from 'utils/formatInfoNumbers'
 import { isUserRejected, logError } from 'utils/sentry'
-import useAccountActiveChain from 'hooks/useAccountActiveChain'
 import { RemoveLiquidityLayout } from '..'
 import ConnectWalletButton from '../../../components/ConnectWalletButton'
 import CurrencyInputPanel from '../../../components/CurrencyInputPanel'
@@ -58,6 +57,7 @@ import StyledInternalLink from '../../../components/Links'
 import Dots from '../../../components/Loader/Dots'
 import { CurrencyLogo } from '../../../components/Logo'
 import SettingsModal from '../../../components/Menu/GlobalSettings/SettingsModal'
+import useActiveWeb3React from '../../../hooks/useActiveWeb3React'
 import ConfirmLiquidityModal from '../../Swap/components/ConfirmRemoveLiquidityModal'
 import { useStableDerivedBurnInfo } from './hooks/useStableDerivedBurnInfo'
 
@@ -72,7 +72,7 @@ export default function RemoveStableLiquidity({ currencyA, currencyB, currencyId
   const native = useNativeCurrency()
   const { isMobile } = useMatchBreakpoints()
 
-  const { account, chainId, isWrongNetwork } = useAccountActiveChain()
+  const { account, chainId, isWrongNetwork } = useActiveWeb3React()
   const { toastError } = useToast()
   const [tokenA, tokenB] = useMemo(() => [currencyA?.wrapped, currencyB?.wrapped], [currencyA, currencyB])
 

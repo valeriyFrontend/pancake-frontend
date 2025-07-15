@@ -25,6 +25,7 @@ export interface PoolCharacteristics {
   needQualifiedNFT?: boolean
   needQualifiedPoints?: boolean
   vestingInformation?: VestingInformation
+  hasTax?: boolean
 
   // 0: public sale
   // 1: private sale

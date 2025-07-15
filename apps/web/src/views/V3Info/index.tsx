@@ -1,12 +1,11 @@
 import { useTranslation } from '@pancakeswap/localization'
 import { AutoColumn, Box, Button, Card, Heading, Text } from '@pancakeswap/uikit'
-import isUndefinedOrNull from '@pancakeswap/utils/isUndefinedOrNull'
 import Page from 'components/Layout/Page'
 import dayjs from 'dayjs'
 import { useActiveChainId } from 'hooks/useActiveChainId'
 import useTheme from 'hooks/useTheme'
 import { useEffect, useMemo, useState } from 'react'
-import { VolumeWindow } from 'state/info/types'
+import isUndefinedOrNull from '@pancakeswap/utils/isUndefinedOrNull'
 import BarChart from './components/BarChart/alt'
 import { DarkGreyCard } from './components/Card'
 import LineChart from './components/LineChart/alt'
@@ -24,6 +23,7 @@ import {
   useTopTokensData,
 } from './hooks'
 import { useTransformedVolumeData } from './hooks/chart'
+import { VolumeWindow } from './types'
 import { unixToDate } from './utils/date'
 import { formatDollarAmount } from './utils/numbers'
 

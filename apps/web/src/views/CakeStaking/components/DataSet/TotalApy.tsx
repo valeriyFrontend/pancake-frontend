@@ -23,15 +23,9 @@ interface TotalApyProps {
   veCake: string
   cakeAmount: number
   cakeLockWeeks: string
-  showTotalAPYOnly?: boolean
 }
 
-export const TotalApy: React.FC<React.PropsWithChildren<TotalApyProps>> = ({
-  veCake,
-  cakeAmount,
-  cakeLockWeeks,
-  showTotalAPYOnly,
-}) => {
+export const TotalApy: React.FC<React.PropsWithChildren<TotalApyProps>> = ({ veCake, cakeAmount, cakeLockWeeks }) => {
   const { t } = useTranslation()
   const cakePoolEmission = useCakePoolEmission()
   const revShareEmission = useRevShareEmission()
@@ -89,14 +83,6 @@ export const TotalApy: React.FC<React.PropsWithChildren<TotalApyProps>> = ({
     const total = new BigNumber(cakePoolApr).plus(revenueSharingApr).plus(bribeApr).toNumber()
     return Number.isNaN(total) ? 0 : total
   }, [bribeApr, cakePoolApr, revenueSharingApr])
-
-  console.log({
-    shouldShow4yrApr,
-    veCAKEPoolApr,
-    revShareEmissionApr,
-    BRIBE_APR,
-    totalApy,
-  })
 
   const {
     targetRef: totalAprRef,
@@ -196,32 +182,17 @@ export const TotalApy: React.FC<React.PropsWithChildren<TotalApyProps>> = ({
     },
   )
 
-  const totalApyElement = (
-    <Flex justifyContent="space-between">
-      <TooltipText fontSize="14px" color="textSubtle" ref={totalAprRef}>
-        {t('Total APR')}
-      </TooltipText>
-      <Flex>
-        <Text>🔹</Text>
-        <GradientText>{t('Up to %apr%%', { apr: totalApy.toFixed(2) })} </GradientText>
-      </Flex>
-    </Flex>
-  )
-
-  if (showTotalAPYOnly) {
-    return (
-      <>
-        <Flex width="100%" flexDirection="column">
-          {totalApyElement}
-        </Flex>
-        {totalAprTooltipVisible && totalAprTooltips}
-      </>
-    )
-  }
-
   return (
     <Flex width="100%" flexDirection="column">
-      {totalApyElement}
+      <Flex justifyContent="space-between">
+        <TooltipText fontSize="14px" color="textSubtle" ref={totalAprRef}>
+          {t('Total APR')}
+        </TooltipText>
+        <Flex>
+          <Text>🔹</Text>
+          <GradientText>{t('Up to %apr%%', { apr: totalApy.toFixed(2) })} </GradientText>
+        </Flex>
+      </Flex>
       <Box ml="25px">
         <Flex mt="4px" justifyContent="space-between">
           <TooltipText fontSize="14px" color="textSubtle" ref={veCakePoolAprRef}>

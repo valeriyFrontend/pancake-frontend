@@ -1,4 +1,5 @@
 import { useTranslation } from '@pancakeswap/localization'
+import { useMemo } from 'react'
 import { CheckmarkCircleIcon, ErrorIcon, ScanLink } from '@pancakeswap/uikit'
 import {
   TransactionListItem,
@@ -6,14 +7,12 @@ import {
   TransactionListItemTitle,
   TransactionStatus,
 } from '@pancakeswap/widgets-internal'
-import { useMemo } from 'react'
 import { ChainLinkSupportChains } from 'state/info/constant'
-import { useReadableTransactionType } from 'state/transactions/hooks'
 import { TransactionDetails } from 'state/transactions/reducer'
+import { useReadableTransactionType } from 'state/transactions/hooks'
 import { styled } from 'styled-components'
 import { getBlockExploreLink } from 'utils'
 
-import { getFullChainNameById } from 'utils/getFullChainNameById'
 import CircleLoader from '../../Loader/CircleLoader'
 
 const TransactionState = styled.div<{ pending: boolean; success?: boolean }>`
@@ -58,11 +57,7 @@ export default function Transaction({ tx, chainId }: { tx: TransactionDetails; c
   return (
     <TransactionListItem
       status={status}
-      title={
-        <TransactionListItemTitle>
-          {title} ({getFullChainNameById(chainId)})
-        </TransactionListItemTitle>
-      }
+      title={<TransactionListItemTitle>{title}</TransactionListItemTitle>}
       action={<ScanLink useBscCoinFallback={ChainLinkSupportChains.includes(chainId)} href={link} />}
     >
       <TransactionListItemDesc>{summary ?? tx.hash}</TransactionListItemDesc>

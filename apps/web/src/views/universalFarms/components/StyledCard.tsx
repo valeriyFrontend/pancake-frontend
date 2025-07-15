@@ -1,25 +1,18 @@
 import styled from 'styled-components'
+import NextLink from 'next/link'
 import {
   Card as RawCard,
   CardBody as RawCardBody,
-  CardFooter as RawCardFooter,
   CardHeader as RawCardHeader,
+  CardFooter as RawCardFooter,
 } from '@pancakeswap/uikit'
 
 export const Card = styled(RawCard)`
   overflow: initial;
-  min-height: 600px;
-  display: flex;
-  flex-direction: column;
 `
 
 export const CardHeader = styled(RawCardHeader)`
-  padding: 16px;
   background: ${({ theme }) => theme.card.background};
-
-  ${({ theme }) => theme.mediaQueries.sm} {
-    padding: 24px;
-  }
 `
 
 export const CardBody = styled(RawCardBody)`
@@ -46,5 +39,18 @@ export const CardFooter = styled(RawCardFooter)`
 
   ${({ theme }) => theme.mediaQueries.lg} {
     bottom: 0;
+  }
+`
+
+export const StyledNextLink = styled(NextLink)`
+  &:hover {
+    > div {
+      background: ${({ theme }) => theme.colors.backgroundHover};
+    }
+  }
+  &:active {
+    > div {
+      background: ${({ theme }) => theme.colors.backgroundTapped};
+    }
   }
 `

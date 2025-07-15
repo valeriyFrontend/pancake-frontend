@@ -1,24 +1,21 @@
-import { Protocol, supportedChainIdV4 } from '@pancakeswap/farms'
+import { ChainId } from '@pancakeswap/chains'
+import { supportedChainIdV4 } from '@pancakeswap/farms'
 import { BIG_ZERO } from '@pancakeswap/utils/bigNumber'
 import { masterChefV3ABI, pancakeV3PoolABI } from '@pancakeswap/v3-sdk'
 import { create, windowedFiniteBatchScheduler } from '@yornaath/batshit'
 import BigNumber from 'bignumber.js'
 import { SECONDS_PER_YEAR } from 'config'
 import { v2BCakeWrapperABI } from 'config/abi/v2BCakeWrapper'
-import { InfinityProtocol, NonInfinityProtocol } from 'config/constants/protocols'
 import dayjs from 'dayjs'
 import groupBy from 'lodash/groupBy'
 import set from 'lodash/set'
 import { chainIdToExplorerInfoChainName, explorerApiClient } from 'state/info/api/client'
 import { safeGetAddress } from 'utils'
 import { usdPriceBatcher } from 'utils/batcher'
-import { getMasterChefV3Contract } from 'utils/contractHelpers'
-import { isInfinityProtocol } from 'utils/protocols'
+import { getMasterChefV3Contract, getV2SSBCakeWrapperContract } from 'utils/contractHelpers'
 import { publicClient } from 'utils/wagmi'
 import { erc20Abi } from 'viem'
-
-import { ChainId } from '@pancakeswap/chains'
-import { InfinityPoolInfo, PoolInfo, StablePoolInfo, V2PoolInfo, V3PoolInfo } from '../type'
+import { PoolInfo, StablePoolInfo, V2PoolInfo, V3PoolInfo } from '../type'
 import { CakeApr, MerklApr } from './atom'
 
 export const getCakeApr = (pool: PoolInfo, cakePrice: BigNumber): Promise<CakeApr> => {
@@ -38,30 +35,20 @@ export const getCakeApr = (pool: PoolInfo, cakePrice: BigNumber): Promise<CakeAp
 }
 
 // @todo @ChefJerry should directly fetch from poolInfo api, BE need update
-export const getLpApr = async (
-  pool: {
-    protocol: Protocol
-    chainId: ChainId
-    lpAddress?: `0x${string}`
-    poolId?: `0x${string}`
-  },
-  apr24h: boolean = false,
-  signal?: AbortSignal,
-): Promise<number> => {
+export const getLpApr = async (pool: PoolInfo, signal?: AbortSignal): Promise<number> => {
   const { protocol } = pool
   const chainName = chainIdToExplorerInfoChainName[pool.chainId]
 
   const resp = await explorerApiClient.GET(
-    isInfinityProtocol(protocol)
-      ? `/cached/pools/apr/${protocol as InfinityProtocol}/{chainName}/{id}`
-      : `/cached/pools/apr/${protocol as NonInfinityProtocol}/{chainName}/{address}`,
+    protocol === 'v4bin'
+      ? `/cached/pools/apr/v4/{chainName}/{id}`
+      : `/cached/pools/apr/${protocol}/{chainName}/{address}`,
     {
       signal,
       params: {
         path: {
           address: pool.lpAddress,
           chainName,
-          id: (pool as InfinityPoolInfo).poolId,
         },
       },
     },
@@ -70,9 +57,6 @@ export const getLpApr = async (
     return 0
   }
 
-  if (apr24h) {
-    return resp.data.apr24h ? parseFloat(resp.data.apr24h) : 0
-  }
   return resp.data.apr7d ? parseFloat(resp.data.apr7d) : 0
 }
 
@@ -83,6 +67,51 @@ const masterChefV3CacheMap = new Map<
     latestPeriodCakePerSecond: bigint
   }
 >()
+
+export const getV3PoolCakeApr = async (pool: V3PoolInfo, cakePrice: BigNumber): Promise<CakeApr[keyof CakeApr]> => {
+  const { tvlUsd } = pool
+  const client = publicClient({ chainId: pool.chainId })
+  const masterChefV3 = getMasterChefV3Contract(undefined, pool.chainId)
+
+  if (!tvlUsd || !client || !masterChefV3 || !pool.pid) {
+    return {
+      value: '0',
+    }
+  }
+
+  const [totalAllocPoint, latestPeriodCakePerSecond, poolInfo] = await Promise.all([
+    masterChefV3CacheMap.get(pool.chainId)?.totalAllocPoint ?? masterChefV3.read.totalAllocPoint(),
+    masterChefV3CacheMap.get(pool.chainId)?.latestPeriodCakePerSecond ?? masterChefV3.read.latestPeriodCakePerSecond(),
+    masterChefV3.read.poolInfo([BigInt(pool.pid)]),
+  ])
+
+  if (!masterChefV3CacheMap.has(pool.chainId)) {
+    masterChefV3CacheMap.set(pool.chainId, {
+      ...(masterChefV3CacheMap.get(pool.chainId) ?? {}),
+      totalAllocPoint,
+      latestPeriodCakePerSecond,
+    })
+  }
+
+  const cakePerYear = new BigNumber(SECONDS_PER_YEAR)
+    .times(latestPeriodCakePerSecond.toString())
+    .dividedBy(1e18)
+    .dividedBy(1e12)
+  const cakePerYearUsd = cakePrice.times(cakePerYear.toString())
+  const [allocPoint, , , , , totalLiquidity, totalBoostLiquidity] = poolInfo
+  const poolWeight = new BigNumber(allocPoint.toString()).dividedBy(totalAllocPoint.toString())
+  const liquidityBooster = new BigNumber(totalBoostLiquidity.toString()).dividedBy(totalLiquidity.toString())
+
+  const baseApr = cakePerYearUsd.times(poolWeight).dividedBy(liquidityBooster.times(pool.tvlUsd ?? 1))
+  const multiplier = DEFAULT_V3_CAKE_APR_BOOST_MULTIPLIER[pool.chainId]
+
+  return {
+    value: baseApr.toString() as `${number}`,
+    boost: multiplier ? (baseApr.times(multiplier).toString() as `${number}`) : undefined,
+    cakePerYear,
+    poolWeight,
+  }
+}
 
 const calcV3PoolApr = ({
   pool,
@@ -119,10 +148,53 @@ const calcV3PoolApr = ({
       ? BIG_ZERO
       : cakePerYearUsd.times(poolWeight).dividedBy(liquidityBooster.times(poolTvlUsd ?? 1))
 
+  const multiplier = DEFAULT_V3_CAKE_APR_BOOST_MULTIPLIER[pool.chainId]
+
   return {
     value: liquidity > 0n ? (baseApr.toString() as `${number}`) : '0',
+    boost: multiplier && liquidity > 0n ? (baseApr.times(multiplier).toString() as `${number}`) : undefined,
     cakePerYear,
     poolWeight,
+  }
+}
+
+export const DEFAULT_V2_CAKE_APR_BOOST_MULTIPLIER = {
+  [ChainId.ETHEREUM]: 2.5,
+  [ChainId.BSC]: 2.5,
+  [ChainId.ZKSYNC]: 2.5,
+  [ChainId.ARBITRUM_ONE]: 2.5,
+  [ChainId.BASE]: 2.5,
+}
+export const DEFAULT_V3_CAKE_APR_BOOST_MULTIPLIER = {
+  [ChainId.ETHEREUM]: 2,
+  [ChainId.BSC]: 2,
+  [ChainId.ZKSYNC]: 2,
+  [ChainId.ARBITRUM_ONE]: 2,
+  [ChainId.BASE]: 2,
+}
+export const getV2PoolCakeApr = async (
+  pool: V2PoolInfo | StablePoolInfo,
+  cakePrice: BigNumber,
+): Promise<{ value: `${number}`; boost?: `${number}` }> => {
+  const { bCakeWrapperAddress } = pool
+  const client = publicClient({ chainId: pool.chainId })
+  if (!bCakeWrapperAddress || !client) {
+    return {
+      value: '0',
+      boost: '0',
+    }
+  }
+
+  const bCakeWrapperContract = getV2SSBCakeWrapperContract(bCakeWrapperAddress, undefined, pool.chainId)
+  const cakePerSecond = await bCakeWrapperContract.read.rewardPerSecond()
+  const cakeOneYearUsd = cakePrice.times((cakePerSecond * BigInt(SECONDS_PER_YEAR)).toString()).dividedBy(1e18)
+
+  const baseApr = cakeOneYearUsd.dividedBy(pool.tvlUsd ?? 1)
+  const multiplier = DEFAULT_V2_CAKE_APR_BOOST_MULTIPLIER[pool.chainId]
+
+  return {
+    value: baseApr.toString() as `${number}`,
+    boost: multiplier ? (baseApr.times(multiplier).toString() as `${number}`) : undefined,
   }
 }
 
@@ -147,7 +219,7 @@ export const getAllNetworkMerklApr = async (signal?: AbortSignal) => {
   const resp = await fetch(
     `https://api.merkl.xyz/v4/opportunities/?chainId=${supportedChainIdV4.join(
       ',',
-    )}&test=false&mainProtocolId=pancake-swap&action=POOL,HOLD&status=LIVE`,
+    )}&test=false&status=LIVE&items=1000&action=POOL,HOLD`,
     { signal },
   )
   if (resp.ok) {
@@ -155,7 +227,6 @@ export const getAllNetworkMerklApr = async (signal?: AbortSignal) => {
     const pancakeResult = result?.filter(
       (opportunity) =>
         opportunity?.tokens?.[0]?.symbol?.toLowerCase().startsWith('cake-lp') ||
-        opportunity?.protocol?.id?.toLowerCase().startsWith('pancake-swap') ||
         opportunity?.protocol?.id?.toLowerCase().startsWith('pancakeswap'),
     )
     const aprs = await Promise.all(supportedChainIdV4.map((chainId) => getMerklApr(pancakeResult, chainId)))
@@ -171,7 +242,7 @@ const getV3PoolsCakeAprByChainId = async (pools: V3PoolInfo[], chainId: number, 
   if (!masterChefV3 || !client) return {}
 
   const validPools = pools.filter((pool) => {
-    return pool.pid && pool.chainId === chainId && pool.pid > 0
+    return pool.pid && pool.chainId === chainId
   })
 
   if (!validPools?.length) return {}
@@ -300,9 +371,11 @@ const calcV2PoolApr = ({
   const farmingTVLUsd = usdPerShare.times(totalBoostShare.toString() ?? 0)
 
   const baseApr = cakeOneYearUsd.dividedBy((farmingTVLUsd ?? 1).toString())
+  const multiplier = DEFAULT_V2_CAKE_APR_BOOST_MULTIPLIER[pool.chainId]
 
   return {
     value: baseApr.toString() as `${number}`,
+    boost: multiplier && baseApr.gt(0) ? (baseApr.times(multiplier).toString() as `${number}`) : undefined,
     cakePerYear,
     userTvlUsd: farmingTVLUsd,
     totalSupply,

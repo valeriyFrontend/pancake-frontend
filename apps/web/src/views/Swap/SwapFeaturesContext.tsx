@@ -60,9 +60,11 @@ export const SwapFeaturesProvider: React.FC<React.PropsWithChildren> = ({ childr
     [chainId],
   )
 
+  const isHotTokenSupported = useMemo(() => false, [])
+
   const value = useMemo(() => {
     return {
-      isHotTokenSupported: false,
+      isHotTokenSupported,
       isChartSupported,
       isStableSupported,
       isAccessTokenSupported,
@@ -72,6 +74,7 @@ export const SwapFeaturesProvider: React.FC<React.PropsWithChildren> = ({ childr
       setIsChartExpanded,
     }
   }, [
+    isHotTokenSupported,
     isChartSupported,
     isStableSupported,
     isAccessTokenSupported,

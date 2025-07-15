@@ -7,8 +7,8 @@ import type { paths } from './schema.d'
 
 const endpoints = process.env.NEXT_PUBLIC_EXPLORE_API_ENDPOINT || 'http://localhost:4123'
 
-export const throwOnError: Middleware = {
-  async onResponse({ response: res }) {
+const throwOnError: Middleware = {
+  async onResponse(res) {
     if (res.status >= 400) {
       const body = res.headers.get('content-type')?.includes('json')
         ? await res.clone().json()
@@ -88,7 +88,6 @@ export const chartPeriodRange = ['1H', '1D', '1W', '1M', '1Y'] as const
 export type ChartPeriod = (typeof chartPeriodRange)[number]
 
 export const chainIdToExplorerInfoChainName = {
-  [ChainId.BSC_TESTNET]: 'bsc-testnet',
   [ChainId.BSC]: 'bsc',
   [ChainId.ETHEREUM]: 'ethereum',
   [ChainId.POLYGON_ZKEVM]: 'polygon-zkevm',

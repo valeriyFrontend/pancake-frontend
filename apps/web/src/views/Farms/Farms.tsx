@@ -28,6 +28,7 @@ import orderBy from 'lodash/orderBy'
 import { useRouter } from 'next/router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useFarms, usePollFarmsWithUserData } from 'state/farms/hooks'
+import { useCakeVaultUserData } from 'state/pools/hooks'
 import { ViewMode } from 'state/user/actions'
 import { useUserFarmStakedOnly, useUserFarmsViewMode } from 'state/user/hooks'
 import { styled } from 'styled-components'
@@ -39,6 +40,7 @@ import { useAccount } from 'wagmi'
 import { V2Farm } from './FarmsV3'
 import Table from './components/FarmTable/FarmTable'
 import { FarmTypesFilter } from './components/FarmTypesFilter'
+import { BCakeBoosterCard } from './components/YieldBooster/components/bCakeV3/BCakeBoosterCard'
 import { FarmsContext } from './context'
 import useMultiChainHarvestModal from './hooks/useMultiChainHarvestModal'
 
@@ -175,6 +177,8 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
   const isInactive = pathname.includes('history')
   const isActive = !isInactive && !isArchived
 
+  useCakeVaultUserData()
+
   usePollFarmsWithUserData()
 
   useMultiChainHarvestModal()
@@ -184,6 +188,7 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
   const userDataReady = !account || (!!account && userDataLoaded)
 
   const [stakedOnly, , toggleStakedOnly] = useUserFarmStakedOnly(isActive)
+  const [boostedOnly, setBoostedOnly] = useState(false)
   const [stableSwapOnly, setStableSwapOnly] = useState(false)
   const [farmTypesEnableCount, setFarmTypesEnableCount] = useState(0)
 
@@ -263,12 +268,14 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
       chosenFs = stakedOnly ? farmsList(stakedArchivedFarms) : farmsList(archivedFarms)
     }
 
-    if (stableSwapOnly) {
-      const stableSwapFarms = chosenFs.filter((farm) => stableSwapOnly && farm.isStable)
+    if (boostedOnly || stableSwapOnly) {
+      const boostedOrStableSwapFarms = chosenFs.filter(
+        (farm) => (boostedOnly && farm.boosted) || (stableSwapOnly && farm.isStable),
+      )
 
-      const stakedStableSwapFarms = getStakedMinProgramFarms(stableSwapFarms)
+      const stakedBoostedOrStableSwapFarms = getStakedMinProgramFarms(boostedOrStableSwapFarms)
 
-      chosenFs = stakedOnly ? farmsList(stakedStableSwapFarms) : farmsList(stableSwapFarms)
+      chosenFs = stakedOnly ? farmsList(stakedBoostedOrStableSwapFarms) : farmsList(boostedOrStableSwapFarms)
     }
 
     return chosenFs
@@ -284,6 +291,7 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
     stakedInactiveFarms,
     stakedOnly,
     stakedOnlyFarms,
+    boostedOnly,
     stableSwapOnly,
   ])
 
@@ -352,6 +360,11 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
                 {t('Stake LP tokens to earn.')}
               </FarmH2>
             </Box>
+            {chainId === ChainId.BSC && (
+              <Box>
+                <BCakeBoosterCard />
+              </Box>
+            )}
           </FarmFlexWrapper>
         </Flex>
       </PageHeader>
@@ -364,6 +377,8 @@ const Farms: React.FC<React.PropsWithChildren> = ({ children }) => {
             <FarmWidget.FarmTabButtons hasStakeInFinishedFarms={stakedInactiveFarms.length > 0} />
             <Flex mt="20px" ml="16px">
               <FarmTypesFilter
+                boostedOnly={boostedOnly}
+                handleSetBoostedOnly={setBoostedOnly}
                 stableSwapOnly={stableSwapOnly}
                 handleSetStableSwapOnly={setStableSwapOnly}
                 farmTypesEnableCount={farmTypesEnableCount}

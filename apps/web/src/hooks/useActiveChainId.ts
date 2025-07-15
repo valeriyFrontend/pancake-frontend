@@ -29,7 +29,6 @@ queryChainIdAtom.onMount = (set) => {
 
 export function useLocalNetworkChain() {
   const [queryChainId, setQueryChainId] = useAtom(queryChainIdAtom)
-
   const { query } = useRouter()
   const chainId = +(getChainId(query.chain as string) || queryChainId)
 
@@ -46,7 +45,7 @@ export function useLocalNetworkChain() {
   return undefined
 }
 
-export const useActiveChainId = (checkChainId?: number) => {
+export const useActiveChainId = () => {
   const localChainId = useLocalNetworkChain()
   const queryChainId = useAtomValue(queryChainIdAtom)
 
@@ -54,23 +53,14 @@ export const useActiveChainId = (checkChainId?: number) => {
   const chainId = localChainId ?? wagmiChainId ?? (queryChainId >= 0 ? ChainId.BSC : undefined)
 
   const isNotMatched = useDeferredValue(wagmiChainId && localChainId && wagmiChainId !== localChainId)
-
   const isWrongNetwork = useMemo(
-    () =>
-      Boolean(
-        ((wagmiChainId && !isChainSupported(wagmiChainId)) ?? false) ||
-          isNotMatched ||
-          (checkChainId && checkChainId !== wagmiChainId),
-      ),
-    [wagmiChainId, isNotMatched, checkChainId],
+    () => Boolean(((wagmiChainId && !isChainSupported(wagmiChainId)) ?? false) || isNotMatched),
+    [wagmiChainId, isNotMatched],
   )
 
-  return useMemo(
-    () => ({
-      chainId: chainId && isChainSupported(chainId) ? chainId : ChainId.BSC,
-      isWrongNetwork,
-      isNotMatched,
-    }),
-    [chainId, isWrongNetwork, isNotMatched],
-  )
+  return {
+    chainId: chainId && isChainSupported(chainId) ? chainId : ChainId.BSC,
+    isWrongNetwork,
+    isNotMatched,
+  }
 }

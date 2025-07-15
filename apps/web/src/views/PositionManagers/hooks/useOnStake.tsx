@@ -4,24 +4,19 @@ import { Currency, CurrencyAmount } from '@pancakeswap/sdk'
 import { useToast } from '@pancakeswap/uikit'
 import BigNumber from 'bignumber.js'
 import { ToastDescriptionWithTx } from 'components/Toast'
+import useActiveWeb3React from 'hooks/useActiveWeb3React'
 import useCatchTxError from 'hooks/useCatchTxError'
 import { usePositionManagerBCakeWrapperContract, usePositionManagerWrapperContract } from 'hooks/useContract'
 import { useCallback } from 'react'
 import { Address } from 'viem'
-import { useAccount } from 'wagmi'
 import { usePMSlippage } from './usePMSlippage'
 
-export const useOnStake = (
-  managerId: MANAGER,
-  contractAddress: Address,
-  bCakeWrapperAddress?: Address,
-  isDisabled?: boolean,
-) => {
+export const useOnStake = (managerId: MANAGER, contractAddress: Address, bCakeWrapperAddress?: Address) => {
   const positionManagerBCakeWrapperContract = usePositionManagerBCakeWrapperContract(bCakeWrapperAddress ?? '0x')
   const positionManagerWrapperContract = usePositionManagerWrapperContract(contractAddress)
   const { fetchWithCatchTxError, loading: pendingTx } = useCatchTxError()
   const { toastSuccess } = useToast()
-  const { address: account, chain } = useAccount()
+  const { chain, account } = useActiveWeb3React()
   const { t } = useTranslation()
   const slippage = usePMSlippage(bCakeWrapperAddress)
 
@@ -63,7 +58,7 @@ export const useOnStake = (
                 },
               )
             }
-          : async () =>
+          : () =>
               positionManagerWrapperContract.write.mintThenDeposit(
                 [
                   allowDepositToken0 ? amountA?.numerator ?? 0n : 0n,
@@ -106,12 +101,12 @@ export const useOnStake = (
     async (onDone?: () => void) => {
       const receipt = await fetchWithCatchTxError(
         bCakeWrapperAddress
-          ? async () =>
+          ? () =>
               positionManagerBCakeWrapperContract.write.deposit([0n, true], {
                 account: account ?? '0x',
                 chain,
               })
-          : async () =>
+          : () =>
               positionManagerWrapperContract.write.deposit([0n], {
                 account: account ?? '0x',
                 chain,
@@ -141,7 +136,7 @@ export const useOnStake = (
   )
 
   return {
-    onStake: isDisabled ? undefined : mintThenDeposit,
+    onStake: mintThenDeposit,
     onUpdate,
     isTxLoading: pendingTx,
   }

@@ -1,6 +1,6 @@
-import { ChainId } from '@pancakeswap/chains'
-import { Token } from '@pancakeswap/sdk'
 import memoize from 'lodash/memoize'
+import { Token } from '@pancakeswap/sdk'
+import { ChainId } from '@pancakeswap/chains'
 import { safeGetAddress } from 'utils'
 import { isAddress } from 'viem'
 
@@ -11,7 +11,6 @@ const mapping = {
   [ChainId.ZKSYNC]: 'zksync',
   [ChainId.ARBITRUM_ONE]: 'arbitrum',
   [ChainId.LINEA]: 'linea',
-  [ChainId.BASE]: 'base',
 }
 
 const getTokenLogoURL = memoize(
