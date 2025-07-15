@@ -10,6 +10,7 @@
     "scripts"
   ],
   "packageManager": "pnpm@10.6.5",
+  "type": "module",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "dev": "turbo run dev --filter=web... --concurrency=50",
