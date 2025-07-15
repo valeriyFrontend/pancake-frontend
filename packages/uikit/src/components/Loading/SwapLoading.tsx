@@ -2,15 +2,11 @@ import { styled } from "styled-components";
 import { ASSET_CDN } from "../../util/endpoints";
 import { Box } from "../Box";
 
-interface SwapLoadingProps {
-  reverse?: boolean;
-}
-
-const SwapLoading = styled(Box)<SwapLoadingProps>`
+const SwapLoading = styled(Box)`
   background-image: url(${ASSET_CDN}/web/swap-spinner.png);
   background-size: contain;
-  -webkit-animation: spin 2s linear infinite ${({ reverse }) => (reverse ? "reverse" : "normal")};
-  animation: spin 2s linear infinite ${({ reverse }) => (reverse ? "reverse" : "normal")};
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
   @-webkit-keyframes spin {
     0% {
       -webkit-transform: rotate(0deg);
@@ -33,7 +29,6 @@ const SwapLoading = styled(Box)<SwapLoadingProps>`
 SwapLoading.defaultProps = {
   width: "18px",
   height: "18px",
-  reverse: false,
 };
 
 export default SwapLoading;

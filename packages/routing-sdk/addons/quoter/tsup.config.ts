@@ -5,7 +5,7 @@ export default defineConfig((options) => ({
   entry: {
     index: './src/index.ts',
   },
-  sourcemap: false,
+  sourcemap: true,
   skipNodeModulesBundle: true,
   format: ['esm', 'cjs'],
   dts: false,

@@ -15,7 +15,6 @@ export const ModalWrapper = ({
   onDismiss,
   hideCloseButton,
   minHeight,
-  containerStyle = {},
   ...props
 }: PropsWithChildren<ModalWrapperProps>) => {
   const { isMobile } = useMatchBreakpoints();
@@ -36,8 +35,8 @@ export const ModalWrapper = ({
         if (info.velocity.y > MODAL_SWIPE_TO_CLOSE_VELOCITY && onDismiss) onDismiss();
       }}
       ref={wrapperRef}
+      style={{ overflow: "visible" }}
       $minHeight={minHeight}
-      style={{ overflow: "visible", ...containerStyle }}
     >
       <Box overflow="hidden" borderRadius="32px" {...props}>
         {children}
@@ -54,12 +53,7 @@ const getIsAndroid = () => {
 };
 
 const getIsBinance = () => {
-  try {
-    return typeof window !== "undefined" && Boolean((window as any).ethereum?.isBinance);
-  } catch (error) {
-    console.error("Error checking Binance Web3 Wallet:", error);
-    return false;
-  }
+  return typeof window !== "undefined" && (window as any).ethereum?.isBinance;
 };
 
 const Modal: React.FC<React.PropsWithChildren<ModalProps>> = ({
@@ -77,7 +71,6 @@ const Modal: React.FC<React.PropsWithChildren<ModalProps>> = ({
   bodyAlignItems,
   headerBorderColor,
   bodyTop = "0px",
-  headerProps,
   ...props
 }) => {
   const context = useContext(ModalV2Context);
@@ -100,7 +93,7 @@ const Modal: React.FC<React.PropsWithChildren<ModalProps>> = ({
       >
         <ModalTitle>
           {onBack && <ModalBackButton onBack={onBack} />}
-          <Heading {...headerProps}>{title}</Heading>
+          <Heading>{title}</Heading>
         </ModalTitle>
         {headerRightSlot}
         {!hideCloseButton && <ModalCloseButton onDismiss={onDismiss} />}

@@ -162,7 +162,6 @@ const DropdownMenu: React.FC<React.PropsWithChildren<DropdownMenuProps>> = ({
   activeItem = "",
   activeSubItemChildItem = "",
   items = [],
-  itemKey,
   index,
   setMenuOpenByIndex,
   isDisabled,
@@ -173,11 +172,7 @@ const DropdownMenu: React.FC<React.PropsWithChildren<DropdownMenuProps>> = ({
   const { isMobile, isMd } = useMatchBreakpoints();
   const [targetRef, setTargetRef] = useState<HTMLDivElement | null>(null);
   const [tooltipRef, setTooltipRef] = useState<HTMLDivElement | null>(null);
-  const filteredItems = useMemo(
-    () => items.filter((item) => ((isMobile || isMd) && item.isMobileOnly) || !item.isMobileOnly),
-    [items, isMobile, isMd]
-  );
-  const hasItems = filteredItems.length > 0;
+  const hasItems = items.length > 0;
   const { styles, attributes } = usePopper(targetRef, tooltipRef, {
     strategy: isBottomNav ? "absolute" : "fixed",
     placement: isBottomNav ? "top" : "bottom-start",
@@ -187,7 +182,6 @@ const DropdownMenu: React.FC<React.PropsWithChildren<DropdownMenuProps>> = ({
   const isMenuShow = isOpen && ((isBottomNav && showItemsOnMobile) || !isBottomNav);
 
   useEffect(() => {
-    if (isBottomNav && !hasItems) return undefined;
     const showDropdownMenu = () => {
       setIsOpen(true);
       hideDropdownMenu.cancel();
@@ -212,7 +206,7 @@ const DropdownMenu: React.FC<React.PropsWithChildren<DropdownMenuProps>> = ({
       });
       hideDropdownMenu.cancel();
     };
-  }, [setIsOpen, tooltipRef, targetRef, isBottomNav, hasItems]);
+  }, [setIsOpen, tooltipRef, targetRef, isBottomNav]);
 
   useEffect(() => {
     if (setMenuOpenByIndex && index !== undefined) {
@@ -221,16 +215,15 @@ const DropdownMenu: React.FC<React.PropsWithChildren<DropdownMenuProps>> = ({
   }, [isMenuShow, setMenuOpenByIndex, index]);
 
   useOnClickOutside(
-    isOpen ? targetRef : null,
+    targetRef,
     useCallback(() => {
       setIsOpen(false);
     }, [setIsOpen])
   );
 
   const handlePointerDown = useCallback(() => {
-    if (isBottomNav && !hasItems) return;
     setIsOpen((s) => !s);
-  }, [isBottomNav, hasItems]);
+  }, []);
 
   return (
     <Box ref={setTargetRef} {...props}>
@@ -243,17 +236,19 @@ const DropdownMenu: React.FC<React.PropsWithChildren<DropdownMenuProps>> = ({
           $isOpen={isMenuShow}
           {...attributes.popper}
         >
-          {filteredItems.map((item) => (
-            <MenuItem
-              key={itemKey?.(item) ?? item?.label?.toString() ?? `delimiter${index}`}
-              item={item}
-              activeItem={activeItem}
-              activeSubItemChildItem={activeSubItemChildItem}
-              isDisabled={isDisabled}
-              linkComponent={linkComponent}
-              setIsOpen={setIsOpen}
-            />
-          ))}
+          {items
+            .filter((item) => ((isMobile || isMd) && item.isMobileOnly) || !item.isMobileOnly)
+            .map((item) => (
+              <MenuItem
+                key={item?.label?.toString() || `delimiter${index}`}
+                item={item}
+                activeItem={activeItem}
+                activeSubItemChildItem={activeSubItemChildItem}
+                isDisabled={isDisabled}
+                linkComponent={linkComponent}
+                setIsOpen={setIsOpen}
+              />
+            ))}
         </StyledDropdownMenu>
       )}
     </Box>

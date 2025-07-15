@@ -1,13 +1,11 @@
 import React from "react";
 import { styled } from "styled-components";
+import { Variant, variants } from "./types";
 import { Image } from "../../../../components/Image";
 import { RefreshIcon, WalletFilledIcon, WarningIcon } from "../../../../components/Svg";
 import { Colors } from "../../../../theme/types";
-import { Variant, variants } from "./types";
 
-const MenuIconWrapper = styled.div.withConfig({
-  shouldForwardProp: (prop) => prop !== "borderColor",
-})<{ borderColor: keyof Colors }>`
+const MenuIconWrapper = styled.div<{ borderColor: keyof Colors }>`
   align-items: center;
   background-color: ${({ theme }) => theme.colors.background};
   border-color: ${({ theme, borderColor }) => theme.colors[borderColor]};
@@ -21,14 +19,14 @@ const MenuIconWrapper = styled.div.withConfig({
   position: absolute;
   top: 0;
   width: 32px;
-  z-index: 20;
+  z-index: 102;
 `;
 
 const ProfileIcon = styled(Image)`
   left: 0;
   position: absolute;
   top: 0;
-  z-index: 20;
+  z-index: 102;
 
   & > img {
     border-radius: 50%;

@@ -17,7 +17,7 @@ const getBorderColor = ({ theme, variant }: StyledButtonMenuProps) => {
 };
 
 const StyledButtonMenu = styled.div.withConfig({
-  shouldForwardProp: (props) => !["fullWidth", "noButtonMargin"].includes(props),
+  shouldForwardProp: (props) => !["fullWidth"].includes(props),
 })<StyledButtonMenuProps>`
   ${(props) => {
     if (props.variant === variants.TEXT) {

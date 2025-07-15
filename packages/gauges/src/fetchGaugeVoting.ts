@@ -21,6 +21,7 @@ const _fetchAllGaugesVoting = async (
 }
 
 export const fetchAllGaugesVoting = cacheByLRU(_fetchAllGaugesVoting, {
+  name: 'fetchAllGaugesVoting',
   ttl: 5000,
   key: (params) => {
     const [, gaugeInfos, inCap, options] = params

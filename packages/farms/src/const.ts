@@ -1,9 +1,9 @@
 import { ChainId } from '@pancakeswap/chains'
+import uniq from 'lodash/uniq'
 
 // @todo remove all other v2/v3 and type definitions
 export const supportedChainIdV4 = [
   ChainId.BSC,
-  ChainId.BSC_TESTNET,
   ChainId.ETHEREUM,
   ChainId.BASE,
   ChainId.OPBNB,
@@ -37,7 +37,7 @@ export const supportedChainIdV3 = [
   ChainId.OPBNB_TESTNET,
   ChainId.MONAD_TESTNET,
 ] as const
-export const supportedChainId = Array.from(new Set<ChainId>([...supportedChainIdV2, ...supportedChainIdV3]))
+export const supportedChainId = uniq([...supportedChainIdV2, ...supportedChainIdV3])
 export const bCakeSupportedChainId = [
   ChainId.BSC,
   ChainId.ARBITRUM_ONE,

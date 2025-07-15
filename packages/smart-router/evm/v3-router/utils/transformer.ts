@@ -2,18 +2,8 @@ import { ChainId } from '@pancakeswap/chains'
 import { Currency, CurrencyAmount, ERC20Token, Native, Percent, TradeType } from '@pancakeswap/sdk'
 import { ADDRESS_ZERO, Tick } from '@pancakeswap/v3-sdk'
 import { Address } from 'viem'
-import {
-  InfinityBinPool,
-  InfinityClPool,
-  Pool,
-  PoolType,
-  Route,
-  SmartRouterTrade,
-  StablePool,
-  V2Pool,
-  V3Pool,
-} from '../types'
-import { isInfinityBinPool, isInfinityClPool, isStablePool, isV2Pool, isV3Pool } from './pool'
+import { Pool, PoolType, Route, SmartRouterTrade, StablePool, V2Pool, V3Pool, V4BinPool, V4ClPool } from '../types'
+import { isStablePool, isV2Pool, isV3Pool, isV4BinPool, isV4ClPool } from './pool'
 
 const ONE_HUNDRED = 100n
 
@@ -63,11 +53,8 @@ export interface SerializedV3Pool
   ticks?: SerializedTick[]
 }
 
-export interface SerializedInfinityClPool
-  extends Omit<
-    InfinityClPool,
-    'currency0' | 'currency1' | 'liquidity' | 'sqrtRatioX96' | 'ticks' | 'reserve0' | 'reserve1'
-  > {
+export interface SerializedV4ClPool
+  extends Omit<V4ClPool, 'currency0' | 'currency1' | 'liquidity' | 'sqrtRatioX96' | 'ticks' | 'reserve0' | 'reserve1'> {
   currency0: SerializedCurrency
   currency1: SerializedCurrency
   liquidity: string
@@ -77,18 +64,11 @@ export interface SerializedInfinityClPool
   ticks?: SerializedTick[]
 }
 
-export interface SerializedInfinityBinPool
-  extends Omit<InfinityBinPool, 'currency0' | 'currency1' | 'reserve0' | 'reserve1' | 'reserveOfBin'> {
+export interface SerializedV4BinPool extends Omit<V4BinPool, 'currency0' | 'currency1' | 'reserve0' | 'reserve1'> {
   currency0: SerializedCurrency
   currency1: SerializedCurrency
-  reserveOfBin?: Record<number, SerializedBinReserves>
   reserve0?: SerializedCurrencyAmount
   reserve1?: SerializedCurrencyAmount
-}
-
-export type SerializedBinReserves = {
-  reserveX: string
-  reserveY: string
 }
 
 export interface SerializedStablePool extends Omit<StablePool, 'balances' | 'amplifier' | 'fee'> {
@@ -101,8 +81,8 @@ export type SerializedPool =
   | SerializedV2Pool
   | SerializedV3Pool
   | SerializedStablePool
-  | SerializedInfinityClPool
-  | SerializedInfinityBinPool
+  | SerializedV4ClPool
+  | SerializedV4BinPool
 
 export interface SerializedRoute
   extends Omit<Route, 'pools' | 'path' | 'input' | 'output' | 'inputAmount' | 'outputAmount'> {
@@ -177,7 +157,7 @@ export function serializePool(pool: Pool): SerializedPool {
       fee: pool.fee.toSignificant(6),
     }
   }
-  if (isInfinityClPool(pool)) {
+  if (isV4ClPool(pool)) {
     return {
       ...pool,
       currency0: serializeCurrency(pool.currency0),
@@ -189,10 +169,9 @@ export function serializePool(pool: Pool): SerializedPool {
       reserve1: pool.reserve1 && serializeCurrencyAmount(pool.reserve1),
     }
   }
-  if (isInfinityBinPool(pool)) {
+  if (isV4BinPool(pool)) {
     return {
       ...pool,
-      reserveOfBin: serializeBinPoolBinReserves(pool.reserveOfBin),
       currency0: serializeCurrency(pool.currency0),
       currency1: serializeCurrency(pool.currency1),
       reserve0: pool.reserve0 && serializeCurrencyAmount(pool.reserve0),
@@ -200,40 +179,6 @@ export function serializePool(pool: Pool): SerializedPool {
     }
   }
   throw new Error('Cannot serialize unsupoorted pool')
-}
-
-export function serializeBinPoolBinReserves(reserveOfBin: InfinityBinPool['reserveOfBin']) {
-  if (!reserveOfBin) return undefined
-  const binIds = Object.keys(reserveOfBin)
-  const binReserves: Record<number, SerializedBinReserves> = {}
-  for (const b of binIds) {
-    const binId = Number(b)
-    binReserves[binId] = {
-      reserveX: String(reserveOfBin[binId].reserveX),
-      reserveY: String(reserveOfBin[binId].reserveY),
-    }
-  }
-  return binReserves
-}
-
-export function parseBinPoolBinReserves(reserveOfBin?: Record<number, SerializedBinReserves>) {
-  if (!reserveOfBin) return undefined
-  const binIds = Object.keys(reserveOfBin)
-  const binReserves: Record<
-    number,
-    {
-      reserveX: bigint
-      reserveY: bigint
-    }
-  > = {}
-  for (const b of binIds) {
-    const binId = Number(b)
-    binReserves[binId] = {
-      reserveX: BigInt(reserveOfBin[binId].reserveX),
-      reserveY: BigInt(reserveOfBin[binId].reserveY),
-    }
-  }
-  return binReserves
 }
 
 export function serializeRoute(route: Route): SerializedRoute {
@@ -303,7 +248,7 @@ export function parsePool(chainId: ChainId, pool: SerializedPool): Pool {
       fee: new Percent(parseFloat(pool.fee) * 1000000, ONE_HUNDRED * 1000000n),
     }
   }
-  if (pool.type === PoolType.InfinityCL) {
+  if (pool.type === PoolType.V4CL) {
     return {
       ...pool,
       currency0: parseCurrency(chainId, pool.currency0),
@@ -315,10 +260,9 @@ export function parsePool(chainId: ChainId, pool: SerializedPool): Pool {
       reserve1: pool.reserve1 && parseCurrencyAmount(chainId, pool.reserve1),
     }
   }
-  if (pool.type === PoolType.InfinityBIN) {
+  if (pool.type === PoolType.V4BIN) {
     return {
       ...pool,
-      reserveOfBin: parseBinPoolBinReserves(pool.reserveOfBin),
       currency0: parseCurrency(chainId, pool.currency0),
       currency1: parseCurrency(chainId, pool.currency1),
       reserve0: pool.reserve0 && parseCurrencyAmount(chainId, pool.reserve0),

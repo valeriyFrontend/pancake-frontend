@@ -1,6 +1,4 @@
-export * from './encodeInfinityRouteToPath'
 export * from './encodeMixedRouteToPath'
-export * from './getCurrenciesOfPool'
 export * from './getExecutionPrice'
 export * from './getNativeWrappedToken'
 export * from './getOutputOfPools'

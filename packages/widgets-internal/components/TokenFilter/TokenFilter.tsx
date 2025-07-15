@@ -5,7 +5,7 @@ import { getTokenByAddress } from "@pancakeswap/tokens";
 import { Column, IMultiSelectChangeEvent, IMultiSelectProps, ISelectItem, MultiSelect } from "@pancakeswap/uikit";
 import { useCallback, useMemo } from "react";
 import styled from "styled-components";
-import { Address, zeroAddress } from "viem";
+import { Address } from "viem";
 import { ASSET_CDN } from "../../utils/endpoints";
 import { CurrencyLogo } from "../CurrencyLogo";
 
@@ -14,8 +14,6 @@ export interface ITokenProps {
   value?: IMultiSelectProps<string>["value"];
   onChange?: (e: IMultiSelectChangeEvent) => void;
   getChainName?: (chainId: number) => string | undefined;
-  getCurrencySymbol?: (currency: Currency) => string | undefined;
-  multiple?: boolean;
 }
 
 const Container = styled.div`
@@ -71,18 +69,8 @@ const ItemName = styled.span`
   font-weight: 400;
 `;
 
-export const getCurrencyAddress = <T extends Currency | undefined>(
-  currency?: T
-): T extends Currency ? Address : undefined => {
-  return currency
-    ? ((currency.isNative ? zeroAddress : currency.wrapped.address) as T extends Currency ? Address : undefined)
-    : (undefined as T extends Currency ? never : undefined);
-};
-
-type ChainIdAddressKey = `${number}:${Address}`;
-export const toTokenValueByCurrency = (t: Currency): ChainIdAddressKey => `${t.chainId}:${getCurrencyAddress(t)}`;
-export const toTokenValue = (t: { chainId: number; address: Address }): ChainIdAddressKey =>
-  `${t.chainId}:${t.address}`;
+export const toTokenValueByCurrency = (t: Currency) => `${t.chainId}:${t.wrapped.address}`;
+export const toTokenValue = (t: { chainId: number; address: Address }) => `${t.chainId}:${t.address}`;
 
 const CurrencyLogoContainer = styled.div`
   position: relative;
@@ -107,8 +95,6 @@ export const TokenFilter: React.FC<ITokenProps> = ({
   value,
   onChange,
   getChainName = defaultGetChainName,
-  multiple = true,
-  getCurrencySymbol = (currency) => currency.symbol || "",
 }) => {
   const { theme } = useTheme();
 
@@ -142,13 +128,12 @@ export const TokenFilter: React.FC<ITokenProps> = ({
 
   const itemTemplate = useCallback(
     (option: ISelectItem<string> & ERC20Token) => {
-      const symbol = getCurrencySymbol(option);
       return (
         <ItemContainer>
           <ItemLogoContainer>{option.icon}</ItemLogoContainer>
           <Column>
             <ItemTitle>
-              <ItemSymbol>{symbol}</ItemSymbol>
+              <ItemSymbol>{option.label}</ItemSymbol>
               <ItemName>{option.name}</ItemName>
             </ItemTitle>
             <ItemDesc>{getChainName(option.chainId)}</ItemDesc>
@@ -177,7 +162,6 @@ export const TokenFilter: React.FC<ITokenProps> = ({
         itemTemplate={itemTemplate}
         value={value}
         onChange={onChange}
-        multiple={multiple}
       />
     </Container>
   );

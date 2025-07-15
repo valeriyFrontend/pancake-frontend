@@ -1,144 +1,5 @@
 # @pancakeswap/smart-router
 
-## 7.2.5
-
-### Patch Changes
-
-- 7270ffa: Remove deps of some lodash functions to support Lambda env.
-- 2f165c8: Add susdx-susdx routing config
-- Updated dependencies [7270ffa]
-- Updated dependencies [2f165c8]
-  - @pancakeswap/gauges@2.0.12
-  - @pancakeswap/tokens@0.7.5
-  - @pancakeswap/infinity-sdk@1.0.2
-  - @pancakeswap/multicall@3.6.4
-  - @pancakeswap/stable-swap-sdk@2.0.6
-  - @pancakeswap/token-lists@0.0.15
-  - @pancakeswap/v3-sdk@3.9.3
-
-## 7.2.4
-
-### Patch Changes
-
-- 5b4135c: Added `account` support for multicall, quote will mutlicall quote hooked pool with account, added whitelist hooks
-- Updated dependencies [5b4135c]
-  - @pancakeswap/infinity-sdk@1.0.2
-  - @pancakeswap/multicall@3.6.4
-
-## 7.2.3
-
-### Patch Changes
-
-- 36fdc2a: Updated a @pancakeswap/utils dependency. So update all packages related.
-- Updated dependencies [36fdc2a]
-  - @pancakeswap/gauges@2.0.11
-
-## 7.2.2
-
-### Patch Changes
-
-- 1718057: Perf. improvement of router. Using online tvl for filter pools.
-  - @pancakeswap/gauges@2.0.10
-  - @pancakeswap/infinity-sdk@1.0.1
-  - @pancakeswap/multicall@3.6.3
-  - @pancakeswap/stable-swap-sdk@2.0.5
-  - @pancakeswap/token-lists@0.0.15
-  - @pancakeswap/tokens@0.7.4
-  - @pancakeswap/v3-sdk@3.9.3
-
-## 7.2.1
-
-### Patch Changes
-
-- Updated dependencies [10acda5]
-- Updated dependencies [3de0443]
-  - @pancakeswap/infinity-sdk@1.0.1
-  - @pancakeswap/chains@0.5.2
-  - @pancakeswap/gauges@2.0.10
-  - @pancakeswap/multicall@3.6.3
-  - @pancakeswap/stable-swap-sdk@2.0.5
-  - @pancakeswap/sdk@5.8.14
-  - @pancakeswap/tokens@0.7.4
-  - @pancakeswap/v3-sdk@3.9.3
-  - @pancakeswap/token-lists@0.0.15
-
-## 7.2.0
-
-### Minor Changes
-
-- cb44715: [Major Updates]
-  **@pancakeswap/routing-sdk-addon-infinity**
-  **@pancakeswap/routing-sdk-addon-quoter**
-  **@pancakeswap/infinity-sdk**
-
-  3 packages added for support infinity(CL & Bin) pools and dynamic hooks path finding and liquidity management.
-
-  [Minor Updates]
-  **@pancakeswap/universal-router-sdk**: This update implements Infinity CL/BIN route planning, merges and restructures code for stable, V2, V3, and Infinity pools, refactors commands into a RoutePlanner, and removes legacy ABIs. It adds new decode logic for universal calldata, reorganizes input token permits, and updates addresses in constants, improving flexibility and reducing complexity.
-
-  **@pancakeswap/widgets-internal** : Add Infinity modules, "PriceRangeChartWithPeriodAndLiquidity," new "ProtocolMenu," "PoolTypeFilter," and "Tips," and remove "PoolTagFilter," "PoolTypeMenu." We update "FeatureStack" (folding/info icons), "FeeTierTooltip," "NetworkFilter," "TokenFilter," "TokenOverview," and ROI logic. We also revise Infinity liquidity features with new chart components and hooks.
-
-  **@pancakeswap/swap-sdk-core**: Reduce rounding errors and improve quote accuracy, with refined type definitions ensuring a smoother developer experience.
-
-  **@pancakeswap/smart-router**: Refactored some references to Infinity and introduced InfinityRouter with Infinity CL and BIN pools. Removed V4 code, updated on-chain quote providers, route encoders, logging, and aggregator logic. Enhanced route handling performance and ensured compatibility with Infinity SDK for improved quoting.
-
-  **@pancakeswap/routing-sdk**: Add Infinity CL and Bin pool support to the routing SDK. Introduce new constants, math utilities, and route encoding for Infinity mixed routes. Integrate Infinity quoter logic, including bin and CL quote calls, gas cost estimation, and logging improvements for better debugging.
-
-  **@pancakeswap/farms**: Added InfinityBIN and InfinityCLAMM protocols, introduced BSC testnet support, updated fetch logic to handle zeroAddress with Native tokens, and included new V4 farm format in utilities. Also updated test exports, chain arrays, and support lists to incorporate these changes and ensure robust universal farm configuration.
-
-  **@pancakeswap/uikit**
-  '@pancakeswap/utils': Added forwardRef support to Breadcrumbs, new Button variant "textPrimary60," a noButtonMargin prop in ButtonMenu, children rendering in CopyButton, itemKey in DropdownMenu, new icons (CurveGraph, CurvedChart, HookFeature, SpotGraph), updated color tokens and styles, refined useModal logic.
-
-  [Patch Updates]
-
-  Added support for infinity by introducing internal types and updating unit tests to improve code maintainability and logging accuracy.
-
-### Patch Changes
-
-- Updated dependencies [cb44715]
-  - @pancakeswap/infinity-sdk@1.0.0
-  - @pancakeswap/swap-sdk-core@1.4.0
-  - @pancakeswap/v3-sdk@3.9.2
-  - @pancakeswap/multicall@3.6.2
-  - @pancakeswap/sdk@5.8.13
-  - @pancakeswap/tokens@0.7.3
-  - @pancakeswap/stable-swap-sdk@2.0.4
-  - @pancakeswap/token-lists@0.0.15
-  - @pancakeswap/gauges@2.0.9
-
-## 7.1.3
-
-### Patch Changes
-
-- Updated dependencies [5f264c5]
-- Updated dependencies [0436fec]
-  - @pancakeswap/chains@0.5.1
-  - @pancakeswap/gauges@2.0.8
-  - @pancakeswap/multicall@3.6.1
-  - @pancakeswap/stable-swap-sdk@2.0.3
-  - @pancakeswap/sdk@5.8.12
-  - @pancakeswap/tokens@0.7.2
-  - @pancakeswap/v3-sdk@3.9.1
-  - @pancakeswap/v4-sdk@0.1.8
-  - @pancakeswap/token-lists@0.0.14
-
-## 7.1.2
-
-### Patch Changes
-
-- 9fa225f: Add whitelist bases in router for susde-usde, olm-ora, ora-brm
-- Updated dependencies [9fa225f]
-  - @pancakeswap/tokens@0.7.1
-  - @pancakeswap/gauges@2.0.7
-  - @pancakeswap/stable-swap-sdk@2.0.2
-
-## 7.1.1
-
-### Patch Changes
-
-- Updated dependencies [091d6a7]
-  - @pancakeswap/gauges@2.0.6
-
 ## 7.1.0
 
 ### Minor Changes
@@ -189,21 +50,21 @@
   - @pancakeswap/multicall@3.5.10
   - @pancakeswap/tokens@0.6.29
   - @pancakeswap/v3-sdk@3.8.13
-  - @pancakeswap/infinity-sdk@0.1.6
+  - @pancakeswap/v4-sdk@0.1.6
 
 ## 6.2.1
 
 ### Patch Changes
 
 - Updated dependencies [6a9fd57]
-  - @pancakeswap/infinity-sdk@0.1.5
+  - @pancakeswap/v4-sdk@0.1.5
 
 ## 6.2.0
 
 ### Minor Changes
 
-- 176eb10: Add Infinity pool types
-- 176eb10: Introduce Infinity liquidity pools
+- 176eb10: Add v4 pool types
+- 176eb10: Introduce v4 liquidity pools
 
 ### Patch Changes
 
@@ -214,7 +75,7 @@
   - @pancakeswap/sdk@5.8.9
   - @pancakeswap/token-lists@0.0.14
   - @pancakeswap/v3-sdk@3.8.12
-  - @pancakeswap/infinity-sdk@0.1.4
+  - @pancakeswap/v4-sdk@0.1.4
   - @pancakeswap/gauges@2.0.2
   - @pancakeswap/multicall@3.5.9
   - @pancakeswap/tokens@0.6.28
@@ -586,13 +447,13 @@
 
 ### Patch Changes
 
-- ad51fb7: Add usage example for Infinity router
+- ad51fb7: Add usage example for v4 router
 
 ## 5.0.0
 
 ### Major Changes
 
-- 610a24a: Introduce Infinity router with faster quoting speed
+- 610a24a: Introduce v4 router with faster quoting speed
 
 ### Patch Changes
 

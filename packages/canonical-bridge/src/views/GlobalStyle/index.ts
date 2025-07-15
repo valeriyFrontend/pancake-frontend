@@ -152,7 +152,6 @@ const GlobalStyle = createGlobalStyle`
         border-radius: 16px;
         gap: 4px; 
         border: 1px solid ${({ theme }) => (theme.isDark ? '#383241' : '#E7E3EB')};
-        background: ${({ theme }) => theme.colors.cardSecondary};
         padding: 12px;
         > div {
           gap: 2.5px; 
@@ -579,7 +578,7 @@ const GlobalStyle = createGlobalStyle`
       .bccb-widget-route-wrapper-selected {
         color: ${({ theme }) => (theme.isDark ? '#F4EEFF' : '#280D5F')};
         border-radius: 16px;
-        background: ${({ theme }) => theme.colors.cardSecondary};
+        background: ${({ theme }) => (theme.isDark ? '#08060B' : '#FAF9FA')};
         .bccb-widget-route-name {
           svg, img {
             width: 24px;
@@ -669,7 +668,7 @@ const GlobalStyle = createGlobalStyle`
     }
     .bccb-widget-route-skeleton {
       border: none;
-      background: ${({ theme }) => theme.colors.cardSecondary};
+      background: ${({ theme }) => (theme.isDark ? '#08060B' : '#FAF9FA')};
     }
 
     .bccb-widget-received-info-route-open > div {

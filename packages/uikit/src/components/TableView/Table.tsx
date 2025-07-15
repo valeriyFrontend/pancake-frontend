@@ -22,7 +22,6 @@ export interface ITableViewProps<T extends BasicDataType> {
   rowKey?: string;
   columns: IColumnsType<T>[];
   data: T[];
-  rowStyle?: React.CSSProperties;
   onSort?: (parms: { dataIndex: IColumnsType<T>["dataIndex"]; order: ISortOrder }) => void;
   sortOrder?: ISortOrder;
   sortField?: IColumnsType<T>["dataIndex"];
@@ -35,7 +34,7 @@ const Table = styled.table`
   tr {
     th,
     td {
-      padding: 12px 6px;
+      padding: 12px;
       vertical-align: middle;
     }
     th:last-child,
@@ -69,7 +68,6 @@ const TableBody = styled.tbody``;
 
 const Row = styled.tr<{ $withLink?: boolean }>`
   border-top: 1px solid ${({ theme }) => theme.colors.cardBorder};
-  transition: background 0.2s ease-in-out;
   ${({ $withLink, theme }) =>
     $withLink &&
     `
@@ -122,7 +120,6 @@ export const TableView = <T extends BasicDataType>({
   sortOrder,
   sortField,
   onRowClick,
-  rowStyle,
 }: ITableViewProps<T>) => {
   const getRowKey = useCallback(
     (rowData: T) =>
@@ -154,7 +151,7 @@ export const TableView = <T extends BasicDataType>({
   return (
     <Table>
       <TableHeader>
-        <Row style={rowStyle}>
+        <Row>
           {columns.map((col) => (
             <th
               key={col.key}
@@ -182,7 +179,7 @@ export const TableView = <T extends BasicDataType>({
       </TableHeader>
       <TableBody>
         {data.map((item) => (
-          <Row style={rowStyle} $withLink={!!onRowClick} key={getRowKey(item)} onClick={(e) => handleClick(item, e)}>
+          <Row $withLink={!!onRowClick} key={getRowKey(item)} onClick={(e) => handleClick(item, e)}>
             {columns.map((col, idx) => (
               <TableCell col={col} data={item} idx={idx} key={col.key} />
             ))}

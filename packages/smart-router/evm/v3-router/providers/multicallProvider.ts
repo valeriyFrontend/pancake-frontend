@@ -24,7 +24,6 @@ export type CallSameFunctionOnContractWithMultipleParams<TFunctionParams, TAddit
   functionParams: TFunctionParams[]
   providerConfig?: ProviderConfig
   additionalConfig?: TAdditionalConfig
-  account?: `0x${string}`
 }
 
 export type CallMultipleFunctionsOnSameContractParams<TFunctionParams, TAdditionalConfig = any> = {

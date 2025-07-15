@@ -1,10 +1,9 @@
 import { ChainId } from '@pancakeswap/chains'
 import { BigintIsh, WETH9 } from '@pancakeswap/sdk'
-import { ADDRESS_THIS } from '@pancakeswap/smart-router'
 import invariant from 'tiny-invariant'
-import { CommandType } from '../../router.types'
+import { ROUTER_AS_RECIPIENT } from '../../constants'
 import { encodeInputTokenOptions } from '../../utils/inputTokens'
-import { RoutePlanner } from '../../utils/RoutePlanner'
+import { CommandType, RoutePlanner } from '../../utils/routerCommands'
 import { Command, RouterTradeType, TradeConfig } from '../Command'
 import { Permit2Signature } from '../types'
 
@@ -39,6 +38,6 @@ export class UnwrapWETH implements Command {
         amount: this.amount.toString(),
       },
     })
-    planner.addCommand(CommandType.UNWRAP_WETH, [ADDRESS_THIS, BigInt(this.amount.toString())])
+    planner.addCommand(CommandType.UNWRAP_WETH, [ROUTER_AS_RECIPIENT, BigInt(this.amount.toString())])
   }
 }

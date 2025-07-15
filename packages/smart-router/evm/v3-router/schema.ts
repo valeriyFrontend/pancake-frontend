@@ -1,17 +1,17 @@
-import { ChainId } from '@pancakeswap/chains'
 import { TradeType } from '@pancakeswap/sdk'
+import { ChainId } from '@pancakeswap/chains'
+import { FeeAmount } from '@pancakeswap/v3-sdk'
 import { Address } from 'viem'
 import { z } from 'zod'
 import { PoolType } from './types'
 
 const zChainId = z.nativeEnum(ChainId)
-const zFee = z.number()
+const zFee = z.nativeEnum(FeeAmount)
 const zTradeType = z.nativeEnum(TradeType)
 const zPoolType = z.nativeEnum(PoolType)
 const zPoolTypes = z.array(zPoolType)
 const zAddress = z.custom<Address>((val) => /^0x[a-fA-F0-9]{40}$/.test(val as string))
 const zHex = z.custom<Address>((val) => /^0x[a-fA-F0-9]*$/.test(val as string))
-const zHooksRegistrationBitmap = z.number().or(zHex)
 const zBigNumber = z.string().regex(/^[0-9]+$/)
 const zCurrency = z
   .object({
@@ -57,9 +57,9 @@ const zStablePool = z
     address: zAddress,
   })
   .required()
-const zInfinityClPool = z
+const zV4ClPool = z
   .object({
-    type: z.literal(PoolType.InfinityCL),
+    type: z.literal(PoolType.V4CL),
     currency0: zCurrency,
     currency1: zCurrency,
     fee: zFee,
@@ -72,13 +72,11 @@ const zInfinityClPool = z
   })
   .required()
   .extend({
-    protocolFee: zFee.optional(),
     hooks: zAddress.optional(),
-    hooksRegistrationBitmap: zHooksRegistrationBitmap.optional(),
   })
-const zInfinityBinPool = z
+const zV4BinPool = z
   .object({
-    type: z.literal(PoolType.InfinityBIN),
+    type: z.literal(PoolType.V4BIN),
     currency0: zCurrency,
     currency1: zCurrency,
     fee: zFee,
@@ -89,12 +87,10 @@ const zInfinityBinPool = z
   })
   .required()
   .extend({
-    protocolFee: zFee.optional(),
     hooks: zAddress.optional(),
-    hooksRegistrationBitmap: zHooksRegistrationBitmap.optional(),
   })
 
-export const zPools = z.array(z.union([zV2Pool, zV3Pool, zStablePool, zInfinityClPool, zInfinityBinPool]))
+export const zPools = z.array(z.union([zV2Pool, zV3Pool, zStablePool, zV4ClPool, zV4BinPool]))
 
 export const zRouterGetParams = z
   .object({
@@ -131,7 +127,6 @@ export const zRouterPostParams = z
     onChainQuoterGasLimit: zBigNumber.optional(),
     nativeCurrencyUsdPrice: z.number().optional(),
     quoteCurrencyUsdPrice: z.number().optional(),
-    account: zAddress.optional(),
   })
   .required({
     chainId: true,

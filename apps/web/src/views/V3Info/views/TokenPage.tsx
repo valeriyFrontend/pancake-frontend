@@ -31,12 +31,17 @@ import { formatAmount } from 'utils/formatInfoNumbers'
 
 import isUndefinedOrNull from '@pancakeswap/utils/isUndefinedOrNull'
 import truncateHash from '@pancakeswap/utils/truncateHash'
+import { atom, useAtomValue } from 'jotai'
+import { atomFamily } from 'jotai/utils'
+import isEqual from 'lodash/isEqual'
 import { ChainLinkSupportChains, multiChainId, multiChainScan } from 'state/info/constant'
 import { useChainNameByQuery, useMultiChainPath, useStableSwapPath } from 'state/info/hooks'
+import { PoolDataForView, TokenChartEntry, TokenDataForView, Transaction } from 'state/info/types'
 import { styled } from 'styled-components'
 import { getTokenNameAlias, getTokenSymbolAlias } from 'utils/getTokenAlias'
 import { CurrencyLogo } from 'views/Info/components/CurrencyLogo'
 import useCMCLink from 'views/Info/hooks/useCMCLink'
+import { chainNames } from '@pancakeswap/chains'
 import BarChart from '../components/BarChart/alt'
 import { LocalLoader } from '../components/Loader'
 import Percent from '../components/Percent'
@@ -44,13 +49,7 @@ import PoolTable from '../components/PoolTable'
 import TransactionTable from '../components/TransactionsTable'
 import { MonoSpace, StyledCMCLink } from '../components/shared'
 import { v3InfoPath } from '../constants'
-import {
-  usePoolsDataForToken,
-  useTokenChartData,
-  useTokenData,
-  useTokenPriceData,
-  useTokenTransactions,
-} from '../hooks'
+import { useTokenPriceData } from '../hooks'
 import { currentTimestamp } from '../utils'
 import { unixToDate } from '../utils/date'
 import { formatDollarAmount } from '../utils/numbers'
@@ -80,9 +79,30 @@ enum ChartView {
   PRICE,
 }
 
-const TokenPage: React.FC<{ address: string }> = ({ address }) => {
+interface TokenPageParams {
+  address: string
+  chain?: string
+}
+
+interface TokenQueryResponse {
+  token: TokenDataForView
+  pool: PoolDataForView[]
+  transactions: Transaction[]
+  charts: TokenChartEntry[]
+}
+
+const tokenPageDataAtom = atomFamily((params: TokenPageParams) => {
+  return atom(async () => {
+    const resp = await fetch(`/api/token/v3/${params.chain || 'bsc'}/${params.address}`)
+    const json = await resp.json()
+    return json as TokenQueryResponse
+  })
+}, isEqual)
+
+const TokenPage: React.FC<{ address: string; chain?: string }> = ({ address, chain: _chain }) => {
   const { isXs, isSm } = useMatchBreakpoints()
-  // const { chainId } = useActiveChainId()
+  const { chainId } = useActiveChainId()
+  const chain = _chain ?? chainNames[chainId]
   // eslint-disable-next-line no-param-reassign
   address = address.toLowerCase()
   const cmcLink = useCMCLink(address)
@@ -93,10 +113,18 @@ const TokenPage: React.FC<{ address: string }> = ({ address }) => {
     window.scrollTo(0, 0)
   }, [])
   const { t } = useTranslation()
-  const tokenData = useTokenData(address)
-  const poolDatas = usePoolsDataForToken(address)
-  const transactions = useTokenTransactions(address)
-  const chartData = useTokenChartData(address)
+  const {
+    token: tokenData,
+    pool: poolDatas,
+    transactions,
+    charts: chartData,
+  } = useAtomValue(
+    tokenPageDataAtom({
+      address,
+      chain,
+    }),
+  )
+
   const formatPoolData = useMemo(() => {
     return poolDatas?.filter((pool) => !isUndefinedOrNull(pool)) ?? []
   }, [poolDatas])
@@ -149,7 +177,6 @@ const TokenPage: React.FC<{ address: string }> = ({ address }) => {
   const chainPath = useMultiChainPath()
   const infoTypeParam = useStableSwapPath()
   const chainName = useChainNameByQuery()
-  const { chainId } = useActiveChainId()
 
   const tokenSymbol = getTokenSymbolAlias(address, chainId, tokenData?.symbol)
   const tokenName = getTokenNameAlias(address, chainId, tokenData?.name)

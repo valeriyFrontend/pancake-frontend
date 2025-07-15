@@ -4,48 +4,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "env": [
-        "RISK_APP_SECRET",
-        "SERVER_NODE_REAL_API_ETH",
-        "SERVER_NODE_REAL_API_GOERLI",
-        "NEXT_PUBLIC_NODE_REAL_API_ETH",
-        "NEXT_PUBLIC_NODE_REAL_API_GOERLI",
-        "NEXT_PUBLIC_NODE_PRODUCTION",
-        "NEXT_PUBLIC_MERCURYO_WIDGET_ID",
-        "NEXT_PUBLIC_WALLCHAIN_BSC_KEY",
-        "NEXT_PUBLIC_DATADOG_CLIENT_TOKEN",
-
-        "NEXT_PUBLIC_NODIES_ARB",
-        "NEXT_PUBLIC_NODIES_BASE",
-        "NEXT_PUBLIC_NODIES_ETH",
-        "NEXT_PUBLIC_NODIES_BSC",
-        "NEXT_PUBLIC_NODIES_POLYGON_ZKEVM",
-
-        "NEXT_PUBLIC_DEFAULT_PROJECT_ID",
-        "NEXT_PUBLIC_WEB_NOTIFICATION_SECURE_TOKEN",
-        "NEXT_PUBLIC_WEB_PUSH_ENCRYPTION_KEY",
-        "NEXT_PUBLIC_WEB_PUSH_IV",
-        "NEXT_PUBLIC_VAPID_KEY",
-
-        "NEXT_PUBLIC_DD_RUM_APP_ID",
-        "NEXT_PUBLIC_DD_RUM_CLIENT_TOKEN",
-        "NEXT_PUBLIC_DD_RUM_SITE",
-
-        "NEXT_PUBLIC_VERCEL_ENV",
-
-        "NEXT_PUBLIC_EXPLORE_API_ENDPOINT",
-
-        "NEXT_PUBLIC_GTAG",
-        "NEXT_PUBLIC_SNAPSHOT_BASE_URL",
-        "NEXT_PUBLIC_BRIDGE_API",
-        "NEXT_PUBLIC_PROOF_API",
-        "NEXT_PUBLIC_MM_API_URL",
-        "NEXT_PUBLIC_QUOTING_API",
-        "TV_JS_INTEGRITY",
-        "MOONPAY_API"
-      ],
-      "outputs": ["dist/**", ".next/**/*", "!.next/cache/**", "!.vercel/**/*"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"]
+      "env": ["RISK_APP_SECRET", "SERVER_NODE_REAL_API_ETH", "SERVER_NODE_REAL_API_GOERLI"],
+      "outputs": ["dist/**", ".next/**/*", "!.next/cache/**", "!.vercel/**/*"]
     },
     "test": {
       "outputs": ["coverage/**"],
@@ -62,28 +22,12 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
-    "build:jupiter": {
-      "dependsOn": [
-        "@pancakeswap/next-config#build",
-        "@pancakeswap/jupiter-terminal#build"
-      ],
-      "cache": false,
-      "persistent": true
-    },
     "lint": {
       "dependsOn": ["@pancakeswap/next-config#build"],
       "outputs": []
     },
     "dev": {
       "dependsOn": ["@pancakeswap/next-config#build"],
-      "cache": false,
-      "persistent": true
-    },
-    "dev:jupiter": {
-      "dependsOn": [
-        "@pancakeswap/next-config#build",
-        "@pancakeswap/jupiter-terminal#dev"
-      ],
       "cache": false,
       "persistent": true
     },

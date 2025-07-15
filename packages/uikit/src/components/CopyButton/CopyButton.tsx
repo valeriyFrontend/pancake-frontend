@@ -42,14 +42,9 @@ export const CopyButton: React.FC<React.PropsWithChildren<CopyButtonProps>> = ({
     setIsTooltipDisplayed(true);
   }, []);
 
-  const handleOnClick = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      event.stopPropagation();
-
-      copyText(text, displayTooltip);
-    },
-    [text, displayTooltip]
-  );
+  const handleOnClick = useCallback(() => {
+    copyText(text, displayTooltip);
+  }, [text, displayTooltip]);
 
   useEffect(() => {
     if (isTooltipDisplayed) {
@@ -70,9 +65,8 @@ export const CopyButton: React.FC<React.PropsWithChildren<CopyButtonProps>> = ({
           onClick={handleOnClick}
           scale="sm"
           variant="text"
-          style={{ width: "auto", position: "relative", height: "fit-content" }}
+          style={{ width: "auto", position: "relative" }}
         >
-          {props.children}
           <Icon color={buttonColor} width={width} {...props} />
         </IconButton>
       </div>

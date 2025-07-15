@@ -25,5 +25,7 @@ const fetchGaugeConfig = async () => {
 }
 
 export const getGauges = cacheByLRU(fetchGaugeConfig, {
+  name: 'getGaugesConfig',
   ttl: 10000,
+  key: () => [],
 })

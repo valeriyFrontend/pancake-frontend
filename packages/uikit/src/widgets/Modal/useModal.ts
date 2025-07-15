@@ -1,8 +1,8 @@
-import get from "lodash/get";
 import React, { useCallback, useContext, useEffect, useRef } from "react";
-import { serialize } from "../../util/serialize";
+import get from "lodash/get";
 import { Context } from "./ModalContext";
 import { Handler } from "./types";
+import { serialize } from "../../util/serialize";
 
 const useModal = (
   modal: React.ReactNode,
@@ -12,22 +12,15 @@ const useModal = (
 ): [Handler, Handler] => {
   const currentModal = useRef<React.ReactNode>();
   currentModal.current = modal;
-  const currentModalId = useRef<string>();
-
   const { isOpen, nodeId, modalNode, setModalNode, onPresent, onDismiss } = useContext(Context);
   const onPresentCallback = useCallback(() => {
     onPresent(currentModal.current, modalId, closeOnOverlayClick);
   }, [modalId, onPresent, closeOnOverlayClick]);
-
-  useEffect(() => {
-    currentModalId.current = nodeId;
-  }, [nodeId]);
-
   const onDismissCallback = useCallback(() => {
-    if (modalId === currentModalId.current) {
+    if (nodeId === modalId) {
       onDismiss?.();
     }
-  }, [onDismiss, modalId]);
+  }, [modalId, onDismiss, nodeId]);
 
   // Updates the "modal" component if props are changed
   // Use carefully since it might result in unnecessary rerenders

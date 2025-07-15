@@ -1,7 +1,7 @@
 import { ChainId } from '@pancakeswap/chains'
 import { ERC20Token, WBNB } from '@pancakeswap/sdk'
 
-import { BUSD_BSC, CAKE_MAINNET, USD1_BSC, USDT_BSC } from './common'
+import { BUSD_BSC, CAKE_MAINNET, USDT_BSC } from './common'
 
 export const bscTokens = {
   wbnb: WBNB[ChainId.BSC],
@@ -88,7 +88,6 @@ export const bscTokens = {
     'https://powerpool.finance/',
   ),
   busd: BUSD_BSC,
-  usd1: USD1_BSC,
   dai: new ERC20Token(
     ChainId.BSC,
     '0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3',
@@ -3366,11 +3365,4 @@ export const bscTokens = {
     'MyShell Token',
     'https://myshell.ai/',
   ),
-  susde: new ERC20Token(ChainId.BSC, '0x211Cc4DD073734dA055fbF44a2b4667d5E5fE5d2', 18, 'sUSDe', 'Staked USDe', ''),
-  usde: new ERC20Token(ChainId.BSC, '0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34', 18, 'USDe', 'USDe', ''),
-  ora: new ERC20Token(ChainId.BSC, '0x333333C465a19C85f85c6CfbED7B16b0B26E3333', 18, 'ORA', ''),
-  olm: new ERC20Token(ChainId.BSC, '0x972C42a6350B2f82CC532148eEc8862843De94c2', 18, 'OLM', ''),
-  brm: new ERC20Token(ChainId.BSC, '0x483d83A361A3cCE99f88BC05fB44C27B6cE0633b', 18, 'BRM', ''),
-  susdx: new ERC20Token(ChainId.BSC, '0x7788A3538C5fc7F9c7C8A74EAC4c898fC8d87d92', 18, 'sUSDX', 'Staked USDX', ''),
-  usdx: new ERC20Token(ChainId.BSC, '0xf3527ef8dE265eAa3716FB312c12847bFBA66Cef', 18, 'USDX', 'USDX', ''),
 }

@@ -1,6 +1,6 @@
 import { ChainId } from '@pancakeswap/chains'
 import { ExclusiveDutchOrder, createExclusiveDutchOrderTrade } from '@pancakeswap/pcsx-sdk'
-import { InfinityRouter, PoolType } from '@pancakeswap/smart-router'
+import { PoolType, V4Router } from '@pancakeswap/smart-router'
 import { Currency, CurrencyAmount, Percent, TradeType, type BigintIsh } from '@pancakeswap/swap-sdk-core'
 import { zeroAddress } from './getCurrencyPrice'
 import { getPoolTypeKey } from './getPoolType'
@@ -101,7 +101,7 @@ export function parseQuoteResponse<
   if (bestOrder.type === OrderType.PCS_CLASSIC) {
     return {
       type: OrderType.PCS_CLASSIC,
-      trade: InfinityRouter.Transformer.parseTrade(chainId, bestOrder.order),
+      trade: V4Router.Transformer.parseTrade(chainId, bestOrder.order),
     }
   }
   if (bestOrder.type === OrderType.DUTCH_LIMIT) {
@@ -110,9 +110,7 @@ export function parseQuoteResponse<
 
     return {
       type: OrderType.DUTCH_LIMIT,
-      ammTrade: otherAmmTrade
-        ? InfinityRouter.Transformer.parseTrade(chainId, otherAmmTrade.order as AMMOrder)
-        : undefined,
+      ammTrade: otherAmmTrade ? V4Router.Transformer.parseTrade(chainId, otherAmmTrade.order as AMMOrder) : undefined,
       trade: createExclusiveDutchOrderTrade({
         currencyIn,
         currenciesOut: [currencyOut],
@@ -128,11 +126,11 @@ export function parseQuoteResponse<
 export function parseAMMPriceResponse(
   chainId: ChainId,
   res: AMMPriceResponse,
-): InfinityRouter.InfinityTradeWithoutGraph<TradeType> & { gasUseEstimateUSD: number } {
+): V4Router.V4TradeWithoutGraph<TradeType> & { gasUseEstimateUSD: number } {
   const {
     message: { gasUseEstimateUSD, ...rest },
   } = res
-  const trade = InfinityRouter.Transformer.parseTrade(chainId, rest)
+  const trade = V4Router.Transformer.parseTrade(chainId, rest)
 
   return {
     ...trade,

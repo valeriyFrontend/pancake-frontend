@@ -54,11 +54,6 @@ export const styleVariants = {
     color: "primary",
     boxShadow: "none",
   },
-  [variants.TEXT_PRIMARY_60]: {
-    backgroundColor: "transparent",
-    color: "primary60",
-    boxShadow: "none",
-  },
   [variants.LIGHT]: {
     backgroundColor: "input",
     color: "textSubtle",
@@ -71,9 +66,5 @@ export const styleVariants = {
     ":disabled": {
       background: vars.colors.disabled,
     },
-  },
-  [variants.PRIMARY60]: {
-    backgroundColor: "tertiary",
-    color: "primary60",
   },
 };

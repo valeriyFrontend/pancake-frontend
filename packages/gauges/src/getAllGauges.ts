@@ -1,5 +1,5 @@
 import { cacheByLRU } from '@pancakeswap/utils/cacheByLRU'
-import keyBy from '@pancakeswap/utils/keyBy'
+import keyBy from 'lodash/keyBy'
 import { PublicClient } from 'viem'
 import { getGauges } from './constants/config/getGauges'
 import { CONFIG_TESTNET } from './constants/config/testnet'
@@ -71,6 +71,7 @@ async function _fetchGaugesSC(client: PublicClient, killed?: boolean, blockNumbe
 }
 
 const fetchGaugesSC = cacheByLRU(_fetchGaugesSC, {
+  name: 'gaugesSC',
   ttl: 15000,
   key: (params) => {
     const [, killed, blockNumber] = params

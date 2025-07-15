@@ -7,7 +7,7 @@ import MenuButton from "./MenuButton";
 import { Colors } from "../../theme";
 import { Language } from "./types";
 import { Position } from "../Dropdown/types";
-import { ButtonProps, Scale } from "../Button/types";
+import { Scale } from "../Button/types";
 
 interface Props {
   currentLang: string;
@@ -27,18 +27,13 @@ const LangSelector: React.FC<React.PropsWithChildren<Props>> = ({
   dropdownPosition = "bottom",
   buttonScale = "md",
   hideLanguage = false,
-  children,
 }) => (
   <Dropdown
     position={dropdownPosition}
     target={
-      React.isValidElement(children) ? (
-        children
-      ) : (
-        <Button scale={buttonScale} variant="text" startIcon={<LanguageIcon color={color} width="24px" />}>
-          {!hideLanguage && <Text color={color}>{currentLang?.toUpperCase()}</Text>}
-        </Button>
-      )
+      <Button scale={buttonScale} variant="text" startIcon={<LanguageIcon color={color} width="24px" />}>
+        {!hideLanguage && <Text color={color}>{currentLang?.toUpperCase()}</Text>}
+      </Button>
     }
   >
     {langs.map((lang) => (

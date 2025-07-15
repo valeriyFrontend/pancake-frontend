@@ -1,10 +1,8 @@
 import invariant from 'tiny-invariant'
 import type { Address } from 'viem'
-import { ADDRESS_THIS } from '../constants'
+import { ROUTER_AS_RECIPIENT } from '../constants'
 import { Permit2Signature } from '../entities/types'
-import { CommandType } from '../router.types'
-import { RoutePlanner } from './RoutePlanner'
-import { encodePermit } from './encodePermit'
+import { CommandType, RoutePlanner } from './routerCommands'
 
 export type ApproveProtocol = {
   token: string
@@ -21,6 +19,10 @@ export type InputTokenOptions = {
   approval?: ApproveProtocol
   permit2Permit?: Permit2Signature
   permit2TransferFrom?: Permit2TransferFrom
+}
+
+export function encodePermit(planner: RoutePlanner, permit2: Permit2Signature): void {
+  planner.addCommand(CommandType.PERMIT2_PERMIT, [permit2, permit2.signature as `0x${string}`])
 }
 
 // Handles the encoding of commands needed to gather input tokens for a trade
@@ -53,7 +55,7 @@ export function encodeInputTokenOptions(planner: RoutePlanner, options: InputTok
   if (options.permit2TransferFrom) {
     planner.addCommand(CommandType.PERMIT2_TRANSFER_FROM, [
       options.permit2TransferFrom.token as Address,
-      (options.permit2TransferFrom.recipient ? options.permit2TransferFrom.recipient : ADDRESS_THIS) as Address,
+      (options.permit2TransferFrom.recipient ? options.permit2TransferFrom.recipient : ROUTER_AS_RECIPIENT) as Address,
       BigInt(options.permit2TransferFrom.amount),
     ])
   }

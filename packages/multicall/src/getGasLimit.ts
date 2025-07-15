@@ -1,5 +1,5 @@
-import { ChainId } from '@pancakeswap/chains'
 import { BigintIsh } from '@pancakeswap/sdk'
+import { ChainId } from '@pancakeswap/chains'
 import { toBigInt } from '@pancakeswap/utils/toBigInt'
 import { PublicClient } from 'viem'
 
@@ -22,9 +22,6 @@ export type GetGasLimitParams = {
   maxGasLimit?: BigintIsh
 
   gasBuffer?: BigintIsh
-
-  // The account to simulate or do the multicall with
-  account?: `0x${string}`
 }
 
 export function getDefaultGasLimit(chainId?: ChainId) {
@@ -40,17 +37,9 @@ export function getDefaultGasBuffer(chainId?: ChainId) {
 export type GetGasLimitOnChainParams = Pick<GetGasLimitParams, 'chainId' | 'client'>
 
 export async function getGasLimitOnChain({ chainId, client }: GetGasLimitOnChainParams) {
-  try {
-    if (!chainId || !client) {
-      return BigInt(getDefaultGasLimit(chainId))
-    }
-    const multicall = getMulticallContract({ chainId, client })
-    const gasLeft = (await multicall.read.gasLeft()) as bigint
-    return gasLeft
-  } catch (error) {
-    console.warn('Failed to get gas limit from chain, using default:', error)
-    return BigInt(getDefaultGasLimit(chainId))
-  }
+  const multicall = getMulticallContract({ chainId, client })
+  const gasLeft = (await multicall.read.gasLeft()) as bigint
+  return gasLeft
 }
 
 export async function getGasLimit({
@@ -64,14 +53,7 @@ export async function getGasLimit({
   const maxGasLimit = toBigInt(maxGasLimitInput)
   const gasBuffer = toBigInt(gasBufferInput)
 
-  let onChainGasLimit: bigint | undefined
-  try {
-    onChainGasLimit = await getGasLimitOnChain({ chainId, client })
-  } catch (error) {
-    console.warn('Failed to fetch gas limit on chain:', error)
-    onChainGasLimit = undefined
-  }
-  const gasLimit = gasLimitOverride || onChainGasLimit || maxGasLimit
+  const gasLimit = gasLimitOverride || (await getGasLimitOnChain({ chainId, client })) || maxGasLimit
   const minGasLimit = gasLimit < maxGasLimit ? gasLimit : maxGasLimit
   return minGasLimit - gasBuffer
 }

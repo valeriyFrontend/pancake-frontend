@@ -108,13 +108,13 @@ export const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
   [ChainId.BSC]: [
     bscTokens.wbnb,
     bscTokens.cake,
-    bscTokens.usd1,
+    bscTokens.busd,
     bscTokens.usdt,
     bscTokens.btcb,
     bscTokens.eth,
     bscTokens.usdc,
   ],
-  [ChainId.BSC_TESTNET]: [bscTestnetTokens.wbnb, bscTestnetTokens.cake, bscTestnetTokens.busd, bscTestnetTokens.usdc],
+  [ChainId.BSC_TESTNET]: [bscTestnetTokens.wbnb, bscTestnetTokens.cake, bscTestnetTokens.busd],
   [ChainId.ARBITRUM_ONE]: [arbitrumTokens.weth, arbitrumTokens.usdt, arbitrumTokens.usdc],
   [ChainId.ARBITRUM_GOERLI]: [arbitrumGoerliTokens.weth, arbitrumGoerliTokens.usdc],
   [ChainId.POLYGON_ZKEVM]: [polygonZkEvmTokens.weth, polygonZkEvmTokens.usdt, polygonZkEvmTokens.usdc],
@@ -136,14 +136,13 @@ export const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
 
 const czusd = new ERC20Token(ChainId.BSC, '0xE68b79e51bf826534Ff37AA9CeE71a3842ee9c70', 18, 'CZUSD', 'CZUSD')
 
-export type ADDITIONAL_BASES_TABLE = {
-  [chainId in ChainId]?: { [tokenAddress: string]: Token[] }
-}
 /**
  * Additional bases for specific tokens
  * @example { [WBTC.address]: [renBTC], [renBTC.address]: [WBTC] }
  */
-export const ADDITIONAL_BASES: ADDITIONAL_BASES_TABLE = {
+export const ADDITIONAL_BASES: {
+  [chainId in ChainId]?: { [tokenAddress: string]: Token[] }
+} = {
   [ChainId.BSC]: {
     // SNFTS-SFUND
     [bscTokens.snfts.address]: [bscTokens.sfund],
@@ -167,13 +166,6 @@ export const ADDITIONAL_BASES: ADDITIONAL_BASES_TABLE = {
 
     [bscTokens.mdlp.address]: [bscTokens.dlp],
     [bscTokens.dlp.address]: [bscTokens.mdlp],
-
-    [bscTokens.susde.address]: [bscTokens.usde],
-    [bscTokens.usde.address]: [bscTokens.susde],
-    [bscTokens.olm.address]: [bscTokens.ora],
-    [bscTokens.ora.address]: [bscTokens.olm, bscTokens.brm],
-    [bscTokens.brm.address]: [bscTokens.ora],
-    [bscTokens.susdx.address]: [bscTokens.usdx],
 
     // pancakeswap/pancake-frontend#7909
     // LSDT

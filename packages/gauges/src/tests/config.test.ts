@@ -1,7 +1,7 @@
 import { ChainId, chainNames } from '@pancakeswap/chains'
 import { FACTORY_ADDRESS_MAP, Token, computePairAddress } from '@pancakeswap/sdk'
-import groupBy from '@pancakeswap/utils/groupBy'
 import { DEPLOYER_ADDRESSES, computePoolAddress } from '@pancakeswap/v3-sdk'
+import groupBy from 'lodash/groupBy'
 import { PublicClient, createPublicClient, fallback, http, parseAbiItem } from 'viem'
 import * as CHAINS from 'viem/chains'
 import { describe, expect, it, test } from 'vitest'
@@ -10,12 +10,6 @@ import { getGauges } from '../constants/config/getGauges'
 import { GaugeStableSwapConfig, GaugeType } from '../types'
 
 const PUBLIC_NODES: Record<string, string[]> = {
-  [ChainId.BSC]: [
-    'https://bsc.publicnode.com',
-    'https://binance.llamarpc.com',
-    'https://bsc-dataseed1.defibit.io',
-    'https://bsc-dataseed1.bnbchain.org',
-  ],
   [ChainId.ARBITRUM_ONE]: [
     CHAINS.arbitrum.rpcUrls.default.http[0],
     'https://arbitrum-one.publicnode.com',

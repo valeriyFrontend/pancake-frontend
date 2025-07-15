@@ -1,5 +1,4 @@
 import { BoxProps } from "../../components/Box";
-import { TextProps } from "../../components/Text/types";
 
 export interface ModalTheme {
   background: string;
@@ -13,7 +12,6 @@ export interface InjectedProps {
 }
 
 export interface ModalWrapperProps extends InjectedProps, Omit<BoxProps, "title" | "content"> {
-  containerStyle?: React.CSSProperties;
   hideCloseButton?: boolean;
 }
 
@@ -28,5 +26,4 @@ export interface ModalProps extends ModalWrapperProps {
   bodyAlignItems?: string;
   headerBorderColor?: string;
   bodyTop?: string;
-  headerProps?: TextProps;
 }

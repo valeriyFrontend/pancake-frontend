@@ -1,14 +1,14 @@
 import { useMatchBreakpoints } from '@pancakeswap/uikit'
+import { AdsIds, useAdsConfigs } from 'components/AdPanel/hooks/useAdsConfig'
 import { useMemo } from 'react'
 import { AdCakeStaking } from './Ads/AdCakeStaking'
 import { AdCommon } from './Ads/AdCommon'
 import { AdIfo } from './Ads/AdIfo'
 import { AdPCSX } from './Ads/AdPCSX'
 import { AdSpringboard } from './Ads/AdSpringboard'
-import { AdTradingCompetitionAndy } from './Ads/AdTradingCompetition'
 import { ExpandableAd } from './Expandable/ExpandableAd'
-import { AdsIds } from './hooks/useAdsConfig'
 import { shouldRenderOnPages } from './renderConditions'
+import { AdSlide } from './types'
 import { useShouldRenderAdIfo } from './useShouldRenderAdIfo'
 
 enum Priority {
@@ -25,13 +25,22 @@ export const useAdConfig = () => {
   const shouldRenderOnPage = shouldRenderOnPages(['/buy-crypto', '/', '/prediction'])
   const MAX_ADS = isDesktop ? 6 : 4
   const shouldRenderAdIfo = useShouldRenderAdIfo()
+  const configs = useAdsConfigs()
+  const commonAdConfigs = useMemo(() => {
+    return Object.entries(configs)
+      .map(([key, value]) => {
+        if (value.ad) {
+          return {
+            id: value.id,
+            component: <AdCommon id={key as AdsIds} />,
+          }
+        }
+        return undefined
+      })
+      .filter(Boolean) as { id: string; component: JSX.Element }[]
+  }, [configs])
 
-  const adList: Array<{
-    id: string
-    component: JSX.Element
-    shouldRender?: Array<boolean>
-    priority?: number
-  }> = useMemo(
+  const adList: Array<AdSlide> = useMemo(
     () => [
       {
         id: 'expandable-ad',
@@ -39,17 +48,10 @@ export const useAdConfig = () => {
         priority: Priority.FIRST_AD,
         shouldRender: [shouldRenderOnPage],
       },
-      {
-        id: 'tst-perp',
-        component: <AdCommon id={AdsIds.TST_PERP} />,
-      },
+      ...commonAdConfigs,
       {
         id: 'ad-springboard',
         component: <AdSpringboard />,
-      },
-      {
-        id: 'ad-andy-tc',
-        component: <AdTradingCompetitionAndy />,
       },
       {
         id: 'ad-ifo',
@@ -65,7 +67,7 @@ export const useAdConfig = () => {
         component: <AdCakeStaking />,
       },
     ],
-    [shouldRenderOnPage, shouldRenderAdIfo],
+    [shouldRenderOnPage, shouldRenderAdIfo, commonAdConfigs],
   )
 
   return useMemo(

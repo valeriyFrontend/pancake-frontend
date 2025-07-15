@@ -1,3 +1,5 @@
+import { logger } from '../v3-router/utils'
+
 export type AnyAsyncFunction = (...args: any[]) => Promise<any>
 
 export interface AsyncCall<F extends AnyAsyncFunction> {
@@ -19,8 +21,7 @@ function withTimeout<F extends AnyAsyncFunction>(fn: F, duration: number) {
 }
 
 export function withFallback<F extends AnyAsyncFunction>(calls: AsyncCall<F>[]) {
-  // @ts-ignore
-  return async function asyncCall(...args: Parameters<F>): ReturnType<F> {
+  return async function asyncCall(...args: Parameters<F>) {
     const numOfCalls = calls.length
     if (numOfCalls === 0) {
       throw new Error('No valid calls')
@@ -36,9 +37,7 @@ export function withFallback<F extends AnyAsyncFunction>(calls: AsyncCall<F>[]) 
           throw e
         }
         // Fallback to next one
-        if (process.env.NODE_ENV !== 'production') {
-          console.warn(`Call failed with error %O, try next fallback`, e)
-        }
+        logger.error(`Call failed with error %O, try next fallback`, e)
       }
     }
     throw new Error('Unexpected end of call')
@@ -58,7 +57,7 @@ export function createAsyncCallWithFallbacks<F extends AnyAsyncFunction>(
   options?: WithFallbackOptions<F>,
 ) {
   const { fallbacks = [], fallbackTimeout: timeout = 3000 } = options || {}
-  return withFallback<F>(
+  return withFallback(
     [defaultCall, ...fallbacks].map((asyncFn) => ({
       asyncFn,
       timeout,

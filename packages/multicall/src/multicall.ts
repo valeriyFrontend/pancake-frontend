@@ -1,11 +1,11 @@
-import { AbortControl, AbortError, abortInvariant } from '@pancakeswap/utils/abortControl'
 import { toBigInt } from '@pancakeswap/utils/toBigInt'
+import { AbortControl, AbortError, abortInvariant } from '@pancakeswap/utils/abortControl'
 import { isViemAbortError } from '@pancakeswap/utils/viem/isAbortError'
 
-import { getBlockConflictTolerance } from './getBlockConflictTolerance'
 import { GetGasLimitParams, getDefaultGasBuffer, getGasLimit } from './getGasLimit'
-import { getMulticallContract } from './getMulticallContract'
 import { MulticallRequestWithGas } from './types'
+import { getMulticallContract } from './getMulticallContract'
+import { getBlockConflictTolerance } from './getBlockConflictTolerance'
 
 export type CallByGasLimitParams = AbortControl &
   GetGasLimitParams & {
@@ -21,7 +21,6 @@ export type CallByGasLimitParams = AbortControl &
     retryFailedCallsWithGreaterLimit?:
       | {
           gasLimitMultiplier: number
-          maxRetry?: number
         }
       | undefined
   }
@@ -35,7 +34,6 @@ export async function multicallByGasLimit(
     dropUnexecutedCalls,
     signal,
     retryFailedCallsWithGreaterLimit,
-    account,
     ...rest
   }: CallByGasLimitParams,
 ) {
@@ -51,19 +49,13 @@ export async function multicallByGasLimit(
     chainId,
     dropUnexecutedCalls,
     signal,
-    account,
   })
   if (!retryFailedCallsWithGreaterLimit) {
     return callResult
   }
 
-  const { gasLimitMultiplier: retryGasLimitMultiplier, maxRetry = 2 } = retryFailedCallsWithGreaterLimit
-  let retry = 0
+  const { gasLimitMultiplier: retryGasLimitMultiplier } = retryFailedCallsWithGreaterLimit
   async function retryFailedCalls(result: CallResult) {
-    retry += 1
-    if (retry > maxRetry) {
-      return result
-    }
     if (result.results.every((r) => r.success)) {
       return result
     }
@@ -105,7 +97,7 @@ export async function multicallByGasLimit(
 
 type CallParams = Pick<
   CallByGasLimitParams,
-  'chainId' | 'client' | 'gasBuffer' | 'blockConflictTolerance' | 'dropUnexecutedCalls' | 'signal' | 'account'
+  'chainId' | 'client' | 'gasBuffer' | 'blockConflictTolerance' | 'dropUnexecutedCalls' | 'signal'
 >
 
 export type SingleCallResult = {
@@ -147,7 +139,6 @@ async function call(calls: MulticallRequestWithGas[], params: CallParams): Promi
     blockConflictTolerance = getBlockConflictTolerance(chainId),
     dropUnexecutedCalls = false,
     signal,
-    account,
   } = params
   if (!calls.length) {
     return {
@@ -160,9 +151,7 @@ async function call(calls: MulticallRequestWithGas[], params: CallParams): Promi
 
   const contract = getMulticallContract({ chainId, client })
   try {
-    const { result } = await contract.simulate.multicallWithGasLimitation([calls, gasBuffer], {
-      account,
-    })
+    const { result } = await contract.simulate.multicallWithGasLimitation([calls, gasBuffer])
     const { results, lastSuccessIndex, blockNumber } = formatCallReturn(result as CallReturnFromContract)
     if (lastSuccessIndex === calls.length - 1) {
       return {

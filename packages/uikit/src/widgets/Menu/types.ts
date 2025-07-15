@@ -15,7 +15,6 @@ export interface NavProps {
   rightSide?: ReactNode;
   banner?: ReactElement;
   links: Array<MenuItemsType>;
-  homeLink?: string;
   subLinks?: Array<SubMenuItemsType>;
   footerLinks: Array<FooterLinkType>;
   activeItem?: string;
@@ -27,8 +26,6 @@ export interface NavProps {
   currentLang: string;
   buyCakeLabel: string;
   buyCakeLink: string;
-  showCakePrice?: boolean;
-  showLangSelector?: boolean;
   langs: Language[];
   chainId: number;
   setLang: (lang: Language) => void;

@@ -8,7 +8,6 @@ export interface TextBaseProps extends SpaceProps, TypographyProps, LayoutProps 
   ellipsis?: boolean;
   strikeThrough?: boolean;
   textTransform?: "uppercase" | "lowercase" | "capitalize";
-  style?: React.CSSProperties;
 }
 
 export type TextProps = PropsWithChildren<TextBaseProps>;

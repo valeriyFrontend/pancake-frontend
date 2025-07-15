@@ -1,7 +1,7 @@
-import { components } from 'state/info/api/schema'
 import { explorerApiClient } from 'state/info/api/client'
+import { components } from 'state/info/api/schema'
+import { PoolDataForView } from 'state/info/types'
 import { getPercentChange } from 'utils/infoDataHelpers'
-import { PoolData } from '../../types'
 
 export async function fetchedPoolData(
   chainName: components['schemas']['ChainName'],
@@ -9,7 +9,7 @@ export async function fetchedPoolData(
   signal: AbortSignal,
 ): Promise<{
   error: boolean
-  data: PoolData | undefined
+  data: PoolDataForView | undefined
 }> {
   try {
     const data = await explorerApiClient

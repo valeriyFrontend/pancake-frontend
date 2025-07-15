@@ -10,11 +10,6 @@ export function getExecutionPrice(
   }
 
   const { inputAmount, outputAmount } = trade
-
-  if (!inputAmount || !outputAmount) {
-    return undefined
-  }
-
   if (inputAmount.quotient === ZERO || outputAmount.quotient === ZERO) {
     return undefined
   }

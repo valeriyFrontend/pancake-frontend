@@ -1,16 +1,16 @@
-import { useIntersectionObserver } from "@pancakeswap/hooks";
-import { useTranslation } from "@pancakeswap/localization";
-import { Flex, OptionProps, SearchInput, Select, Text, ViewMode } from "@pancakeswap/uikit";
-import latinise from "@pancakeswap/utils/latinise";
+import { useCallback, useEffect, useMemo, useRef, useState, ReactElement } from "react";
+import { styled } from "styled-components";
 import BigNumber from "bignumber.js";
 import partition from "lodash/partition";
+import { useTranslation } from "@pancakeswap/localization";
+import { useIntersectionObserver } from "@pancakeswap/hooks";
+import latinise from "@pancakeswap/utils/latinise";
 import { useRouter } from "next/router";
-import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { styled } from "styled-components";
+import { Flex, Text, SearchInput, Select, OptionProps, ViewMode } from "@pancakeswap/uikit";
 
 import { sortPools } from "./helpers";
 import PoolTabButtons from "./PoolTabButtons";
-import { DeserializedPool } from "./types";
+import { DeserializedPool, DeserializedPoolVault } from "./types";
 
 const PoolControlsView = styled.div`
   display: flex;
@@ -20,12 +20,12 @@ const PoolControlsView = styled.div`
 
   justify-content: space-between;
   flex-direction: column;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 
   ${({ theme }) => theme.mediaQueries.sm} {
     flex-direction: row;
     flex-wrap: wrap;
-    padding: 16px 0px;
+    padding: 16px 32px;
     margin-bottom: 0;
   }
 `;
@@ -112,12 +112,20 @@ export function PoolControls<T>({
   const stakedOnlyFinishedPools = useMemo(
     () =>
       finishedPools.filter((pool) => {
+        if (pool.vaultKey) {
+          const vault = pool as DeserializedPoolVault<T>;
+          return vault?.userData?.userShares?.gt(0);
+        }
         return pool.userData && new BigNumber(pool.userData.stakedBalance).isGreaterThan(0);
       }),
     [finishedPools]
   );
   const stakedOnlyOpenPools = useCallback(() => {
     return openPoolsWithStartBlockFilter.filter((pool) => {
+      if (pool.vaultKey) {
+        const vault = pool as DeserializedPoolVault<T>;
+        return vault?.userData?.userShares?.gt(0);
+      }
       return pool.userData && new BigNumber(pool.userData.stakedBalance).isGreaterThan(0);
     });
   }, [openPoolsWithStartBlockFilter]);
@@ -212,7 +220,7 @@ export function PoolControls<T>({
               />
             </ControlStretch>
           </LabelWrapper>
-          <LabelWrapper style={{ marginLeft: 16, width: "100%" }}>
+          <LabelWrapper style={{ marginLeft: 16 }}>
             <Text fontSize="12px" bold color="textSubtle" textTransform="uppercase">
               {t("Search")}
             </Text>

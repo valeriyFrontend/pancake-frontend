@@ -1,11 +1,10 @@
 import { BigintIsh, Currency, CurrencyAmount, TradeType } from '@pancakeswap/sdk'
+import chunk from 'lodash/chunk.js'
 import { AbortControl } from '@pancakeswap/utils/abortControl'
-import chunk from '@pancakeswap/utils/chunk'
 
-import { RemoteLogger } from '@pancakeswap/utils/RemoteLogger'
 import { getAmountDistribution } from './functions'
 import { BaseRoute, GasModel, QuoteProvider, RouteWithoutQuote, RouteWithQuote } from './types'
-import { getPoolAddress } from './utils'
+import { logger } from './utils/logger'
 
 type Params = {
   blockNumber?: BigintIsh
@@ -16,24 +15,19 @@ type Params = {
   tradeType: TradeType
   gasModel: GasModel
   quoterOptimization?: boolean
-  quoteId?: string
 } & AbortControl
 
 export async function getRoutesWithValidQuote({
   amount,
   baseRoutes,
-  distributionPercent = 5,
+  distributionPercent,
   quoteProvider,
   tradeType,
   blockNumber,
   gasModel,
   quoterOptimization = true,
   signal,
-  quoteId,
 }: Params): Promise<RouteWithQuote[]> {
-  // const distributionPercent = 100
-  const logger = RemoteLogger.getLogger(quoteId)
-  logger.debug('run getRoutesWithValidQuote')
   const [percents, amounts] = getAmountDistribution(amount, distributionPercent)
   const routesWithoutQuote = amounts.reduce<RouteWithoutQuote[]>(
     (acc, curAmount, i) => [
@@ -46,27 +40,17 @@ export async function getRoutesWithValidQuote({
     ],
     [],
   )
-  logger.debug(`quote calls=${routesWithoutQuote.length}`, 2)
-  for (const route of routesWithoutQuote) {
-    logger.debug(
-      `quote call, ${route.percent}% ${route.pools.map((x) => getPoolAddress(x)).join(',')} ${route.input.symbol} ${
-        route.output.symbol
-      } ${route.amount.quotient}`,
-      3,
-    )
-  }
   const getRoutesWithQuote =
     tradeType === TradeType.EXACT_INPUT
       ? quoteProvider.getRouteWithQuotesExactIn
       : quoteProvider.getRouteWithQuotesExactOut
 
   if (!quoterOptimization) {
-    return getRoutesWithQuote(routesWithoutQuote, { blockNumber, gasModel, signal, quoteId })
+    return getRoutesWithQuote(routesWithoutQuote, { blockNumber, gasModel, signal })
   }
 
-  logger.debug('via quote optimization', 2)
   const requestCallback = typeof window === 'undefined' ? setTimeout : window.requestIdleCallback || window.setTimeout
-  logger.debug(`Get quotes from ${routesWithoutQuote.length} routes routesWithoutQuote`, 2)
+  logger.metric('Get quotes', 'from', routesWithoutQuote.length, 'routes', routesWithoutQuote)
   // Split into chunks so the calculation won't block the main thread
   const getQuotes = (routes: RouteWithoutQuote[]): Promise<RouteWithQuote[]> =>
     new Promise((resolve, reject) => {
@@ -85,7 +69,6 @@ export async function getRoutesWithValidQuote({
     acc.push(...cur)
     return acc
   }, [])
-  logger.debug(`Get quotes success, got, ${quotes.length}`)
-
+  logger.metric('Get quotes', 'success, got', quotes.length, 'quoted routes', quotes)
   return quotes
 }

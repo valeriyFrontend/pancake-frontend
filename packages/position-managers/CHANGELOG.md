@@ -1,54 +1,5 @@
 # @pancakeswap/position-managers
 
-## 0.1.47
-
-### Patch Changes
-
-- Updated dependencies [2f165c8]
-  - @pancakeswap/tokens@0.7.5
-  - @pancakeswap/token-lists@0.0.15
-  - @pancakeswap/v3-sdk@3.9.3
-
-## 0.1.46
-
-### Patch Changes
-
-- Updated dependencies [3de0443]
-  - @pancakeswap/chains@0.5.2
-  - @pancakeswap/sdk@5.8.14
-  - @pancakeswap/tokens@0.7.4
-  - @pancakeswap/v3-sdk@3.9.3
-  - @pancakeswap/token-lists@0.0.15
-
-## 0.1.45
-
-### Patch Changes
-
-- Updated dependencies [cb44715]
-  - @pancakeswap/v3-sdk@3.9.2
-  - @pancakeswap/sdk@5.8.13
-  - @pancakeswap/tokens@0.7.3
-  - @pancakeswap/token-lists@0.0.15
-
-## 0.1.44
-
-### Patch Changes
-
-- Updated dependencies [5f264c5]
-- Updated dependencies [0436fec]
-  - @pancakeswap/chains@0.5.1
-  - @pancakeswap/sdk@5.8.12
-  - @pancakeswap/tokens@0.7.2
-  - @pancakeswap/v3-sdk@3.9.1
-  - @pancakeswap/token-lists@0.0.14
-
-## 0.1.43
-
-### Patch Changes
-
-- Updated dependencies [9fa225f]
-  - @pancakeswap/tokens@0.7.1
-
 ## 0.1.42
 
 ### Patch Changes

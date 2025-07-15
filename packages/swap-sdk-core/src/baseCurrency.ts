@@ -64,8 +64,4 @@ export abstract class BaseCurrency {
    * implement this to be used in PancakeSwap
    */
   public abstract get wrapped(): Token
-
-  public get asToken(): Token {
-    return this.wrapped
-  }
 }

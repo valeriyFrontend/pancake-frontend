@@ -1,7 +1,7 @@
-import { type ReactNode, useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import { Skeleton } from "../Skeleton";
 import Text from "./Text";
-import type { TextProps } from "./types";
+import { TextProps } from "./types";
 
 type SkeletonTextProps = {
   loading: boolean;

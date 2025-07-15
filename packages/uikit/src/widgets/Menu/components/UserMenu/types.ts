@@ -22,7 +22,6 @@ export interface UserMenuProps extends Omit<FlexProps, "children"> {
   placement?: Placement;
   recalculatePopover?: boolean;
   ellipsis?: boolean;
-  popperStyle?: React.CSSProperties;
 }
 
 export interface UserMenuItemProps {

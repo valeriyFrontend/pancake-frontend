@@ -2,14 +2,14 @@ import { ChainId } from '@pancakeswap/chains'
 import { GaugeType, safeGetGaugesByChain } from '@pancakeswap/gauges'
 import { Currency, Token } from '@pancakeswap/sdk'
 import { getTokensByChain } from '@pancakeswap/tokens'
-import memoize from '@pancakeswap/utils/memoize'
-import uniqBy from '@pancakeswap/utils/uniqBy'
-import { type Address } from 'viem'
+import flatMap from 'lodash/flatMap.js'
+import memoize from 'lodash/memoize.js'
+import uniqBy from 'lodash/uniqBy.js'
+import type { Address } from 'viem'
 
-import { BASES_TO_CHECK_TRADES_AGAINST, CUSTOM_BASES } from '../../constants'
+import { ADDITIONAL_BASES, BASES_TO_CHECK_TRADES_AGAINST, CUSTOM_BASES } from '../../constants'
 import { wrappedCurrency } from '../../utils/currency'
 import { isCurrenciesSameChain, log } from '../utils'
-import { getAdditionalBases } from './getAdditionalBase'
 
 const getToken = memoize(
   (chainId?: ChainId, address?: Address): Token | undefined => {
@@ -105,9 +105,15 @@ const resolver = (currencyA?: Currency, currencyB?: Currency) => {
   return `${token0.chainId}_${token0.address}_${token1.address}`
 }
 
+type TokenBases = {
+  [tokenAddress: Address]: Token[]
+}
+
 async function getAdditionalCheckAgainstBaseTokens(currencyA?: Currency, currencyB?: Currency): Promise<Token[]> {
   const chainId: ChainId | undefined = currencyA?.chainId
-  const additionalBases = await getAdditionalBases(chainId)
+  const additionalBases: TokenBases = {
+    ...(chainId ? ADDITIONAL_BASES[chainId] ?? {} : {}),
+  }
   const uniq = (tokens: Token[]) => uniqBy(tokens, (t) => t.address)
   const additionalA =
     currencyA && chainId
@@ -164,7 +170,7 @@ export const getPairCombinations = memoize(
 
     const bases = await getCheckAgainstBaseTokens(currencyA, currencyB)
 
-    const basePairs: [Currency, Currency][] = bases.flatMap((base): [Currency, Currency][] =>
+    const basePairs: [Currency, Currency][] = flatMap(bases, (base): [Currency, Currency][] =>
       bases.map((otherBase) => [base, otherBase]),
     )
 

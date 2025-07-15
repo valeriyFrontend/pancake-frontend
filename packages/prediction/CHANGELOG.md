@@ -1,58 +1,5 @@
 # @pancakeswap/prediction
 
-## 1.1.15
-
-### Patch Changes
-
-- Updated dependencies [2f165c8]
-  - @pancakeswap/tokens@0.7.5
-  - @pancakeswap/pools@5.1.43
-
-## 1.1.14
-
-### Patch Changes
-
-- Updated dependencies [3de0443]
-  - @pancakeswap/chains@0.5.2
-  - @pancakeswap/pools@5.1.42
-  - @pancakeswap/sdk@5.8.14
-  - @pancakeswap/tokens@0.7.4
-
-## 1.1.13
-
-### Patch Changes
-
-- Updated dependencies [cb44715]
-  - @pancakeswap/sdk@5.8.13
-  - @pancakeswap/tokens@0.7.3
-  - @pancakeswap/pools@5.1.41
-
-## 1.1.12
-
-### Patch Changes
-
-- Updated dependencies [5f264c5]
-- Updated dependencies [0436fec]
-  - @pancakeswap/chains@0.5.1
-  - @pancakeswap/pools@5.1.40
-  - @pancakeswap/sdk@5.8.12
-  - @pancakeswap/tokens@0.7.2
-
-## 1.1.11
-
-### Patch Changes
-
-- Updated dependencies [9fa225f]
-  - @pancakeswap/tokens@0.7.1
-  - @pancakeswap/pools@5.1.39
-
-## 1.1.10
-
-### Patch Changes
-
-- Updated dependencies [49352a5]
-  - @pancakeswap/pools@5.1.38
-
 ## 1.1.9
 
 ### Patch Changes

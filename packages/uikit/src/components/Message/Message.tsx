@@ -1,20 +1,19 @@
 import React, { useContext, useMemo } from "react";
 import { styled } from "styled-components";
-import { space, variant as systemVariant } from "styled-system";
-import { Box } from "../Box";
-import { CheckmarkCircleIcon, ErrorIcon, InfoFilledIcon, WarningIcon } from "../Svg";
+import { variant as systemVariant, space } from "styled-system";
+import { WarningIcon, ErrorIcon, CheckmarkCircleFillIcon, InfoFilledIcon } from "../Svg";
 import { Text, TextProps } from "../Text";
-import variants from "./theme";
+import { Box } from "../Box";
 import { MessageProps } from "./types";
+import variants from "./theme";
 
 const MessageContext = React.createContext<MessageProps>({ variant: "success" });
 
 const Icons = {
   warning: WarningIcon,
   danger: ErrorIcon,
-  success: CheckmarkCircleIcon,
+  success: CheckmarkCircleFillIcon,
   primary: InfoFilledIcon,
-  secondary: ErrorIcon,
 };
 
 const MessageContainer = styled.div<MessageProps>`
@@ -39,7 +38,6 @@ const colors = {
   success: "#129E7D",
   danger: "failure",
   primary: "text",
-  secondary: "#D67E0A",
 };
 
 export const MessageText: React.FC<React.PropsWithChildren<TextProps>> = ({ children, ...props }) => {

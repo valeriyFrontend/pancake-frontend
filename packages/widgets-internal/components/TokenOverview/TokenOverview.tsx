@@ -1,21 +1,19 @@
-import { getChainName as defaultGetChainName } from "@pancakeswap/chains";
-import { Currency } from "@pancakeswap/sdk";
+import { Currency, Token } from "@pancakeswap/sdk";
 import { Flex, Skeleton, Text } from "@pancakeswap/uikit";
 import { styled } from "styled-components";
+import { getChainName as defaultGetChainName } from "@pancakeswap/chains";
 import { ChainLogo, DoubleCurrencyLogo } from "../CurrencyLogo";
 
 export interface ITokenInfoProps {
   isReady?: boolean;
   title?: React.ReactNode;
-  titleFontSize?: string;
   desc?: React.ReactNode;
   icon?: React.ReactNode;
   customContent?: React.ReactNode;
   token: Currency;
-  quoteToken: Currency;
-  iconWidth?: string;
+  quoteToken: Token;
+  width?: string;
   getChainName?: (chainId: number) => string | undefined;
-  getCurrencySymbol?: (token: Currency) => string | undefined;
 }
 
 const Container = styled.div`
@@ -49,10 +47,8 @@ export const TokenOverview: React.FC<ITokenInfoProps> = ({
   customContent,
   token,
   quoteToken,
-  iconWidth,
-  titleFontSize = "16px",
+  width,
   getChainName = defaultGetChainName,
-  getCurrencySymbol = (token) => token.symbol, // Default alias function
 }) => {
   if (!isReady) {
     return (
@@ -67,18 +63,14 @@ export const TokenOverview: React.FC<ITokenInfoProps> = ({
   }
   return (
     <Container>
-      <IconWrapper width={iconWidth}>
-        {icon ?? <DoubleCurrencyLogo currency0={token} currency1={quoteToken} />}
-      </IconWrapper>
+      <IconWrapper width={width}>{icon ?? <DoubleCurrencyLogo currency0={token} currency1={quoteToken} />}</IconWrapper>
       {customContent ?? (
         <Flex flexDirection="column">
-          <Text bold fontSize={titleFontSize}>
-            {title ?? `${getCurrencySymbol(token)} / ${getCurrencySymbol(quoteToken)}`}
-          </Text>
+          <Text bold>{title ?? `${token.symbol} / ${quoteToken.symbol}`}</Text>
           <DescWrapper>
             {desc ?? (
               <>
-                <ChainLogo width={16} height={16} chainId={token.chainId} imageStyles={{ borderRadius: "50%" }} />
+                <ChainLogo width={16} height={16} chainId={token.chainId} />
                 {getChainName(token.chainId)?.toUpperCase()}
               </>
             )}

@@ -12,7 +12,6 @@ export type ExclusiveDutchOrderTrade<input extends Currency = Currency, output e
   maximumAmountIn: CurrencyAmount<input>
   minimumAmountOut: CurrencyAmount<output>
   orderInfo: ExclusiveDutchOrderInfo
-  quoteQueryHash?: string
 }
 
 export function createExclusiveDutchOrderTrade<

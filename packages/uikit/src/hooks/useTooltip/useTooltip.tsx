@@ -105,10 +105,7 @@ const useTooltip = (content: React.ReactNode, options?: TooltipOptions): Tooltip
 
   const toggleTooltip = useCallback(
     (e: Event) => {
-      if (!avoidToStopPropagation) {
-        e.stopPropagation();
-        e.preventDefault();
-      }
+      if (!avoidToStopPropagation) e.stopPropagation();
       setVisible(!visible);
     },
     [visible, avoidToStopPropagation]

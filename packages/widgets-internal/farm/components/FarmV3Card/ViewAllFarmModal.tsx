@@ -20,7 +20,7 @@ import {
 } from "@pancakeswap/uikit";
 import Tags from "../Tags";
 
-const { FarmAuctionTag, V3FeeTag } = Tags;
+const { BoostedTag, FarmAuctionTag, V3FeeTag } = Tags;
 
 const ScrollableContainer = styled(Flex)`
   flex-direction: column;
@@ -33,6 +33,7 @@ interface ViewAllFarmModalProps extends ModalProps {
   lpSymbol: string;
   onAddLiquidity: () => void;
   tokenPairImage: ReactNode;
+  boosted?: boolean;
   feeAmount?: FeeAmount;
   isCommunityFarm?: boolean;
   multiplier: string;
@@ -45,6 +46,7 @@ const ViewAllFarmModal: React.FunctionComponent<React.PropsWithChildren<ViewAllF
   isReady,
   lpSymbol,
   tokenPairImage,
+  boosted,
   feeAmount,
   isCommunityFarm,
   multiplier,
@@ -71,6 +73,7 @@ const ViewAllFarmModal: React.FunctionComponent<React.PropsWithChildren<ViewAllF
                 </Tag>
               )}
               {isReady && feeAmount && <V3FeeTag mr="4px" feeAmount={feeAmount} />}
+              {isReady && boosted && <BoostedTag mr="4px" />}
               {isReady && isCommunityFarm && <FarmAuctionTag />}
             </AutoRow>
           </Flex>

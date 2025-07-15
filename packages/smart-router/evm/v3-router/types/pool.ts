@@ -1,13 +1,13 @@
 import { Currency, CurrencyAmount, Percent } from '@pancakeswap/sdk'
 import { FeeAmount, Tick } from '@pancakeswap/v3-sdk'
-import { Address, Hex } from 'viem'
+import { Address } from 'viem'
 
 export enum PoolType {
   V2,
   V3,
   STABLE,
-  InfinityCL,
-  InfinityBIN,
+  V4CL,
+  V4BIN,
 }
 
 export interface BasePool {
@@ -49,29 +49,25 @@ export interface V3Pool extends BasePool {
   reserve0?: CurrencyAmount<Currency>
   reserve1?: CurrencyAmount<Currency>
 }
-export type BaseInfinityPool = BasePool & {
+
+export type V4ClPool = BasePool & {
   id: `0x${string}`
+  type: PoolType.V4CL
   currency0: Currency
   currency1: Currency
   fee: number
-  protocolFee?: number
-  hooks?: Address
-  hooksRegistrationBitmap?: Hex | number
-  poolManager: Address
-
-  reserve0?: CurrencyAmount<Currency>
-  reserve1?: CurrencyAmount<Currency>
-}
-
-export type InfinityClPool = BaseInfinityPool & {
-  type: PoolType.InfinityCL
   tickSpacing: number
   liquidity: bigint
   sqrtRatioX96: bigint
   tick: number
+  hooks?: Address
+  poolManager: Address
 
   // Allow pool with no ticks data provided
   ticks?: Tick[]
+
+  reserve0?: CurrencyAmount<Currency>
+  reserve1?: CurrencyAmount<Currency>
 }
 
 type ActiveId = number
@@ -79,16 +75,24 @@ type Reserve = {
   reserveX: bigint
   reserveY: bigint
 }
-
-export type InfinityBinPool = BaseInfinityPool & {
-  type: PoolType.InfinityBIN
+export type V4BinPool = BasePool & {
+  id: `0x${string}`
+  type: PoolType.V4BIN
+  currency0: Currency
+  currency1: Currency
+  fee: number
   binStep: number
   activeId: ActiveId
 
+  hooks?: Address
+  poolManager: Address
   reserveOfBin?: Record<ActiveId, Reserve>
+
+  reserve0?: CurrencyAmount<Currency>
+  reserve1?: CurrencyAmount<Currency>
 }
 
-export type Pool = V2Pool | V3Pool | StablePool | InfinityBinPool | InfinityClPool
+export type Pool = V2Pool | V3Pool | StablePool | V4BinPool | V4ClPool
 
 export interface WithTvl {
   tvlUSD: bigint
@@ -99,5 +103,3 @@ export type V3PoolWithTvl = V3Pool & WithTvl
 export type V2PoolWithTvl = V2Pool & WithTvl
 
 export type StablePoolWithTvl = StablePool & WithTvl
-
-export type InfinityPoolWithTvl = (InfinityClPool | InfinityBinPool) & WithTvl

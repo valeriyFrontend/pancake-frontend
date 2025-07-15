@@ -9,7 +9,7 @@ import { MIXED_ROUTE_QUOTER_ADDRESSES } from './constants'
 import type { QuoteRoute } from './types'
 import { encodeRouteToPath } from './utils'
 
-type SupportedPool = V3Pool | V2Pool | StablePool
+export type SupportedPool = V3Pool | V2Pool | StablePool
 
 export function buildMixedRouteQuoteCall<P extends SupportedPool = SupportedPool>(route: QuoteRoute<P>) {
   const { path, amount } = route

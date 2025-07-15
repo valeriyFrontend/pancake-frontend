@@ -28,7 +28,6 @@ export const formatAmount = (
     displayThreshold?: number
     tokenPrecision?: tokenPrecisionStyle
     isInteger?: boolean
-    precision?: number
   },
 ) => {
   const {
@@ -52,8 +51,8 @@ export const formatAmount = (
     return getFirstThreeNonZeroDecimals(amount)
   }
 
-  let precision = options?.precision ?? 2
-  if (tokenPrecision && !options?.precision) {
+  let precision = 2
+  if (tokenPrecision) {
     precision = amount < 1 || tokenPrecision === 'enhanced' ? 3 : 2
   }
 

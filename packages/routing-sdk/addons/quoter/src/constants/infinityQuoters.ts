@@ -1,5 +1,0 @@
-export {
-  INFI_BIN_QUOTER_ADDRESSES,
-  INFI_CL_QUOTER_ADDRESSES,
-  INFI_MIXED_QUOTER_ADDRESSES,
-} from '@pancakeswap/infinity-sdk'

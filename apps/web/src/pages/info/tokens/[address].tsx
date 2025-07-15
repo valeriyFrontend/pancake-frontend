@@ -1,14 +1,26 @@
-import Token from 'views/Info/Tokens/TokenPage'
 import { GetStaticPaths, GetStaticProps } from 'next'
+import { getTokenStaticPaths, getTokenStaticProps, invalidAddressCheck } from 'utils/pageUtils'
 import { InfoPageLayout } from 'views/Info'
-import { getTokenStaticPaths, getTokenStaticProps } from 'utils/pageUtils'
+import Token from 'views/Info/Tokens/TokenPage'
+import { Suspense } from 'react'
+import { Flex, Spinner } from '@pancakeswap/uikit'
 
 const TokenPage = ({ address }: { address: string }) => {
-  if (!address) {
+  if (invalidAddressCheck(String(address))) {
     return null
   }
 
-  return <Token routeAddress={address} />
+  return (
+    <Suspense
+      fallback={
+        <Flex mt="80px" justifyContent="center">
+          <Spinner />
+        </Flex>
+      }
+    >
+      <Token routeAddress={address} />
+    </Suspense>
+  )
 }
 
 TokenPage.Layout = InfoPageLayout

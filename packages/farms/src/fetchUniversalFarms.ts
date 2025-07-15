@@ -1,6 +1,5 @@
 import { ChainId } from '@pancakeswap/chains'
-import { ERC20Token, Native } from '@pancakeswap/sdk'
-import { isAddressEqual, zeroAddress } from 'viem'
+import { ERC20Token } from '@pancakeswap/sdk'
 import { FARMS_API } from '../config/endpoint'
 import { Protocol, UniversalFarmConfig } from './types'
 
@@ -26,17 +25,14 @@ export const fetchUniversalFarms = async (chainId: ChainId, protocol?: Protocol)
     const result = await response.json()
     const newData: UniversalFarmConfig[] = result.map((p: any) => ({
       ...p,
-      lpAddress: p.lpAddress ?? p.poolId,
-      token0: isAddressEqual(p.token0.address, zeroAddress)
-        ? Native.onChain(chainId)
-        : new ERC20Token(
-            p.token0.chainId,
-            p.token0.address,
-            p.token0.decimals,
-            p.token0.symbol,
-            p.token0.name,
-            p.token0.projectLink,
-          ),
+      token0: new ERC20Token(
+        p.token0.chainId,
+        p.token0.address,
+        p.token0.decimals,
+        p.token0.symbol,
+        p.token0.name,
+        p.token0.projectLink,
+      ),
       token1: new ERC20Token(
         p.token1.chainId,
         p.token1.address,

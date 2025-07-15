@@ -26,7 +26,7 @@ const StyledOverlay = styled(Box)<{ isUnmounting?: boolean }>`
   left: 0px;
   width: 100%;
   height: 100%;
-  background-color: ${({ theme }) => `${theme.colors.backgroundOverlay}`};
+  background-color: ${({ theme }) => `${theme.colors.text99}`};
   z-index: 20;
   will-change: opacity;
   animation: ${mountAnimation} 350ms ease forwards;
@@ -40,21 +40,15 @@ const StyledOverlay = styled(Box)<{ isUnmounting?: boolean }>`
 const BodyLock = () => {
   useEffect(() => {
     if (document?.body?.style) {
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      const previousOverflow = document.body.style.overflow;
-      const previousPaddingRight = document.body.style.paddingRight;
-
+      document.body.style.cssText = `
+      overflow: hidden;
+    `;
       document.body.style.overflow = "hidden";
-      if (scrollbarWidth > 0) {
-        document.body.style.paddingRight = `${scrollbarWidth}px`;
-      }
-
       return () => {
-        document.body.style.overflow = previousOverflow || "visible";
-        document.body.style.paddingRight = previousPaddingRight;
-        if (!previousOverflow) {
-          document.body.style.overflow = "overlay";
-        }
+        document.body.style.cssText = `
+        overflow: visible;
+        overflow: overlay;
+      `;
       };
     }
 

@@ -8,7 +8,7 @@ import { ModalProps } from "./types";
 
 export const mobileFooterHeight = 73;
 
-export const ModalHeader = styled(Flex)<{ width?: string; background?: string; headerBorderColor?: string }>`
+export const ModalHeader = styled(Flex)<{ background?: string; headerBorderColor?: string }>`
   align-items: center;
   background: transparent;
   border-bottom: 1px solid ${({ theme, headerBorderColor }) => headerBorderColor || theme.colors.cardBorder};
@@ -57,7 +57,7 @@ export const ModalCloseButton: React.FC<
 export const ModalBackButton: React.FC<React.PropsWithChildren<{ onBack: ModalProps["onBack"] }>> = ({ onBack }) => {
   return (
     <IconButton variant="text" onClick={onBack} area-label="go back" mr="8px">
-      <ArrowBackIcon color="primary60" />
+      <ArrowBackIcon color="primary" />
     </IconButton>
   );
 };

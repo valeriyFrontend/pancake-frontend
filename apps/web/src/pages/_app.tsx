@@ -3,8 +3,6 @@ import BigNumber from 'bignumber.js'
 import { SentryErrorBoundary } from 'components/ErrorBoundary'
 import GlobalCheckClaimStatus from 'components/GlobalCheckClaimStatus'
 import { PageMeta } from 'components/Layout/Page'
-import { AffiliateExpiredModal } from 'components/Modal/AffiliateExpiredModal'
-import { AffiliateSunsetModal } from 'components/Modal/AffiliateSunsetModal'
 import { SimpleStakingSunsetModal } from 'components/Modal/SimpleStakingSunsetModal'
 import { NetworkModal } from 'components/NetworkModal'
 import { FixedSubgraphHealthIndicator } from 'components/SubgraphHealthIndicator/FixedSubgraphHealthIndicator'
@@ -29,19 +27,22 @@ import { PersistGate } from 'redux-persist/integration/react'
 import 'utils/abortcontroller-polyfill'
 import { V4CakeIcon } from 'views/Home/components/V4CakeIcon'
 
-import { AdPanel } from 'components/AdPanel'
+import { DesktopCard } from 'components/AdPanel/DesktopCard'
+import { MobileCard } from 'components/AdPanel/MobileCard'
 import { layoutDesktopAdIgnoredPages, layoutMobileAdIgnoredPages } from 'components/AdPanel/config'
 import { shouldRenderOnPages } from 'components/AdPanel/renderConditions'
+import { Cb1Membership } from 'components/Cb1/Cb1Membership'
 import { ZKSyncAirdropModalWithAutoPopup } from 'components/ClaimZksyncAirdropModal'
 import { useDataDogRUM } from 'hooks/useDataDogRUM'
 import { useLoadExperimentalFeatures } from 'hooks/useExperimentalFeatureEnabled'
 import useInitNotificationsClient from 'hooks/useInitNotificationsClient'
+import useOptionsSunsetNotification from 'hooks/useOptionsSunsetNotification'
 import { useVercelFeatureFlagOverrides } from 'hooks/useVercelToolbar'
+import { useWalletConnectRouterSync } from 'hooks/useWalletConnectRouterSync'
 import { useWeb3WalletView } from 'hooks/useWeb3WalletView'
 import { useInitGlobalWorker } from 'hooks/useWorker'
 import { persistor, useStore } from 'state'
 import { usePollBlockNumber } from 'state/block/hooks'
-import { useWalletConnectRouterSync } from 'hooks/useWalletConnectRouterSync'
 import { Blocklist, Updaters } from '..'
 import { SEO } from '../../next-seo.config'
 import Providers from '../Providers'
@@ -71,6 +72,7 @@ function GlobalHooks() {
   useLockedEndNotification()
   useInitNotificationsClient()
   useWalletConnectRouterSync()
+  useOptionsSunsetNotification()
   return null
 }
 
@@ -184,8 +186,8 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
       <ShowMenu>
         <Layout>
           <Component {...pageProps} />
-          <AdPanel.MobileCard shouldRender={!shouldRenderOnPages(layoutMobileAdIgnoredPages)} mt="4px" mb="12px" />
-          <AdPanel.DesktopCard shouldRender={!shouldRenderOnPages(layoutDesktopAdIgnoredPages)} />
+          <MobileCard shouldRender={!shouldRenderOnPages(layoutMobileAdIgnoredPages)} mt="4px" mb="12px" />
+          <DesktopCard shouldRender={!shouldRenderOnPages(layoutDesktopAdIgnoredPages)} />
         </Layout>
       </ShowMenu>
       <EasterEgg iterations={2} />
@@ -197,10 +199,9 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
       {shouldScreenWallet && <Blocklist />}
       {isShowV4IconButton && <V4CakeIcon />}
       <ZKSyncAirdropModalWithAutoPopup />
-      <AffiliateExpiredModal />
-      <AffiliateSunsetModal />
       <SimpleStakingSunsetModal />
       <VercelToolbar />
+      <Cb1Membership />
     </ProductionErrorBoundary>
   )
 }

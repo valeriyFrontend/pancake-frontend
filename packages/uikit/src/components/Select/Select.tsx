@@ -80,8 +80,6 @@ export interface SelectProps extends BoxProps {
   onOptionChange?: (option: OptionProps) => void;
   placeHolderText?: string;
   defaultOptionIndex?: number;
-  textStyle?: React.CSSProperties;
-  listStyle?: React.CSSProperties;
 }
 
 export interface OptionProps {
@@ -95,8 +93,6 @@ const Select: React.FunctionComponent<React.PropsWithChildren<SelectProps>> = ({
   onOptionChange,
   defaultOptionIndex = 0,
   placeHolderText,
-  textStyle = {},
-  listStyle = {},
   ...props
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -150,13 +146,13 @@ const Select: React.FunctionComponent<React.PropsWithChildren<SelectProps>> = ({
             src={options?.[selectedOptionIndex]?.imageUrl}
           />
         )}
-        <Text color={!optionSelected && placeHolderText ? "text" : undefined} style={textStyle}>
+        <Text color={!optionSelected && placeHolderText ? "text" : undefined}>
           {!optionSelected && placeHolderText ? placeHolderText : options[selectedOptionIndex]?.label}
         </Text>
       </DropDownHeader>
       <ArrowDropDownIcon color="text" onClick={toggling} />
       <DropDownListContainer>
-        <DropDownList style={listStyle}>
+        <DropDownList>
           {options.map((option, index) =>
             placeHolderText || index !== selectedOptionIndex ? (
               <ListItem onClick={onOptionClicked(index)} key={option.label}>

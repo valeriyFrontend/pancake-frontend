@@ -1,10 +1,8 @@
 import { ChainId } from '@pancakeswap/chains'
 import { getStableSwapPools } from '@pancakeswap/stable-swap-sdk'
-import { Address } from 'viem'
 import {
   ComputedFarmConfigV3,
   FarmV3Data,
-  Protocol,
   SerializedClassicFarmConfig,
   SerializedFarmConfig,
   SerializedStableFarmConfig,
@@ -12,7 +10,6 @@ import {
   UniversalFarmConfigStableSwap,
   UniversalFarmConfigV2,
   UniversalFarmConfigV3,
-  UniversalFarmConfigV4,
 } from './types'
 
 export function isActiveV3Farm(farm: FarmV3Data, poolLength: number) {
@@ -27,7 +24,6 @@ type LegacyClassicFarmConfig = Omit<SerializedClassicFarmConfig, 'pid'> & { chai
   pid?: number
 }
 type LegacyV3FarmConfig = ComputedFarmConfigV3 & { chainId: ChainId; version: 2 | 3 }
-type LegacyV4FarmConfig = Omit<ComputedFarmConfigV3, 'feeAmount'> & { chainId: ChainId; poolId: Address; version: 4 }
 
 export async function formatUniversalFarmToSerializedFarm(
   farms: UniversalFarmConfig[],
@@ -41,9 +37,6 @@ export async function formatUniversalFarmToSerializedFarm(
           return formatV2UniversalFarmToSerializedFarm(farm as UniversalFarmConfigV2)
         case 'v3':
           return formatV3UniversalFarmToSerializedFarm(farm as UniversalFarmConfigV3)
-        case Protocol.InfinityBIN:
-        case Protocol.InfinityCLAMM:
-          return formatV4UniversalFarmToSerializedFarm(farm as UniversalFarmConfigV4)
         default:
           return undefined
       }
@@ -120,22 +113,6 @@ const formatV3UniversalFarmToSerializedFarm = (farm: UniversalFarmConfigV3): Leg
   }
 }
 
-const formatV4UniversalFarmToSerializedFarm = (farm: UniversalFarmConfigV4): LegacyV4FarmConfig => {
-  const { chainId, pid, token0, token1, poolId } = farm
-  return {
-    pid,
-    poolId,
-    lpAddress: poolId,
-    lpSymbol: `${token0.symbol}-${token1.symbol} LP`,
-    token0,
-    token1,
-    token: token0,
-    quoteToken: token1,
-    chainId,
-    version: 4,
-  }
-}
-
 export const getFarmConfigKey = (farm: Pick<UniversalFarmConfig, 'chainId' | 'lpAddress'>) => {
-  return `${farm.chainId}:${farm.lpAddress?.toLowerCase()}`
+  return `${farm.chainId}:${farm.lpAddress.toLowerCase()}`
 }

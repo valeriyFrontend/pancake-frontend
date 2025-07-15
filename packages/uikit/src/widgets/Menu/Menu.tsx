@@ -80,14 +80,11 @@ const Menu: React.FC<React.PropsWithChildren<NavProps>> = ({
   setLang,
   cakePriceUsd,
   links,
-  homeLink: homeLink_,
   subLinks,
   footerLinks,
   activeItem,
   activeSubItem,
   activeSubItemChildItem,
-  showCakePrice = true,
-  showLangSelector = true,
   langs,
   buyCakeLabel,
   buyCakeLink,
@@ -98,7 +95,7 @@ const Menu: React.FC<React.PropsWithChildren<NavProps>> = ({
   const { isMobile } = useMatchBreakpoints();
   const isMounted = useIsMounted();
   const [showMenu, setShowMenu] = useState(true);
-  const refPrevOffset = useRef(typeof window === "undefined" ? 0 : window.scrollY);
+  const refPrevOffset = useRef(typeof window === "undefined" ? 0 : window.pageYOffset);
 
   const topBannerHeight = isMobile ? TOP_BANNER_HEIGHT_MOBILE : TOP_BANNER_HEIGHT;
 
@@ -106,7 +103,7 @@ const Menu: React.FC<React.PropsWithChildren<NavProps>> = ({
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentOffset = window.scrollY;
+      const currentOffset = window.pageYOffset;
       const isBottomOfPage = window.document.body.clientHeight === currentOffset + window.innerHeight;
       const isTopOfPage = currentOffset === 0;
       // Always show the menu when user reach the top
@@ -134,7 +131,7 @@ const Menu: React.FC<React.PropsWithChildren<NavProps>> = ({
   }, [totalTopMenuHeight]);
 
   // Find the home link if provided
-  const homeLink = useMemo(() => links.find((link) => link.label === "Home"), [links]);
+  const homeLink = links.find((link) => link.label === "Home");
 
   const subLinksWithoutMobile = useMemo(() => subLinks?.filter((subLink) => !subLink.isMobileOnly), [subLinks]);
   const subLinksMobileOnly = useMemo(() => subLinks?.filter((subLink) => subLink.isMobileOnly), [subLinks]);
@@ -151,9 +148,9 @@ const Menu: React.FC<React.PropsWithChildren<NavProps>> = ({
         <Wrapper>
           <FixedContainer showMenu={showMenu} height={totalTopMenuHeight}>
             {banner && isMounted && <TopBannerContainer height={topBannerHeight}>{banner}</TopBannerContainer>}
-            <StyledNav id="nav">
+            <StyledNav>
               <Flex>
-                {logoComponent ?? <Logo href={homeLink_ ?? homeLink?.href ?? "/home"} />}
+                {logoComponent ?? <Logo href={homeLink?.href ?? "/home"} />}
                 <AtomBox display={{ xs: "none", lg: "block" }}>
                   <MenuItems
                     ml="24px"
@@ -168,18 +165,16 @@ const Menu: React.FC<React.PropsWithChildren<NavProps>> = ({
                 <AtomBox mr="12px" display={{ xs: "none", xxl: "block" }}>
                   <CakePrice chainId={chainId} showSkeleton={false} cakePriceUsd={cakePriceUsd} />
                 </AtomBox>
-                {showLangSelector && (
-                  <Box mt="4px">
-                    <LangSelector
-                      currentLang={currentLang}
-                      langs={langs}
-                      setLang={setLang}
-                      buttonScale="xs"
-                      color="textSubtle"
-                      hideLanguage
-                    />
-                  </Box>
-                )}
+                <Box mt="4px">
+                  <LangSelector
+                    currentLang={currentLang}
+                    langs={langs}
+                    setLang={setLang}
+                    buttonScale="xs"
+                    color="textSubtle"
+                    hideLanguage
+                  />
+                </Box>
                 {rightSide}
               </Flex>
             </StyledNav>
@@ -220,8 +215,6 @@ const Menu: React.FC<React.PropsWithChildren<NavProps>> = ({
         cakePriceUsd={cakePriceUsd}
         buyCakeLabel={buyCakeLabel}
         buyCakeLink={buyCakeLink}
-        showLangSelector={showLangSelector}
-        showCakePrice={showCakePrice}
         mb={[`${MOBILE_MENU_HEIGHT}px`, null, "0px"]}
       />
       <AtomBox display={{ xs: "block", lg: "none" }}>

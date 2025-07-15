@@ -1,5 +1,5 @@
 /* eslint-disable react/no-array-index-key */
-import React, { Children, forwardRef, isValidElement, ReactNode } from "react";
+import React, { Children, isValidElement, ReactNode } from "react";
 import { styled } from "styled-components";
 import { space } from "styled-system";
 import ChevronRightIcon from "../Svg/Icons/ChevronRight";
@@ -58,19 +58,20 @@ const insertSeparators = (items: ReactNode[], separator: BreadcrumbsProps["separ
 
 const DefaultSeparator = <ChevronRightIcon color="currentColor" width="24px" />;
 
-const Breadcrumbs = forwardRef<HTMLUListElement, React.PropsWithChildren<BreadcrumbsProps>>(
-  ({ separator = DefaultSeparator, children }, ref) => {
-    const validItems = Children.toArray(children).filter((child) => isValidElement(child));
-    const items = insertSeparators(validItems, separator);
+const Breadcrumbs: React.FC<React.PropsWithChildren<BreadcrumbsProps>> = ({
+  separator = DefaultSeparator,
+  children,
+}) => {
+  const validItems = Children.toArray(children).filter((child) => isValidElement(child));
+  const items = insertSeparators(validItems, separator);
 
-    return (
-      <StyledBreadcrumbs ref={ref}>
-        {items.map((item, index) => (
-          <li key={`child-${index}`}>{item}</li>
-        ))}
-      </StyledBreadcrumbs>
-    );
-  }
-);
+  return (
+    <StyledBreadcrumbs>
+      {items.map((item, index) => (
+        <li key={`child-${index}`}>{item}</li>
+      ))}
+    </StyledBreadcrumbs>
+  );
+};
 
 export default Breadcrumbs;

@@ -1,8 +1,8 @@
-import { useTranslation } from "@pancakeswap/localization";
-import { BaseCurrency } from "@pancakeswap/swap-sdk-core";
-import { AutoColumn, AutoRow, Button, Flex, RowFixed, Text, useMatchBreakpoints } from "@pancakeswap/uikit";
 import { CSSProperties, ReactElement } from "react";
+import { BaseCurrency } from "@pancakeswap/swap-sdk-core";
+import { useTranslation } from "@pancakeswap/localization";
 import { styled } from "styled-components";
+import { AutoColumn, AutoRow, Button, Flex, RowFixed, Text, useMatchBreakpoints } from "@pancakeswap/uikit";
 import { ListLogo } from "./ListLogo";
 
 const TokenSection = styled.div<{ dim?: boolean }>`
@@ -40,7 +40,6 @@ export function withCurrencyLogo<T extends BaseCurrency>(
 ) {
   return ({
     token,
-    symbolAlias,
     style,
     dim,
     onCurrencySelect,
@@ -49,7 +48,6 @@ export function withCurrencyLogo<T extends BaseCurrency>(
     children,
   }: {
     token: T;
-    symbolAlias?: string;
     style?: CSSProperties;
     dim?: boolean;
     onCurrencySelect?: (currency: T) => void;
@@ -75,7 +73,7 @@ export function withCurrencyLogo<T extends BaseCurrency>(
         <AutoColumn gap="4px" style={{ opacity: dim ? "0.6" : "1" }}>
           <AutoRow>
             <NameOverflow title={token.name}>
-              {symbolAlias ?? token.symbol}
+              {token.symbol}
               <Text ellipsis color="textDisabled" fontSize="12px">
                 {token.name}
               </Text>

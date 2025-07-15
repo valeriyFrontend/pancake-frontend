@@ -374,7 +374,7 @@ exports[`PancakeSwap StableSwap Through Universal Router, BSC Network Only > mul
       {
         "type": "address",
         "name": "recipient",
-        "value": "0x0000000000000000000000000000000000000001"
+        "value": "0x0000000000000000000000000000000000000002"
       },
       {
         "type": "uint256",
@@ -407,7 +407,7 @@ exports[`PancakeSwap StableSwap Through Universal Router, BSC Network Only > mul
       {
         "type": "address",
         "name": "recipient",
-        "value": "0x0000000000000000000000000000000000000001"
+        "value": "0x0000000000000000000000000000000000000002"
       },
       {
         "type": "uint256",
@@ -437,7 +437,7 @@ exports[`PancakeSwap StableSwap Through Universal Router, BSC Network Only > mul
       {
         "type": "address",
         "name": "recipient",
-        "value": "0x0000000000000000000000000000000000000001"
+        "value": "0x0000000000000000000000000000000000000002"
       },
       {
         "type": "uint256",
@@ -468,6 +468,26 @@ exports[`PancakeSwap StableSwap Through Universal Router, BSC Network Only > mul
         "type": "bool",
         "name": "payerIsUser",
         "value": true
+      }
+    ]
+  },
+  {
+    "command": "SWEEP",
+    "args": [
+      {
+        "type": "address",
+        "name": "token",
+        "value": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d"
+      },
+      {
+        "type": "address",
+        "name": "recipient",
+        "value": "0x0000000000000000000000000000000000000001"
+      },
+      {
+        "type": "uint256",
+        "name": "amountMin",
+        "value": "2854285712"
       }
     ]
   }
@@ -666,7 +686,7 @@ exports[`PancakeSwap StableSwap Through Universal Router, BSC Network Only > sho
             "expiration": 281474976710655,
             "nonce": 0
           },
-          "spender": "0xd9C500DfF816a1Da21A48A732d3498Bf09dc9AEB",
+          "spender": "0x1A0A18AC4BECDDbd6389559687d1A73d8927E416",
           "sigDeadline": "281474976710655"
         }
       },
@@ -1179,7 +1199,7 @@ exports[`PancakeSwap Universal Router Trade > multi-route > should encode a spli
       {
         "type": "address",
         "name": "recipient",
-        "value": "0x0000000000000000000000000000000000000001"
+        "value": "0x0000000000000000000000000000000000000002"
       },
       {
         "type": "uint256",
@@ -1212,7 +1232,7 @@ exports[`PancakeSwap Universal Router Trade > multi-route > should encode a spli
       {
         "type": "address",
         "name": "recipient",
-        "value": "0x0000000000000000000000000000000000000001"
+        "value": "0x0000000000000000000000000000000000000002"
       },
       {
         "type": "uint256",
@@ -1242,7 +1262,7 @@ exports[`PancakeSwap Universal Router Trade > multi-route > should encode a spli
       {
         "type": "address",
         "name": "recipient",
-        "value": "0x0000000000000000000000000000000000000001"
+        "value": "0x0000000000000000000000000000000000000002"
       },
       {
         "type": "uint256",
@@ -1263,6 +1283,26 @@ exports[`PancakeSwap Universal Router Trade > multi-route > should encode a spli
         "type": "bool",
         "name": "payerIsUser",
         "value": false
+      }
+    ]
+  },
+  {
+    "command": "SWEEP",
+    "args": [
+      {
+        "type": "address",
+        "name": "token",
+        "value": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+      },
+      {
+        "type": "address",
+        "name": "recipient",
+        "value": "0x0000000000000000000000000000000000000001"
+      },
+      {
+        "type": "uint256",
+        "name": "amountMin",
+        "value": "1899531173721836775"
       }
     ]
   }
@@ -2654,56 +2694,6 @@ exports[`PancakeSwap Universal Router Trade > v2 > should encode exactOutput USD
 ]
 `;
 
-exports[`PancakeSwap Universal Router Trade > v3 > label: should encode a single exactInput ETH->USDC swap (payerIsUser = false) 1`] = `
-[
-  {
-    "command": "WRAP_ETH",
-    "args": [
-      {
-        "type": "address",
-        "name": "recipient",
-        "value": "0x0000000000000000000000000000000000000002"
-      },
-      {
-        "type": "uint256",
-        "name": "amountMin",
-        "value": "1000000000000000000"
-      }
-    ]
-  },
-  {
-    "command": "V3_SWAP_EXACT_IN",
-    "args": [
-      {
-        "type": "address",
-        "name": "recipient",
-        "value": "0x0000000000000000000000000000000000000001"
-      },
-      {
-        "type": "uint256",
-        "name": "amountIn",
-        "value": "1000000000000000000"
-      },
-      {
-        "type": "uint256",
-        "name": "amountOutMin",
-        "value": "949053319313984300"
-      },
-      {
-        "type": "bytes",
-        "name": "path",
-        "value": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc20009c4a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
-      },
-      {
-        "type": "bool",
-        "name": "payerIsUser",
-        "value": false
-      }
-    ]
-  }
-]
-`;
-
 exports[`PancakeSwap Universal Router Trade > v3 > should encode a exactInput ETH->USDC->USDT swap 1`] = `
 [
   {
@@ -2863,56 +2853,6 @@ exports[`PancakeSwap Universal Router Trade > v3 > should encode a exactOutput U
         "type": "uint256",
         "name": "amountMin",
         "value": "1000000000000000000"
-      }
-    ]
-  }
-]
-`;
-
-exports[`PancakeSwap Universal Router Trade > v3 > should encode a single exactInput ETH->USDC swap (payerIsUser = false) 1`] = `
-[
-  {
-    "command": "WRAP_ETH",
-    "args": [
-      {
-        "type": "address",
-        "name": "recipient",
-        "value": "0x0000000000000000000000000000000000000002"
-      },
-      {
-        "type": "uint256",
-        "name": "amountMin",
-        "value": "1000000000000000000"
-      }
-    ]
-  },
-  {
-    "command": "V3_SWAP_EXACT_IN",
-    "args": [
-      {
-        "type": "address",
-        "name": "recipient",
-        "value": "0x0000000000000000000000000000000000000001"
-      },
-      {
-        "type": "uint256",
-        "name": "amountIn",
-        "value": "1000000000000000000"
-      },
-      {
-        "type": "uint256",
-        "name": "amountOutMin",
-        "value": "949053319313984300"
-      },
-      {
-        "type": "bytes",
-        "name": "path",
-        "value": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc20009c4a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
-      },
-      {
-        "type": "bool",
-        "name": "payerIsUser",
-        "value": false
       }
     ]
   }

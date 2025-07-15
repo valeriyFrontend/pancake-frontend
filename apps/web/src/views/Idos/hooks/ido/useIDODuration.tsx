@@ -2,7 +2,7 @@ import { useTranslation } from '@pancakeswap/localization'
 import getTimePeriods from '@pancakeswap/utils/getTimePeriods'
 
 export const useIDODuration = (duration: number) => {
-  const { days, hours } = getTimePeriods(duration)
+  const { days, hours } = getTimePeriods(duration, 'ceil')
   const { t } = useTranslation()
 
   if (days > 1) {
@@ -11,6 +11,10 @@ export const useIDODuration = (duration: number) => {
 
   if (hours > 1) {
     return `${hours} ${t('hours')}`
+  }
+
+  if (hours === 1) {
+    return `${t('1 hour')}`
   }
 
   return `${t('< 1 hour')}`

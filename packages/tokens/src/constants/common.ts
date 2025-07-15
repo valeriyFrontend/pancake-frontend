@@ -63,15 +63,6 @@ export const USDT_BSC = new ERC20Token(
   'https://tether.to/',
 )
 
-export const USD1_BSC = new ERC20Token(
-  ChainId.BSC,
-  '0x8d0D000Ee44948FC98c9B98A4FA4921476f08B0d',
-  18,
-  'USD1',
-  'USD1',
-  'https://www.worldlibertyfinancial.com/',
-)
-
 export const USDT_ETH = new ERC20Token(
   ChainId.ETHEREUM,
   '0xdAC17F958D2ee523a2206206994597C13D831ec7',
@@ -376,7 +367,7 @@ export const USDC = {
   ),
   [ChainId.MONAD_TESTNET]: new ERC20Token(
     ChainId.MONAD_TESTNET,
-    '0xf817257fed379853cDe0fa4F97AB987181B1E5Ea',
+    '0x673cD70FA883394a1f3DEb3221937Ceb7C2618D7',
     18,
     'USDC',
     'USD Coin',
@@ -449,14 +440,6 @@ export const USDT = {
     6,
     'USDT',
     'Tether USDT',
-    'https://tether.to/',
-  ),
-  [ChainId.MONAD_TESTNET]: new ERC20Token(
-    ChainId.MONAD_TESTNET,
-    '0x88b8E2161DEDC77EF4ab7585569D2415a1C1055D',
-    18,
-    'USDT',
-    'Tether USD',
     'https://tether.to/',
   ),
 }

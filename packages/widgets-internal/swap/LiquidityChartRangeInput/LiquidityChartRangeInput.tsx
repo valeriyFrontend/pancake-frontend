@@ -19,28 +19,6 @@ const ChartWrapper = styled.div`
   justify-content: center;
   align-content: center;
 `;
-export interface LiquidityRangeInputProps {
-  tickCurrent?: number;
-  liquidity?: bigint;
-  isLoading?: boolean;
-  error?: Error;
-  currencyA?: Currency | null;
-  currencyB?: Currency | null;
-  feeAmount?: FeeAmount;
-  ticks?: TickDataRaw[];
-  ticksAtLimit?: { [bound in Bound]?: boolean };
-  price?: number;
-  priceLower?: Price<Currency, Currency>;
-  priceUpper?: Price<Currency, Currency>;
-  tickLower?: number;
-  tickUpper?: number;
-  onLeftRangeInput?: (typedValue: string) => void;
-  onRightRangeInput?: (typedValue: string) => void;
-  onBothRangeInput?: (leftTypedValue: string, rightTypedValue: string) => void;
-  interactive?: boolean;
-  zoomLevel?: ZoomLevels;
-  formattedData: ChartEntry[] | undefined;
-}
 
 export function LiquidityChartRangeInput({
   currencyA,
@@ -50,9 +28,6 @@ export function LiquidityChartRangeInput({
   price,
   priceLower,
   priceUpper,
-  tickUpper,
-  tickLower,
-  tickCurrent,
   onBothRangeInput = () => {
     // default
   },
@@ -67,7 +42,26 @@ export function LiquidityChartRangeInput({
   error,
   zoomLevel,
   formattedData,
-}: LiquidityRangeInputProps) {
+}: {
+  tickCurrent?: number;
+  liquidity?: bigint;
+  isLoading?: boolean;
+  error?: Error;
+  currencyA?: Currency | null;
+  currencyB?: Currency | null;
+  feeAmount?: FeeAmount;
+  ticks?: TickDataRaw[];
+  ticksAtLimit?: { [bound in Bound]?: boolean };
+  price?: number;
+  priceLower?: Price<Currency, Currency>;
+  priceUpper?: Price<Currency, Currency>;
+  onLeftRangeInput?: (typedValue: string) => void;
+  onRightRangeInput?: (typedValue: string) => void;
+  onBothRangeInput?: (leftTypedValue: string, rightTypedValue: string) => void;
+  interactive?: boolean;
+  zoomLevel?: ZoomLevels;
+  formattedData: ChartEntry[] | undefined;
+}) {
   const { t } = useTranslation();
   const theme = useTheme();
 
@@ -81,32 +75,8 @@ export function LiquidityChartRangeInput({
   );
 
   const brushDomain: [number, number] | undefined = useMemo(() => {
-    let leftPrice = isSorted ? priceLower : priceUpper?.invert();
-    let rightPrice = isSorted ? priceUpper : priceLower?.invert();
-
-    if (tickLower !== undefined && tickUpper !== undefined && tickCurrent !== undefined && price !== undefined) {
-      if (tickLower === tickCurrent) {
-        if (isSorted) {
-          leftPrice = leftPrice
-            ? Price.fromDecimal(leftPrice.baseCurrency, leftPrice.quoteCurrency, String(price))
-            : leftPrice;
-        } else {
-          rightPrice = rightPrice
-            ? Price.fromDecimal(rightPrice.baseCurrency, rightPrice.quoteCurrency, String(price))
-            : rightPrice;
-        }
-      } else if (tickUpper === tickCurrent) {
-        if (isSorted) {
-          rightPrice = rightPrice
-            ? Price.fromDecimal(rightPrice.baseCurrency, rightPrice.quoteCurrency, String(price))
-            : rightPrice;
-        } else {
-          leftPrice = leftPrice
-            ? Price.fromDecimal(leftPrice.baseCurrency, leftPrice.quoteCurrency, String(price))
-            : leftPrice;
-        }
-      }
-    }
+    const leftPrice = isSorted ? priceLower : priceUpper?.invert();
+    const rightPrice = isSorted ? priceUpper : priceLower?.invert();
 
     return leftPrice && rightPrice
       ? [parseFloat(leftPrice?.toSignificant(18)), parseFloat(rightPrice?.toSignificant(18))]

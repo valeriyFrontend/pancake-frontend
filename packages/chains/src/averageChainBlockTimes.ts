@@ -1,10 +1,10 @@
 import { ChainId } from './chainId'
 
 export const AVERAGE_CHAIN_BLOCK_TIMES: Record<ChainId, number> = {
-  [ChainId.BSC]: 0.75,
-  [ChainId.BSC_TESTNET]: 0.75,
-  [ChainId.OPBNB]: 0.5,
-  [ChainId.OPBNB_TESTNET]: 0.5,
+  [ChainId.BSC]: 3,
+  [ChainId.BSC_TESTNET]: 3,
+  [ChainId.OPBNB]: 1,
+  [ChainId.OPBNB_TESTNET]: 1,
   [ChainId.ETHEREUM]: 12,
   [ChainId.GOERLI]: 3,
   [ChainId.POLYGON_ZKEVM]: 3,

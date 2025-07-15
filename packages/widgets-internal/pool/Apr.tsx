@@ -67,7 +67,17 @@ export function Apr<T>({
   boostedTooltipsText,
   ...props
 }: AprProps<T>) {
-  const { stakingToken, earningToken, isFinished, earningTokenPrice, stakingTokenPrice, userData, apr } = pool;
+  const {
+    stakingToken,
+    earningToken,
+    isFinished,
+    earningTokenPrice,
+    stakingTokenPrice,
+    userData,
+    apr,
+    rawApr,
+    vaultKey,
+  } = pool;
   const { t } = useTranslation();
   const { isDesktop } = useMatchBreakpoints();
 
@@ -82,13 +92,13 @@ export function Apr<T>({
   );
 
   const poolApr = useMemo(() => {
-    const currentApr = apr;
+    const currentApr = vaultKey ? rawApr : apr;
     if (boostedApr) {
       return new BigNumber(currentApr ?? 0).plus(boostedApr).toNumber();
     }
 
     return currentApr ?? 0;
-  }, [apr, boostedApr]);
+  }, [apr, boostedApr, rawApr, vaultKey]);
 
   const [onPresentApyModal] = useModal(
     <RoiCalculatorModal
@@ -118,8 +128,9 @@ export function Apr<T>({
   const isValidate = apr !== undefined && !Number.isNaN(apr);
 
   const tooltipStakeApy = useMemo(() => {
-    return `${apr?.toLocaleString("en-US", { maximumFractionDigits: 2 }) ?? 0}%`;
-  }, [apr]);
+    const currentApr = vaultKey ? rawApr : apr;
+    return `${currentApr?.toLocaleString("en-US", { maximumFractionDigits: 2 }) ?? 0}%`;
+  }, [vaultKey, rawApr, apr]);
 
   const boostedAprGreaterThanZero = useMemo(() => new BigNumber(boostedApr ?? 0).isGreaterThan(0), [boostedApr]);
 

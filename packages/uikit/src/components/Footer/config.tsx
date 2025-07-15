@@ -103,8 +103,16 @@ export const socials = [
         href: "https://t.me/PancakeSwapVN",
       },
       {
+        label: "Italiano",
+        href: "https://t.me/pancakeswap_Ita",
+      },
+      {
         label: "русский",
         href: "https://t.me/pancakeswap_ru",
+      },
+      {
+        label: "Türkiye",
+        href: "https://t.me/pancakeswapturkiye",
       },
       {
         label: "Português",
@@ -119,16 +127,24 @@ export const socials = [
         href: "https://t.me/pancakeswapJP",
       },
       {
+        label: "Français",
+        href: "https://t.me/pancakeswapFR",
+      },
+      {
+        label: "Deutsch",
+        href: "https://t.me/pancakeswap_DE",
+      },
+      {
         label: "Filipino",
         href: "https://t.me/pancakeswap_PH",
       },
       {
-        label: "हिन्दी",
-        href: "https://t.me/pancakeswap_INDIA",
+        label: "ქართული ენა",
+        href: "https://t.me/pancakeswapGeorgia",
       },
       {
-        label: "한국어",
-        href: "https://t.me/PancakeSwapSouthKorea",
+        label: "हिन्दी",
+        href: "https://t.me/pancakeswap_INDIA",
       },
       {
         label: "Announcements",
